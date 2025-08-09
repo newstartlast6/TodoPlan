@@ -18,6 +18,11 @@ import {
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   calculateDayProgress,
   calculateWeekProgress,
   calculateMonthProgress,
@@ -284,33 +289,85 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
   const progress = getProgress();
 
   return (
-    <div className={cn("bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border", className)} data-testid="urgency-view-simple">
-      <div className="space-y-4">
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <Progress
-            value={progress.percentage}
-            className="h-2"
-            data-testid="urgency-progress"
-          />
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Progress</span>
-            <span
-              className={`font-medium ${getUrgencyClass(progress.urgencyLevel)}`}
-            >
-              {Math.round(progress.percentage)}%
-            </span>
+    <div className={cn("", className)} data-testid="urgency-view-simple">
+      <Popover>
+        <PopoverTrigger asChild>
+          <div className="cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="space-y-2">
+              {/* Main Progress Indicator */}
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <Progress
+                    value={progress.percentage}
+                    className="h-3"
+                    data-testid="urgency-progress"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`text-sm font-bold ${getUrgencyClass(progress.urgencyLevel)}`}
+                  >
+                    {Math.round(progress.percentage)}%
+                  </span>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full animate-pulse",
+                      progress.urgencyLevel === "high" ? "bg-red-500" : 
+                      progress.urgencyLevel === "medium" ? "bg-yellow-500" : "bg-green-500"
+                    )}
+                  />
+                </div>
+              </div>
+              
+              {/* Urgency Text */}
+              <div className="text-xs text-muted-foreground text-center">
+                <span className={getUrgencyClass(progress.urgencyLevel)}>
+                  {progress.urgencyLevel.toUpperCase()} URGENCY
+                </span>
+                {" • "}
+                <span>
+                  {view === "day" && `${Math.round(progress.elapsed)}% of day passed`}
+                  {view === "week" && `${Math.floor((progress.elapsed / 100) * 7)} of 7 days passed`}
+                  {view === "month" && `${new Date().getDate()} of ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()} days passed`}
+                  {view === "year" && `${new Date().getMonth() + 1} of 12 months passed`}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-4" side="bottom" align="end">
+          <div className="space-y-4">
+            <div className="text-sm font-semibold text-foreground">
+              {view.charAt(0).toUpperCase() + view.slice(1)} Overview
+            </div>
+            
+            {/* Detailed Progress */}
+            <div className="space-y-2">
+              <Progress
+                value={progress.percentage}
+                className="h-2"
+                data-testid="urgency-progress-detailed"
+              />
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Progress</span>
+                <span
+                  className={`font-medium ${getUrgencyClass(progress.urgencyLevel)}`}
+                >
+                  {Math.round(progress.percentage)}%
+                </span>
+              </div>
+            </div>
 
-        {/* Active Minimap View */}
-        <div data-testid={`minimap-view-${view}`}>
-          {view === "day" && renderDayMinimap()}
-          {view === "week" && renderWeekMinimap()}
-          {view === "month" && renderMonthMinimap()}
-          {view === "year" && renderYearMinimap()}
-        </div>
-      </div>
+            {/* Minimap View */}
+            <div data-testid={`minimap-view-${view}`}>
+              {view === "day" && renderDayMinimap()}
+              {view === "week" && renderWeekMinimap()}
+              {view === "month" && renderMonthMinimap()}
+              {view === "year" && renderYearMinimap()}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
