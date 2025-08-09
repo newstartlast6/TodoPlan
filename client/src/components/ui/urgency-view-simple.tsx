@@ -1,8 +1,30 @@
-import { format, isToday, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth, eachWeekOfInterval, startOfYear, endOfYear, eachMonthOfInterval, isPast, isThisMonth } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import { calculateDayProgress, calculateWeekProgress, calculateMonthProgress, calculateYearProgress, getUrgencyClass } from '@/lib/time-utils';
-import type { Task } from '@shared/schema';
+import { useState } from "react";
+import {
+  format,
+  isToday,
+  isSameDay,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  startOfMonth,
+  endOfMonth,
+  eachWeekOfInterval,
+  startOfYear,
+  endOfYear,
+  eachMonthOfInterval,
+  isPast,
+  isThisMonth,
+} from "date-fns";
+import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import {
+  calculateDayProgress,
+  calculateWeekProgress,
+  calculateMonthProgress,
+  calculateYearProgress,
+  getUrgencyClass,
+} from "@/lib/time-utils";
+import type { Task } from "@shared/schema";
 
 interface UrgencyViewSimpleProps {
   tasks: Task[];
@@ -33,7 +55,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
                     ? "urgency-crossed"
                     : isCurrentHour
                       ? "bg-primary animate-pulse-subtle"
-                      : "bg-gray-200 dark:bg-gray-700",
+                      : "bg-gray-200",
                 )}
                 title={`${hour}:00 ${hour < 12 ? "AM" : "PM"}`}
                 data-testid={`hour-block-${hour}`}
@@ -71,24 +93,32 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
             );
 
             return (
-              <div
-                key={dayIndex}
-                className={cn(
-                  "h-8 rounded-sm transition-all",
-                  isDayPast
-                    ? "urgency-crossed"
-                    : isCurrentDay
-                      ? "bg-primary animate-pulse-subtle"
-                      : "bg-gray-200 dark:bg-gray-700",
-                )}
-                title={format(day, "EEE, MMM d")}
-                data-testid={`day-block-${dayIndex}`}
-              >
-                {dayTasks.length > 0 && (
-                  <div className="text-xs text-white bg-black/30 rounded-sm px-1 m-0.5">
-                    {dayTasks.length}
-                  </div>
-                )}
+              <div key={dayIndex} className="space-y-1">
+                <div
+                  className={cn(
+                    "h-4 rounded-sm transition-all",
+                    isDayPast
+                      ? "urgency-crossed"
+                      : isCurrentDay
+                        ? "bg-primary animate-pulse-subtle"
+                        : "bg-gray-200",
+                  )}
+                  title={`${format(day, "EEEE")} - ${dayTasks.length} tasks`}
+                  data-testid={`day-block-${dayIndex}`}
+                />
+                <div className="text-center">
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      isDayPast
+                        ? "text-red-500 line-through"
+                        : "text-foreground",
+                    )}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  {isDayPast && <div className="text-xs text-red-500">✓</div>}
+                </div>
               </div>
             );
           })}
@@ -96,10 +126,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className={getUrgencyClass(weekProgress.urgencyLevel)}>
-            {Math.round(weekProgress.elapsed)}% elapsed
+            {Math.floor((weekProgress.elapsed / 100) * 7)} days passed
           </span>
           <span className="text-muted-foreground">
-            {Math.round(weekProgress.remaining)}% remaining
+            {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days left
           </span>
         </div>
       </div>
@@ -109,49 +139,52 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
   const renderMonthMinimap = () => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
-    const monthProgress = calculateMonthProgress(currentDate);
-    
     const weeks = eachWeekOfInterval(
       { start: monthStart, end: monthEnd },
-      { weekStartsOn: 1 }
+      { weekStartsOn: 1 },
     );
+    const monthProgress = calculateMonthProgress(currentDate);
+    const currentDay = new Date().getDate();
+    const totalDays = monthEnd.getDate();
 
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-6 gap-1">
           {weeks.map((week, weekIndex) => {
-            const weekDays = eachDayOfInterval({
-              start: startOfWeek(week, { weekStartsOn: 1 }),
-              end: endOfWeek(week, { weekStartsOn: 1 })
-            });
-            
-            const weekTasks = tasks.filter(task => {
-              const taskDate = new Date(task.startTime);
-              return weekDays.some(day => isSameDay(taskDate, day));
-            });
-            
-            const isCurrentWeek = weekDays.some(day => isToday(day));
-            const isPastWeek = weekDays.every(day => isPast(day));
+            const weekStart = startOfWeek(week, { weekStartsOn: 1 });
+            const isCurrentWeek =
+              weekStart <= new Date() &&
+              new Date() <= endOfWeek(week, { weekStartsOn: 1 });
+            const isWeekPast =
+              isPast(endOfWeek(week, { weekStartsOn: 1 })) && !isCurrentWeek;
 
             return (
-              <div
-                key={weekIndex}
-                className={cn(
-                  "h-6 rounded-sm transition-all",
-                  isPastWeek
-                    ? "urgency-crossed"
-                    : isCurrentWeek
-                      ? "bg-primary animate-pulse-subtle"
-                      : "bg-gray-200 dark:bg-gray-700",
-                )}
-                title={`Week ${weekIndex + 1}`}
-                data-testid={`week-block-${weekIndex}`}
-              >
-                {weekTasks.length > 0 && (
-                  <div className="text-xs text-white bg-black/30 rounded-sm px-1 m-0.5">
-                    {weekTasks.length}
-                  </div>
-                )}
+              <div key={weekIndex} className="space-y-1">
+                <div
+                  className={cn(
+                    "h-4 rounded-sm transition-all",
+                    isWeekPast
+                      ? "urgency-crossed"
+                      : isCurrentWeek
+                        ? "bg-primary animate-pulse-subtle"
+                        : "bg-gray-200",
+                  )}
+                  title={`Week ${weekIndex + 1}`}
+                  data-testid={`week-block-${weekIndex}`}
+                />
+                <div className="text-center">
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      isWeekPast
+                        ? "text-red-500 line-through"
+                        : "text-foreground",
+                    )}
+                  >
+                    W{weekIndex + 1}
+                  </span>
+                  {isWeekPast && <div className="text-xs text-red-500">✓</div>}
+                </div>
               </div>
             );
           })}
@@ -159,10 +192,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className={getUrgencyClass(monthProgress.urgencyLevel)}>
-            {Math.round(monthProgress.elapsed)}% elapsed
+            {currentDay} days passed
           </span>
           <span className="text-muted-foreground">
-            {Math.round(monthProgress.remaining)}% remaining
+            {totalDays - currentDay} days left
           </span>
         </div>
       </div>
@@ -172,42 +205,50 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
   const renderYearMinimap = () => {
     const yearStart = startOfYear(currentDate);
     const yearEnd = endOfYear(currentDate);
-    const yearProgress = calculateYearProgress(currentDate);
     const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+    const yearProgress = calculateYearProgress(currentDate);
+    const currentMonth = new Date().getMonth();
 
     return (
       <div className="space-y-3">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Jan</span>
+          <span>Now</span>
+          <span>Dec</span>
+        </div>
+
         <div className="grid grid-cols-6 gap-1">
           {months.map((month, monthIndex) => {
-            const monthStart = startOfMonth(month);
-            const monthEnd = endOfMonth(month);
-            const monthTasks = tasks.filter(task => {
-              const taskDate = new Date(task.startTime);
-              return taskDate >= monthStart && taskDate <= monthEnd;
-            });
-            
-            const isCurrentMonth = isThisMonth(month);
-            const isPastMonth = isPast(monthEnd);
+            const isCurrentMonth = monthIndex === currentMonth;
+            const isMonthPast = monthIndex < currentMonth;
 
             return (
-              <div
-                key={monthIndex}
-                className={cn(
-                  "h-6 rounded-sm transition-all",
-                  isPastMonth
-                    ? "urgency-crossed"
-                    : isCurrentMonth
-                      ? "bg-primary animate-pulse-subtle"
-                      : "bg-gray-200 dark:bg-gray-700",
-                )}
-                title={format(month, "MMM yyyy")}
-                data-testid={`month-block-${monthIndex}`}
-              >
-                {monthTasks.length > 0 && (
-                  <div className="text-xs text-white bg-black/30 rounded-sm px-1 m-0.5">
-                    {monthTasks.length}
-                  </div>
-                )}
+              <div key={monthIndex} className="space-y-1">
+                <div
+                  className={cn(
+                    "h-4 rounded-sm transition-all",
+                    isMonthPast
+                      ? "urgency-crossed"
+                      : isCurrentMonth
+                        ? "bg-primary animate-pulse-subtle"
+                        : "bg-gray-200",
+                  )}
+                  title={format(month, "MMMM")}
+                  data-testid={`month-block-${monthIndex}`}
+                />
+                <div className="text-center">
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      isMonthPast
+                        ? "text-red-500 line-through"
+                        : "text-foreground",
+                    )}
+                  >
+                    {format(month, "MMM")}
+                  </span>
+                  {isMonthPast && <div className="text-xs text-red-500">✓</div>}
+                </div>
               </div>
             );
           })}
@@ -215,10 +256,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className={getUrgencyClass(yearProgress.urgencyLevel)}>
-            {Math.round(yearProgress.elapsed)}% elapsed
+            {currentMonth + 1} months passed
           </span>
           <span className="text-muted-foreground">
-            {Math.round(yearProgress.remaining)}% remaining
+            {12 - (currentMonth + 1)} months left
           </span>
         </div>
       </div>
