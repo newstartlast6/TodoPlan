@@ -70,11 +70,11 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className={getUrgencyClass(dayProgress.urgencyLevel)}>
-            {Math.round(dayProgress.elapsed)}% elapsed
+          <span className="text-red-500 font-bold">
+            {Math.round(dayProgress.elapsed)}% LOST
           </span>
-          <span className="text-muted-foreground">
-            {Math.round(dayProgress.remaining)}% remaining
+          <span className="text-orange-500 font-medium">
+            Only {Math.round(dayProgress.remaining)}% left!
           </span>
         </div>
       </div>
@@ -130,11 +130,11 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className={getUrgencyClass(weekProgress.urgencyLevel)}>
-            {Math.floor((weekProgress.elapsed / 100) * 7)} days passed
+          <span className="text-red-500 font-bold">
+            {Math.floor((weekProgress.elapsed / 100) * 7)} days WASTED
           </span>
-          <span className="text-muted-foreground">
-            {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days left
+          <span className="text-orange-500 font-medium">
+            Only {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days remain!
           </span>
         </div>
       </div>
@@ -196,11 +196,11 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className={getUrgencyClass(monthProgress.urgencyLevel)}>
-            {currentDay} days passed
+          <span className="text-red-500 font-bold">
+            {currentDay} days GONE
           </span>
-          <span className="text-muted-foreground">
-            {totalDays - currentDay} days left
+          <span className="text-orange-500 font-medium">
+            Only {totalDays - currentDay} days left!
           </span>
         </div>
       </div>
@@ -260,11 +260,11 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className={getUrgencyClass(yearProgress.urgencyLevel)}>
-            {currentMonth + 1} months passed
+          <span className="text-red-500 font-bold">
+            {currentMonth + 1} months LOST
           </span>
-          <span className="text-muted-foreground">
-            {12 - (currentMonth + 1)} months left
+          <span className="text-orange-500 font-medium">
+            Only {12 - (currentMonth + 1)} months remain!
           </span>
         </div>
       </div>
@@ -304,32 +304,24 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span
-                    className={`text-sm font-bold ${getUrgencyClass(progress.urgencyLevel)}`}
-                  >
+                  <span className="text-sm font-bold text-red-500">
                     {Math.round(progress.percentage)}%
                   </span>
-                  <div
-                    className={cn(
-                      "w-2 h-2 rounded-full animate-pulse",
-                      progress.urgencyLevel === "high" ? "bg-red-500" : 
-                      progress.urgencyLevel === "medium" ? "bg-yellow-500" : "bg-green-500"
-                    )}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                 </div>
               </div>
               
               {/* Urgency Text */}
-              <div className="text-xs text-muted-foreground text-center">
-                <span className={getUrgencyClass(progress.urgencyLevel)}>
-                  {progress.urgencyLevel.toUpperCase()} URGENCY
+              <div className="text-xs text-center">
+                <span className="text-red-500 font-bold animate-pulse">
+                  URGENT: TIME RUNNING OUT
                 </span>
                 {" • "}
-                <span>
-                  {view === "day" && `${Math.round(progress.elapsed)}% of day passed`}
-                  {view === "week" && `${Math.floor((progress.elapsed / 100) * 7)} of 7 days passed`}
-                  {view === "month" && `${new Date().getDate()} of ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()} days passed`}
-                  {view === "year" && `${new Date().getMonth() + 1} of 12 months passed`}
+                <span className="text-red-400 font-medium">
+                  {view === "day" && `${Math.round(progress.elapsed)}% of day ALREADY GONE`}
+                  {view === "week" && `${Math.floor((progress.elapsed / 100) * 7)} of 7 days LOST`}
+                  {view === "month" && `${new Date().getDate()} of ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()} days WASTED`}
+                  {view === "year" && `${new Date().getMonth() + 1} of 12 months PASSED`}
                 </span>
               </div>
             </div>
@@ -337,8 +329,8 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         </PopoverTrigger>
         <PopoverContent className="w-80 p-4" side="bottom" align="end">
           <div className="space-y-4">
-            <div className="text-sm font-semibold text-foreground">
-              {view.charAt(0).toUpperCase() + view.slice(1)} Overview
+            <div className="text-sm font-bold text-red-500">
+              ⚠️ {view.charAt(0).toUpperCase() + view.slice(1)} Time Crisis
             </div>
             
             {/* Detailed Progress */}
@@ -349,11 +341,9 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
                 data-testid="urgency-progress-detailed"
               />
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Progress</span>
-                <span
-                  className={`font-medium ${getUrgencyClass(progress.urgencyLevel)}`}
-                >
-                  {Math.round(progress.percentage)}%
+                <span className="text-red-400 font-medium">TIME LOST</span>
+                <span className="font-bold text-red-500">
+                  {Math.round(progress.percentage)}% GONE
                 </span>
               </div>
             </div>
