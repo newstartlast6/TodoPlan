@@ -1,0 +1,534 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronoView - Smart Calendar with Time Urgency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6366F1',
+                        secondary: '#8B5CF6',
+                        accent: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        dark: {
+                            bg: '#0F172A',
+                            surface: '#1E293B',
+                            card: '#334155'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            },
+            darkMode: 'class',
+        };
+    </script>
+</head>
+<body class="font-inter bg-dark-bg text-slate-100 min-h-screen">
+    <!-- @COMPONENT: App [main application container] -->
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- @COMPONENT: Sidebar [navigation and controls] -->
+        <aside class="w-64 bg-dark-surface border-r border-slate-700 flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-calendar-alt text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-lg font-semibold">ChronoView</h1>
+                </div>
+            </div>
+
+            <!-- Real-time Urgency Panel -->
+            <div class="p-4 border-b border-slate-700">
+                <h3 class="text-sm font-medium text-slate-400 mb-3">Time Remaining</h3>
+                
+                <!-- @FUNCTIONALITY: Real-time updates showing remaining time for each period -->
+                <div class="space-y-3">
+                    <!-- Day Progress -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400">Today</span>
+                        <span class="text-xs font-medium text-warning" data-bind="dayRemaining">8h 23m (65%)</span>
+                    </div>
+                    <div class="w-full bg-slate-600 rounded-full h-2">
+                        <div class="bg-warning h-2 rounded-full transition-all duration-300" style="width: 65%"></div>
+                    </div>
+
+                    <!-- Week Progress -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400">This Week</span>
+                        <span class="text-xs font-medium text-accent" data-bind="weekRemaining">3d 8h (45%)</span>
+                    </div>
+                    <div class="w-full bg-slate-600 rounded-full h-2">
+                        <div class="bg-accent h-2 rounded-full transition-all duration-300" style="width: 45%"></div>
+                    </div>
+
+                    <!-- Month Progress -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400">This Month</span>
+                        <span class="text-xs font-medium text-primary" data-bind="monthRemaining">2w 3d (72%)</span>
+                    </div>
+                    <div class="w-full bg-slate-600 rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 72%"></div>
+                    </div>
+
+                    <!-- Year Progress -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400">This Year</span>
+                        <span class="text-xs font-medium text-secondary" data-bind="yearRemaining">4m 2w (88%)</span>
+                    </div>
+                    <div class="w-full bg-slate-600 rounded-full h-2">
+                        <div class="bg-secondary h-2 rounded-full transition-all duration-300" style="width: 88%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary font-medium">
+                            <i class="fas fa-list text-sm"></i>
+                            <span>List View</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-calendar-week text-sm"></i>
+                            <span>Week Focus</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-tasks text-sm"></i>
+                            <span>Tasks</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-chart-line text-sm"></i>
+                            <span>Analytics</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Theme Toggle & Settings -->
+            <div class="p-4 border-t border-slate-700">
+                <div class="flex items-center justify-between">
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-slate-100 transition-colors">
+                        <i class="fas fa-moon text-sm"></i>
+                        <span class="text-sm">Dark Mode</span>
+                    </button>
+                    <button class="text-slate-400 hover:text-slate-100 transition-colors">
+                        <i class="fas fa-cog text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex overflow-hidden">
+            
+            <!-- @COMPONENT: MainCalendarView [primary calendar interface] -->
+            <main class="flex-1 flex flex-col overflow-hidden">
+                
+                <!-- Header -->
+                <header class="bg-dark-surface border-b border-slate-700 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-semibold">Week of December 11-17, 2024</h2>
+                            <p class="text-sm text-slate-400 mt-1">Current time: <span class="text-accent font-medium" data-bind="currentTime">2:35 PM EST</span></p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- Time Period Selector -->
+                            <div class="flex bg-dark-card rounded-lg p-1">
+                                <button class="px-3 py-1 text-xs rounded-md text-slate-400 hover:text-slate-100 transition-colors">Day</button>
+                                <button class="px-3 py-1 text-xs rounded-md bg-primary text-white">Week</button>
+                                <button class="px-3 py-1 text-xs rounded-md text-slate-400 hover:text-slate-100 transition-colors">Month</button>
+                                <button class="px-3 py-1 text-xs rounded-md text-slate-400 hover:text-slate-100 transition-colors">Year</button>
+                            </div>
+                            
+                            <!-- Add Task Button -->
+                            <button class="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg text-sm font-medium transition-colors" data-event="click:openTaskModal">
+                                <i class="fas fa-plus mr-2"></i>Add Task
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Calendar List View -->
+                <div class="flex-1 p-6 overflow-y-auto">
+                    <div class="space-y-6">
+                        
+                        <!-- @MAP: weekDays.map(day => ( -->
+                        <!-- Monday, Dec 11 -->
+                        <div class="bg-dark-surface rounded-xl p-6 border border-slate-700 animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-lg font-semibold">Monday, Dec 11</h3>
+                                    <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">Today</span>
+                                </div>
+                                <div class="text-sm text-slate-400">
+                                    <span data-bind="dayProgress">8h 23m remaining (65%)</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Tasks for the day -->
+                            <div class="space-y-3" data-mock="true">
+                                <div class="flex items-center gap-3 p-3 bg-dark-card rounded-lg border border-slate-600">
+                                    <div class="w-2 h-2 bg-danger rounded-full animate-pulse-slow"></div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium">Team standup meeting</h4>
+                                        <p class="text-sm text-slate-400">9:00 AM - 9:30 AM</p>
+                                    </div>
+                                    <span class="px-2 py-1 bg-danger/20 text-danger text-xs rounded-full">High Priority</span>
+                                </div>
+                                
+                                <div class="flex items-center gap-3 p-3 bg-dark-card rounded-lg border border-slate-600">
+                                    <div class="w-2 h-2 bg-warning rounded-full"></div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium">Code review for calendar feature</h4>
+                                        <p class="text-sm text-slate-400">2:00 PM - 3:00 PM</p>
+                                    </div>
+                                    <span class="px-2 py-1 bg-warning/20 text-warning text-xs rounded-full">Medium</span>
+                                </div>
+                                
+                                <div class="flex items-center gap-3 p-3 bg-dark-card rounded-lg border border-slate-600">
+                                    <div class="w-2 h-2 bg-accent rounded-full"></div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium">Update documentation</h4>
+                                        <p class="text-sm text-slate-400">4:00 PM - 5:00 PM</p>
+                                    </div>
+                                    <span class="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">Low</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tuesday, Dec 12 -->
+                        <div class="bg-dark-surface rounded-xl p-6 border border-slate-700 animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-lg font-semibold">Tuesday, Dec 12</h3>
+                                </div>
+                                <div class="text-sm text-slate-400">
+                                    <span data-bind="dayProgress">24h remaining (100%)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3" data-mock="true">
+                                <div class="flex items-center gap-3 p-3 bg-dark-card rounded-lg border border-slate-600">
+                                    <div class="w-2 h-2 bg-primary rounded-full"></div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium">Client presentation</h4>
+                                        <p class="text-sm text-slate-400">10:00 AM - 11:30 AM</p>
+                                    </div>
+                                    <span class="px-2 py-1 bg-primary/20 text-primary text-xs rounded-full">Meeting</span>
+                                </div>
+                                
+                                <div class="flex items-center gap-3 p-3 bg-dark-card rounded-lg border border-slate-600">
+                                    <div class="w-2 h-2 bg-secondary rounded-full"></div>
+                                    <div class="flex-1">
+                                        <h4 class="font-medium">Design system updates</h4>
+                                        <p class="text-sm text-slate-400">2:00 PM - 4:00 PM</p>
+                                    </div>
+                                    <span class="px-2 py-1 bg-secondary/20 text-secondary text-xs rounded-full">Design</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wednesday, Dec 13 -->
+                        <div class="bg-dark-surface rounded-xl p-6 border border-slate-700 animate-fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="text-lg font-semibold">Wednesday, Dec 13</h3>
+                                </div>
+                                <div class="text-sm text-slate-400">
+                                    <span data-bind="dayProgress">48h remaining (200%)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 border-2 border-dashed border-slate-600 rounded-lg text-center text-slate-400" data-mock="true">
+                                <i class="fas fa-plus text-2xl mb-2"></i>
+                                <p>No tasks scheduled</p>
+                                <button class="text-primary hover:text-primary/80 text-sm mt-1">Add Task</button>
+                            </div>
+                        </div>
+
+                        <!-- Rest of week (collapsed view) -->
+                        <div class="bg-dark-surface rounded-xl p-4 border border-slate-700 opacity-70">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-400">Thursday - Sunday</span>
+                                <button class="text-primary hover:text-primary/80 text-sm">
+                                    <i class="fas fa-chevron-down mr-1"></i>Expand
+                                </button>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                        
+                    </div>
+                </div>
+
+            </main>
+            <!-- @END_COMPONENT: MainCalendarView -->
+
+            <!-- @COMPONENT: MinimapPanel [VSCode-style overview] -->
+            <aside class="w-80 bg-dark-surface border-l border-slate-700 flex flex-col">
+                <div class="p-4 border-b border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-semibold">Overview</h3>
+                        <button class="text-slate-400 hover:text-slate-100 transition-colors">
+                            <i class="fas fa-compress-arrows-alt text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- @FUNCTIONALITY: VSCode-style minimap showing compressed calendar view -->
+                <div class="flex-1 p-4">
+                    
+                    <!-- Week Overview -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-slate-400 mb-3">Week Overview</h4>
+                        <div class="space-y-2">
+                            <!-- Each day as a compressed bar -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 w-8">MON</span>
+                                <div class="flex-1 h-6 bg-dark-card rounded flex overflow-hidden">
+                                    <div class="w-4 bg-danger/60"></div>
+                                    <div class="w-6 bg-warning/60"></div>
+                                    <div class="w-4 bg-accent/60"></div>
+                                    <div class="flex-1 bg-slate-700"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">75%</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 w-8">TUE</span>
+                                <div class="flex-1 h-6 bg-dark-card rounded flex overflow-hidden">
+                                    <div class="w-8 bg-primary/60"></div>
+                                    <div class="w-8 bg-secondary/60"></div>
+                                    <div class="flex-1 bg-slate-700"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">50%</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 w-8">WED</span>
+                                <div class="flex-1 h-6 bg-dark-card rounded">
+                                    <div class="h-full bg-slate-700 rounded"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">0%</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 w-8">THU</span>
+                                <div class="flex-1 h-6 bg-dark-card rounded">
+                                    <div class="h-full bg-slate-700 rounded"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">0%</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500 w-8">FRI</span>
+                                <div class="flex-1 h-6 bg-dark-card rounded">
+                                    <div class="h-full bg-slate-700 rounded"></div>
+                                </div>
+                                <span class="text-xs text-slate-500">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Month Overview -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-slate-400 mb-3">Month Overview</h4>
+                        <div class="grid grid-cols-7 gap-1">
+                            <!-- Mini calendar grid showing density -->
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30" data-mock="true"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-primary/40 rounded-sm"></div>
+                            <div class="h-4 bg-warning/60 rounded-sm"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-accent/40 rounded-sm"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-danger/80 rounded-sm"></div>
+                            <div class="h-4 bg-primary/60 rounded-sm"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            
+                            <div class="h-4 bg-secondary/50 rounded-sm"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-warning/40 rounded-sm"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                            <div class="h-4 bg-slate-700 rounded-sm opacity-30"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="bg-dark-card p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-slate-400 mb-3">Quick Stats</h4>
+                        <div class="space-y-2 text-sm" data-mock="true">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Total Tasks</span>
+                                <span class="font-medium">12</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Completed</span>
+                                <span class="font-medium text-accent">8</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">High Priority</span>
+                                <span class="font-medium text-danger">3</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">This Week Load</span>
+                                <span class="font-medium text-warning">75%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <!-- @END_COMPONENT: MinimapPanel -->
+
+        </div>
+    </div>
+    <!-- @END_COMPONENT: App -->
+
+    <!-- @COMPONENT: TaskModal [task creation/editing] -->
+    <div id="taskModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-dark-surface rounded-xl p-6 w-full max-w-md mx-4 border border-slate-700">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Create New Task</h3>
+                <button class="text-slate-400 hover:text-slate-100 transition-colors" data-event="click:closeTaskModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form class="space-y-4" data-mock="true">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Task Name</label>
+                    <input type="text" class="w-full bg-dark-card border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Enter task name">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Date & Time</label>
+                    <div class="flex gap-2">
+                        <input type="date" class="flex-1 bg-dark-card border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
+                        <input type="time" class="bg-dark-card border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Priority</label>
+                    <select class="w-full bg-dark-card border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors">
+                        <option value="low">Low Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" class="flex-1 bg-slate-600 hover:bg-slate-500 text-slate-100 py-2 rounded-lg font-medium transition-colors" data-event="click:closeTaskModal">Cancel</button>
+                    <button type="submit" class="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-lg font-medium transition-colors">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: TaskModal -->
+
+    <script>
+        // TODO: Implement real-time clock updates and urgency calculations
+        // TODO: Add task management functionality (CRUD operations)
+        // TODO: Implement theme switching between dark/light modes
+        // TODO: Add drag & drop for task reordering
+        // TODO: Connect to backend API for data persistence
+        
+        (function() {
+            // Simple modal controls for demonstration
+            const taskModal = document.getElementById('taskModal');
+            const openModalButtons = document.querySelectorAll('[data-event*="openTaskModal"]');
+            const closeModalButtons = document.querySelectorAll('[data-event*="closeTaskModal"]');
+            
+            openModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    taskModal.classList.remove('hidden');
+                    taskModal.classList.add('flex');
+                });
+            });
+            
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    taskModal.classList.add('hidden');
+                    taskModal.classList.remove('flex');
+                });
+            });
+            
+            // Close modal on backdrop click
+            taskModal.addEventListener('click', (e) => {
+                if (e.target === taskModal) {
+                    taskModal.classList.add('hidden');
+                    taskModal.classList.remove('flex');
+                }
+            });
+
+            // Simple time updates (for demonstration)
+            function updateCurrentTime() {
+                const timeElement = document.querySelector('[data-bind="currentTime"]');
+                if (timeElement) {
+                    const now = new Date();
+                    timeElement.textContent = now.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        timeZone: 'America/New_York',
+                        timeZoneName: 'short'
+                    });
+                }
+            }
+
+            // Update time every minute
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000);
+
+            // Simulate urgency updates (in real app, this would be calculated based on actual time)
+            function simulateUrgencyUpdates() {
+                // TODO: Calculate actual remaining time based on current time and period boundaries
+                // This is just for visual demonstration
+                const urgencyElements = document.querySelectorAll('[data-bind*="Remaining"]');
+                urgencyElements.forEach(element => {
+                    // Add subtle pulsing for urgent items
+                    if (element.textContent.includes('65%') || element.textContent.includes('23m')) {
+                        element.parentElement.classList.add('animate-pulse-slow');
+                    }
+                });
+            }
+
+            simulateUrgencyUpdates();
+        })();
+    </script>
+</body>
+</html>
