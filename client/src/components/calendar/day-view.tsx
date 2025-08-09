@@ -44,14 +44,13 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
     <div className="space-y-8" data-testid="day-view">
       {/* Day Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-3xl font-bold text-foreground" data-testid="day-title">
               {format(currentDate, "EEEE, MMMM d, yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-2" data-testid="day-summary">
+            <p className="text-muted-foreground mt-1" data-testid="day-summary">
               {completedTasks.length} of {dayTasks.length} tasks completed
-              {isCurrentDay && ` • ${format(new Date(), "h:mm a")}`}
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -64,9 +63,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
                   </span>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Urgency Level</div>
-                  <div className={`text-lg font-semibold ${getUrgencyClass(dayProgress.urgencyLevel)}`} data-testid="urgency-level">
-                    {dayProgress.urgencyLevel.toUpperCase()}
+                  <div className="text-sm text-muted-foreground">Time Remaining</div>
+                  <div className={`text-lg font-semibold ${getUrgencyClass(dayProgress.urgencyLevel)}`} data-testid="time-remaining">
+                    {Math.round(dayProgress.remaining)}%
                   </div>
                 </div>
               </>
@@ -77,53 +76,6 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
             </Button>
           </div>
         </div>
-
-        {/* Day Urgency Indicators - Hours */}
-        {isCurrentDay && (
-          <div className="bg-surface rounded-lg p-4 border" data-testid="day-urgency-indicators">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Daily Progress</h3>
-              <span className="text-xs text-muted-foreground">
-                {Math.round(dayProgress.remaining)}% time remaining
-              </span>
-            </div>
-            <div className="grid grid-cols-12 gap-1">
-              {Array.from({ length: 24 }, (_, hour) => {
-                const now = new Date();
-                const currentHour = now.getHours();
-                const isCurrentHour = hour === currentHour;
-                const isPastHour = hour < currentHour;
-                const hourTasks = dayTasks.filter(task => {
-                  const taskHour = new Date(task.startTime).getHours();
-                  return taskHour === hour;
-                });
-                const hasCompletedTasks = hourTasks.some(task => task.completed);
-                
-                return (
-                  <div
-                    key={hour}
-                    className={cn(
-                      "relative flex items-center justify-center h-8 rounded text-xs font-medium transition-all",
-                      isCurrentHour && "ring-2 ring-primary ring-offset-1 bg-primary text-primary-foreground",
-                      isPastHour && !isCurrentHour && "bg-muted line-through opacity-60",
-                      !isPastHour && !isCurrentHour && "bg-muted/50 text-muted-foreground",
-                    )}
-                    data-testid={`day-hour-${hour}`}
-                    title={`${hour}:00 - ${hourTasks.length} tasks`}
-                  >
-                    {hour === 0 ? "12a" : hour === 12 ? "12p" : hour > 12 ? `${hour-12}p` : `${hour}a`}
-                    {isPastHour && hasCompletedTasks && (
-                      <CheckCircle className="absolute -top-1 -right-1 w-3 h-3 text-green-500 bg-surface rounded-full" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground text-center">
-              24-hour timeline showing current progress
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Current Task Highlight */}
