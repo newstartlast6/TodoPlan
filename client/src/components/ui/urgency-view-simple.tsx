@@ -312,7 +312,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
               </div>
               
               {/* Urgency Text */}
-              <div className="text-xs text-center">
+              <div className="text-xs text-left">
                 <span className="text-red-400 font-medium">
                   {view === "day" && (
                     progress.percentage < 25 ? `Morning started - Only ${24 - new Date().getHours()}h remaining` :
@@ -333,10 +333,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
                     `Month ending - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days remaining`
                   )}
                   {view === "year" && (
-                    new Date().getMonth() + 1 <= 3 ? `Q1 done - Only ${12 - (new Date().getMonth() + 1)} months remaining` :
-                    new Date().getMonth() + 1 <= 6 ? `Half year passed - Only ${12 - (new Date().getMonth() + 1)} months left` :
-                    new Date().getMonth() + 1 <= 9 ? `Q3 done - Only ${12 - (new Date().getMonth() + 1)} months remaining` :
-                    `Year ending - Only ${12 - (new Date().getMonth() + 1)} months left`
+                    `${new Date().getMonth() + 1} months passed - Only ${12 - (new Date().getMonth() + 1)} months remaining`
                   )}
                 </span>
               </div>
