@@ -116,6 +116,24 @@
     transform: translateY(-50%);
   }
   
+  .urgency-crossed {
+    position: relative;
+    opacity: 0.7;
+    background-color: hsl(0 84% 60%);
+  }
+  
+  .urgency-crossed::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: hsl(0 100% 40%);
+    transform: translateY(-50%);
+    z-index: 10;
+  }
+  
   .minimap-block {
     height: 4px;
     margin: 1px 0;

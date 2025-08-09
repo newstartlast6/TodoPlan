@@ -40,8 +40,8 @@ export function UrgencyMinimap({ tasks, currentDate = new Date(), className }: U
               <div
                 key={hour}
                 className={cn(
-                  "h-2 rounded-sm transition-all",
-                  isPastHour ? "bg-gray-400 crossed-out" :
+                  "h-3 rounded-sm transition-all",
+                  isPastHour ? "urgency-crossed" :
                   isCurrentHour ? "bg-primary animate-pulse-subtle" : "bg-gray-200"
                 )}
                 title={`${hour}:00 ${hour < 12 ? 'AM' : 'PM'}`}
@@ -87,15 +87,20 @@ export function UrgencyMinimap({ tasks, currentDate = new Date(), className }: U
               <div key={dayIndex} className="space-y-1">
                 <div
                   className={cn(
-                    "h-3 rounded-sm transition-all",
-                    isDayPast ? "bg-gray-400 crossed-out" :
+                    "h-4 rounded-sm transition-all",
+                    isDayPast ? "urgency-crossed" :
                     isCurrentDay ? "bg-primary animate-pulse-subtle" : "bg-gray-200"
                   )}
                   title={`${format(day, 'EEEE')} - ${dayTasks.length} tasks`}
                   data-testid={`day-block-${dayIndex}`}
                 />
                 <div className="text-center">
-                  <span className="text-xs font-medium">{format(day, 'd')}</span>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    isDayPast ? "text-red-500 line-through" : "text-foreground"
+                  )}>
+                    {format(day, 'd')}
+                  </span>
                   {isDayPast && (
                     <div className="text-xs text-red-500">✓</div>
                   )}
@@ -143,15 +148,20 @@ export function UrgencyMinimap({ tasks, currentDate = new Date(), className }: U
               <div key={weekIndex} className="space-y-1">
                 <div
                   className={cn(
-                    "h-3 rounded-sm transition-all",
-                    isWeekPast ? "bg-gray-400 crossed-out" :
+                    "h-4 rounded-sm transition-all",
+                    isWeekPast ? "urgency-crossed" :
                     isCurrentWeek ? "bg-primary animate-pulse-subtle" : "bg-gray-200"
                   )}
                   title={`Week ${weekIndex + 1}`}
                   data-testid={`week-block-${weekIndex}`}
                 />
                 <div className="text-center">
-                  <span className="text-xs font-medium">W{weekIndex + 1}</span>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    isWeekPast ? "text-red-500 line-through" : "text-foreground"
+                  )}>
+                    W{weekIndex + 1}
+                  </span>
                   {isWeekPast && (
                     <div className="text-xs text-red-500">✓</div>
                   )}
@@ -197,15 +207,20 @@ export function UrgencyMinimap({ tasks, currentDate = new Date(), className }: U
               <div key={monthIndex} className="space-y-1">
                 <div
                   className={cn(
-                    "h-3 rounded-sm transition-all",
-                    isMonthPast ? "bg-gray-400 crossed-out" :
+                    "h-4 rounded-sm transition-all",
+                    isMonthPast ? "urgency-crossed" :
                     isCurrentMonth ? "bg-primary animate-pulse-subtle" : "bg-gray-200"
                   )}
                   title={format(month, 'MMMM')}
                   data-testid={`month-block-${monthIndex}`}
                 />
                 <div className="text-center">
-                  <span className="text-xs font-medium">{format(month, 'MMM')}</span>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    isMonthPast ? "text-red-500 line-through" : "text-foreground"
+                  )}>
+                    {format(month, 'MMM')}
+                  </span>
                   {isMonthPast && (
                     <div className="text-xs text-red-500">✓</div>
                   )}
