@@ -2,7 +2,7 @@ import { format, startOfMonth, endOfMonth, eachWeekOfInterval, eachDayOfInterval
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { UrgencyMinimap } from "@/components/ui/urgency-minimap";
+import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
 import { Task } from "@shared/schema";
 import { calculateMonthProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -56,13 +56,12 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="bg-surface/50 rounded-lg p-3 border">
-              <UrgencyMinimap 
-                tasks={tasks} 
-                currentDate={currentDate} 
-                className="w-64"
-              />
-            </div>
+            <UrgencyViewSimple 
+              tasks={tasks} 
+              currentDate={currentDate} 
+              view="month"
+              className="w-64"
+            />
           </div>
         </div>
       </div>
