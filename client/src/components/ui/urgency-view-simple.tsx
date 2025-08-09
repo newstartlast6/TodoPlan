@@ -74,7 +74,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
             {new Date().getHours()}h elapsed
           </span>
           <span className="text-orange-500 font-medium">
-            {24 - new Date().getHours()}h remaining
+            Only {24 - new Date().getHours()}h remaining
           </span>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
             {Math.floor((weekProgress.elapsed / 100) * 7)} days passed
           </span>
           <span className="text-orange-500 font-medium">
-            {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days left
+            Only {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days left
           </span>
         </div>
       </div>
@@ -200,7 +200,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
             {currentDay} days passed
           </span>
           <span className="text-orange-500 font-medium">
-            {totalDays - currentDay} days remaining
+            Only {totalDays - currentDay} days remaining
           </span>
         </div>
       </div>
@@ -264,7 +264,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
             {currentMonth + 1} months passed
           </span>
           <span className="text-orange-500 font-medium">
-            {12 - (currentMonth + 1)} months remaining
+            Only {12 - (currentMonth + 1)} months remaining
           </span>
         </div>
       </div>
@@ -315,28 +315,28 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
               <div className="text-xs text-center">
                 <span className="text-red-400 font-medium">
                   {view === "day" && (
-                    progress.percentage < 25 ? `Morning slipping away - ${new Date().getHours()}h passed` :
-                    progress.percentage < 50 ? `Half day approaching - ${Math.round(progress.elapsed)}% gone` :
-                    progress.percentage < 75 ? `Afternoon fading - ${Math.round(progress.elapsed)}% lost` :
-                    `Day almost over - ${Math.round(progress.elapsed)}% wasted`
+                    progress.percentage < 25 ? `Morning started - Only ${24 - new Date().getHours()}h remaining` :
+                    progress.percentage < 50 ? `Half day passed - Only ${24 - new Date().getHours()}h left` :
+                    progress.percentage < 75 ? `Afternoon fading - Only ${24 - new Date().getHours()}h remaining` :
+                    `Day almost over - Only ${24 - new Date().getHours()}h left`
                   )}
                   {view === "week" && (
-                    Math.floor((progress.elapsed / 100) * 7) === 0 ? `Week just started - Don't waste it` :
-                    Math.floor((progress.elapsed / 100) * 7) < 3 ? `${Math.floor((progress.elapsed / 100) * 7)} days already gone` :
-                    Math.floor((progress.elapsed / 100) * 7) < 5 ? `Mid-week crisis - ${Math.floor((progress.elapsed / 100) * 7)} days lost` :
-                    `Weekend approaching - ${Math.floor((progress.elapsed / 100) * 7)} days wasted`
+                    Math.floor((progress.elapsed / 100) * 7) === 0 ? `Week started - Only 7 days ahead` :
+                    Math.floor((progress.elapsed / 100) * 7) < 3 ? `${Math.floor((progress.elapsed / 100) * 7)} days passed - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days left` :
+                    Math.floor((progress.elapsed / 100) * 7) < 5 ? `Mid-week - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days remaining` :
+                    `Weekend close - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days left`
                   )}
                   {view === "month" && (
-                    new Date().getDate() <= 7 ? `First week ending - ${new Date().getDate()} days passed` :
-                    new Date().getDate() <= 15 ? `Half month looming - ${new Date().getDate()} days gone` :
-                    new Date().getDate() <= 23 ? `Month accelerating - ${new Date().getDate()} days lost` :
-                    `Month almost over - ${new Date().getDate()} days wasted`
+                    new Date().getDate() <= 7 ? `First week done - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days left` :
+                    new Date().getDate() <= 15 ? `Half month passed - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days remaining` :
+                    new Date().getDate() <= 23 ? `Month progressing - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days left` :
+                    `Month ending - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days remaining`
                   )}
                   {view === "year" && (
-                    new Date().getMonth() + 1 <= 3 ? `Q1 ending - ${new Date().getMonth() + 1} months passed` :
-                    new Date().getMonth() + 1 <= 6 ? `Half year approaching - ${new Date().getMonth() + 1} months gone` :
-                    new Date().getMonth() + 1 <= 9 ? `Year accelerating - ${new Date().getMonth() + 1} months lost` :
-                    `Year almost over - ${new Date().getMonth() + 1} months wasted`
+                    new Date().getMonth() + 1 <= 3 ? `Q1 done - Only ${12 - (new Date().getMonth() + 1)} months remaining` :
+                    new Date().getMonth() + 1 <= 6 ? `Half year passed - Only ${12 - (new Date().getMonth() + 1)} months left` :
+                    new Date().getMonth() + 1 <= 9 ? `Q3 done - Only ${12 - (new Date().getMonth() + 1)} months remaining` :
+                    `Year ending - Only ${12 - (new Date().getMonth() + 1)} months left`
                   )}
                 </span>
               </div>
