@@ -160,7 +160,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => toggleTaskCompletion(task.id, task.completed)}
+                            onClick={() => toggleTaskCompletion(task.id, task.completed || false)}
                             className="p-0 h-auto"
                             data-testid={`task-toggle-${dayIndex}-${taskIndex}`}
                           >

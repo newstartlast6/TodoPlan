@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { ProgressRing } from "@/components/ui/progress-ring";
-import { Minimap } from "@/components/ui/minimap";
+import { UrgencyMinimap } from "@/components/ui/urgency-minimap";
 import { calculateDayProgress, calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { Task } from "@shared/schema";
 import { useEffect, useState } from "react";
@@ -56,13 +56,9 @@ export function Sidebar({ tasks, currentView }: SidebarProps) {
         </div>
       </div>
 
-      {/* Minimap Section */}
+      {/* Urgency Minimap Section */}
       <div className="p-6 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center" data-testid="minimap-title">
-          <CalendarIcon className="text-primary mr-2 w-4 h-4" />
-          Week Overview
-        </h3>
-        <Minimap tasks={tasks} />
+        <UrgencyMinimap tasks={tasks} />
       </div>
 
       {/* Quick Stats */}

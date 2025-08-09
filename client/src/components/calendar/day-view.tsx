@@ -105,7 +105,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toggleTaskCompletion(currentTask.id, currentTask.completed)}
+                  onClick={() => toggleTaskCompletion(currentTask.id, currentTask.completed || false)}
                   className="mt-2"
                   data-testid="button-complete-current"
                 >
@@ -159,7 +159,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => toggleTaskCompletion(task.id, task.completed)}
+                      onClick={() => toggleTaskCompletion(task.id, task.completed || false)}
                       className="p-0 h-auto"
                       data-testid={`task-toggle-${index}`}
                     >
