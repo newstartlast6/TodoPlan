@@ -31,8 +31,9 @@ export function TaskForm({ open, onOpenChange, onSubmit, defaultDate = new Date(
   });
 
   const handleSubmit = (data: InsertTask) => {
-    console.log('Form data being submitted:', data);
     onSubmit(data);
+    form.reset();
+    onOpenChange(false);
   };
 
   const formatDateTimeLocal = (date: Date) => {

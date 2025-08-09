@@ -1,4 +1,5 @@
 import { format, startOfMonth, endOfMonth, eachWeekOfInterval, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday, isPast } from "date-fns";
+import { CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -45,28 +46,69 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
     <div className="space-y-8" data-testid="month-view">
       {/* Month Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground" data-testid="month-title">
+            <h2 className="text-3xl font-bold text-foreground" data-testid="month-title">
               {format(currentDate, "MMMM yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="month-summary">
-              {Math.floor(monthProgress.elapsed)} days completed • {Math.ceil(monthProgress.remaining)} days remaining
+            <p className="text-muted-foreground mt-2" data-testid="month-summary">
+              {completedTasks.length} of {totalTasks} tasks completed this month
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Progress value={monthProgress.percentage} className="w-32" data-testid="month-progress" />
               <span className="text-sm font-medium text-muted-foreground">
-                {Math.round(monthProgress.percentage)}% complete
+                {Math.round(monthProgress.percentage)}% elapsed
               </span>
             </div>
             <div className="text-right">
-              <div className="text-sm text-muted-foreground">Time Remaining</div>
-              <div className={`text-lg font-semibold ${getUrgencyClass(monthProgress.urgencyLevel)}`} data-testid="time-remaining">
-                {Math.round(monthProgress.remaining)}%
+              <div className="text-sm text-muted-foreground">Urgency Level</div>
+              <div className={`text-lg font-semibold ${getUrgencyClass(monthProgress.urgencyLevel)}`} data-testid="urgency-level">
+                {monthProgress.urgencyLevel.toUpperCase()}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Month Urgency Indicators - Weeks */}
+        <div className="bg-surface rounded-lg p-4 border" data-testid="month-urgency-indicators">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-muted-foreground">Monthly Progress</h3>
+            <span className="text-xs text-muted-foreground">
+              {Math.round(monthProgress.remaining)}% time remaining
+            </span>
+          </div>
+          <div className="flex justify-center space-x-2">
+            {weeks.map((weekStart, index) => {
+              const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+              const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+              const isCurrentWeek = weekDays.some(day => isToday(day) && isSameMonth(day, currentDate));
+              const isPastWeek = weekEnd < new Date() && !isCurrentWeek;
+              const weekTasks = weekDays.flatMap(day => getTasksForDay(day));
+              const hasCompletedTasks = weekTasks.some(task => task.completed);
+              
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "relative flex items-center justify-center w-16 h-12 rounded text-xs font-medium transition-all",
+                    isCurrentWeek && "ring-2 ring-primary ring-offset-2 bg-primary text-primary-foreground",
+                    isPastWeek && !isCurrentWeek && "bg-muted line-through opacity-60",
+                    !isPastWeek && !isCurrentWeek && "bg-muted/50 text-muted-foreground",
+                  )}
+                  data-testid={`month-week-${index}`}
+                >
+                  Week {index + 1}
+                  {isPastWeek && hasCompletedTasks && (
+                    <CheckCircle className="absolute -top-1 -right-1 w-4 h-4 text-green-500 bg-surface rounded-full" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground text-center">
+            Weekly breakdown showing monthly progress
           </div>
         </div>
       </div>

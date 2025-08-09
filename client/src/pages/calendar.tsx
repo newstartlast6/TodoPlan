@@ -87,12 +87,7 @@ export default function Calendar() {
   });
 
   const handleCreateTask = (newTask: InsertTask) => {
-    console.log('Creating task with data:', newTask);
-    createTaskMutation.mutate(newTask, {
-      onSuccess: () => {
-        setIsTaskFormOpen(false);
-      }
-    });
+    createTaskMutation.mutate(newTask);
   };
 
   const handleUpdateTask = (taskId: string, updates: Partial<Task>) => {

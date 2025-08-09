@@ -70,29 +70,71 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
     <div className="space-y-8" data-testid="week-view">
       {/* Week Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground" data-testid="week-title">
+            <h2 className="text-3xl font-bold text-foreground" data-testid="week-title">
               Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="week-summary">
-              {Math.floor(weekProgress.elapsed / 100 * 7)} days completed • {7 - Math.floor(weekProgress.elapsed / 100 * 7)} days remaining
+            <p className="text-muted-foreground mt-2" data-testid="week-summary">
+              {completedTasks.length} of {totalTasks} tasks completed this week
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            {/* Week Progress */}
             <div className="flex items-center space-x-2">
-              <Progress value={weekProgress.percentage} className="w-24" data-testid="week-progress" />
+              <Progress value={weekProgress.percentage} className="w-32" data-testid="week-progress" />
               <span className="text-sm font-medium text-muted-foreground">
-                {Math.round(weekProgress.percentage)}% complete
+                {Math.round(weekProgress.percentage)}% elapsed
               </span>
             </div>
             <div className="text-right">
-              <div className="text-sm text-muted-foreground">Time Remaining</div>
-              <div className={`text-lg font-semibold ${getUrgencyClass(weekProgress.urgencyLevel)}`} data-testid="time-remaining">
-                {Math.round(weekProgress.remaining)}%
+              <div className="text-sm text-muted-foreground">Urgency Level</div>
+              <div className={`text-lg font-semibold ${getUrgencyClass(weekProgress.urgencyLevel)}`} data-testid="urgency-level">
+                {weekProgress.urgencyLevel.toUpperCase()}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Week Urgency Indicators */}
+        <div className="bg-surface rounded-lg p-4 border" data-testid="week-urgency-indicators">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-muted-foreground">Week Progress</h3>
+            <span className="text-xs text-muted-foreground">
+              {Math.round(weekProgress.remaining)}% time remaining
+            </span>
+          </div>
+          <div className="flex justify-center space-x-2">
+            {weekDays.map((day, index) => {
+              const isCurrentDay = isToday(day);
+              const isPastDay = isPast(day) && !isCurrentDay;
+              const dayTasks = getTasksForDay(day);
+              const hasCompletedTasks = dayTasks.some(task => task.completed);
+              
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "relative flex items-center justify-center w-12 h-12 rounded-full text-xs font-medium transition-all",
+                    isCurrentDay && "ring-2 ring-primary ring-offset-2 bg-primary text-primary-foreground",
+                    isPastDay && !isCurrentDay && "bg-muted line-through opacity-60",
+                    !isPastDay && !isCurrentDay && "bg-muted/50 text-muted-foreground",
+                  )}
+                  data-testid={`week-day-${index}`}
+                >
+                  {format(day, "d")}
+                  {isPastDay && hasCompletedTasks && (
+                    <CheckCircle className="absolute -top-1 -right-1 w-4 h-4 text-green-500 bg-surface rounded-full" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-center mt-2 space-x-2">
+            {weekDays.map((day, index) => (
+              <div key={index} className="text-xs text-muted-foreground text-center w-12">
+                {format(day, "EEE")}
+              </div>
+            ))}
           </div>
         </div>
       </div>
