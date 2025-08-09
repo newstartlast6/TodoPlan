@@ -2,6 +2,7 @@ import { format, startOfMonth, endOfMonth, eachWeekOfInterval, eachDayOfInterval
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { UrgencyOverview } from "@/components/ui/urgency-overview";
 import { Task } from "@shared/schema";
 import { calculateMonthProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -55,18 +56,11 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Progress value={monthProgress.percentage} className="w-32" data-testid="month-progress" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {Math.round(monthProgress.percentage)}% complete
-              </span>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground">Time Remaining</div>
-              <div className={`text-lg font-semibold ${getUrgencyClass(monthProgress.urgencyLevel)}`} data-testid="time-remaining">
-                {Math.round(monthProgress.remaining)}%
-              </div>
-            </div>
+            <UrgencyOverview 
+              tasks={tasks} 
+              currentDate={currentDate} 
+              view="month" 
+            />
           </div>
         </div>
       </div>

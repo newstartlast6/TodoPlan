@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { UrgencyOverview } from "@/components/ui/urgency-overview";
 import { Task } from "@shared/schema";
 import { calculateDayProgress, formatTimeRange, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -54,22 +55,11 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            {isCurrentDay && (
-              <>
-                <div className="flex items-center space-x-2">
-                  <Progress value={dayProgress.percentage} className="w-32" data-testid="day-progress" />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {Math.round(dayProgress.percentage)}% elapsed
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Time Remaining</div>
-                  <div className={`text-lg font-semibold ${getUrgencyClass(dayProgress.urgencyLevel)}`} data-testid="time-remaining">
-                    {Math.round(dayProgress.remaining)}%
-                  </div>
-                </div>
-              </>
-            )}
+            <UrgencyOverview 
+              tasks={tasks} 
+              currentDate={currentDate} 
+              view="day" 
+            />
             <Button onClick={onAddTask} className="flex items-center space-x-2" data-testid="button-add-task">
               <Plus className="w-4 h-4" />
               <span>Add Task</span>

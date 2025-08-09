@@ -2,6 +2,7 @@ import { format, startOfYear, endOfYear, eachMonthOfInterval, startOfMonth, endO
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { UrgencyOverview } from "@/components/ui/urgency-overview";
 import { Task } from "@shared/schema";
 import { calculateYearProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -56,18 +57,11 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Progress value={yearProgress.percentage} className="w-40" data-testid="year-progress" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {Math.round(yearProgress.percentage)}% complete
-              </span>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground">Time Remaining</div>
-              <div className={`text-lg font-semibold ${getUrgencyClass(yearProgress.urgencyLevel)}`} data-testid="time-remaining">
-                {Math.round(yearProgress.remaining)}%
-              </div>
-            </div>
+            <UrgencyOverview 
+              tasks={tasks} 
+              currentDate={currentDate} 
+              view="year" 
+            />
           </div>
         </div>
       </div>
