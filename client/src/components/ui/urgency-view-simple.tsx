@@ -313,10 +313,6 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
               
               {/* Urgency Text */}
               <div className="text-xs text-center">
-                <span className="text-red-500 font-bold animate-pulse">
-                  URGENT: TIME RUNNING OUT
-                </span>
-                {" • "}
                 <span className="text-red-400 font-medium">
                   {view === "day" && `${Math.round(progress.elapsed)}% of day ALREADY GONE`}
                   {view === "week" && `${Math.floor((progress.elapsed / 100) * 7)} of 7 days LOST`}
