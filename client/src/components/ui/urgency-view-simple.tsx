@@ -71,10 +71,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-red-500 font-bold">
-            {Math.round(dayProgress.elapsed)}% LOST
+            {new Date().getHours()}h elapsed
           </span>
           <span className="text-orange-500 font-medium">
-            Only {Math.round(dayProgress.remaining)}% left!
+            {24 - new Date().getHours()}h remaining
           </span>
         </div>
       </div>
@@ -131,10 +131,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-red-500 font-bold">
-            {Math.floor((weekProgress.elapsed / 100) * 7)} days WASTED
+            {Math.floor((weekProgress.elapsed / 100) * 7)} days passed
           </span>
           <span className="text-orange-500 font-medium">
-            Only {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days remain!
+            {7 - Math.floor((weekProgress.elapsed / 100) * 7)} days left
           </span>
         </div>
       </div>
@@ -197,10 +197,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-red-500 font-bold">
-            {currentDay} days GONE
+            {currentDay} days passed
           </span>
           <span className="text-orange-500 font-medium">
-            Only {totalDays - currentDay} days left!
+            {totalDays - currentDay} days remaining
           </span>
         </div>
       </div>
@@ -261,10 +261,10 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-red-500 font-bold">
-            {currentMonth + 1} months LOST
+            {currentMonth + 1} months passed
           </span>
           <span className="text-orange-500 font-medium">
-            Only {12 - (currentMonth + 1)} months remain!
+            {12 - (currentMonth + 1)} months remaining
           </span>
         </div>
       </div>
@@ -314,10 +314,30 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
               {/* Urgency Text */}
               <div className="text-xs text-center">
                 <span className="text-red-400 font-medium">
-                  {view === "day" && `${Math.round(progress.elapsed)}% of day ALREADY GONE`}
-                  {view === "week" && `${Math.floor((progress.elapsed / 100) * 7)} of 7 days LOST`}
-                  {view === "month" && `${new Date().getDate()} of ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()} days WASTED`}
-                  {view === "year" && `${new Date().getMonth() + 1} of 12 months PASSED`}
+                  {view === "day" && (
+                    progress.percentage < 25 ? `Morning slipping away - ${new Date().getHours()}h passed` :
+                    progress.percentage < 50 ? `Half day approaching - ${Math.round(progress.elapsed)}% gone` :
+                    progress.percentage < 75 ? `Afternoon fading - ${Math.round(progress.elapsed)}% lost` :
+                    `Day almost over - ${Math.round(progress.elapsed)}% wasted`
+                  )}
+                  {view === "week" && (
+                    Math.floor((progress.elapsed / 100) * 7) === 0 ? `Week just started - Don't waste it` :
+                    Math.floor((progress.elapsed / 100) * 7) < 3 ? `${Math.floor((progress.elapsed / 100) * 7)} days already gone` :
+                    Math.floor((progress.elapsed / 100) * 7) < 5 ? `Mid-week crisis - ${Math.floor((progress.elapsed / 100) * 7)} days lost` :
+                    `Weekend approaching - ${Math.floor((progress.elapsed / 100) * 7)} days wasted`
+                  )}
+                  {view === "month" && (
+                    new Date().getDate() <= 7 ? `First week ending - ${new Date().getDate()} days passed` :
+                    new Date().getDate() <= 15 ? `Half month looming - ${new Date().getDate()} days gone` :
+                    new Date().getDate() <= 23 ? `Month accelerating - ${new Date().getDate()} days lost` :
+                    `Month almost over - ${new Date().getDate()} days wasted`
+                  )}
+                  {view === "year" && (
+                    new Date().getMonth() + 1 <= 3 ? `Q1 ending - ${new Date().getMonth() + 1} months passed` :
+                    new Date().getMonth() + 1 <= 6 ? `Half year approaching - ${new Date().getMonth() + 1} months gone` :
+                    new Date().getMonth() + 1 <= 9 ? `Year accelerating - ${new Date().getMonth() + 1} months lost` :
+                    `Year almost over - ${new Date().getMonth() + 1} months wasted`
+                  )}
                 </span>
               </div>
             </div>
@@ -326,7 +346,7 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
         <PopoverContent className="w-80 p-4" side="bottom" align="end">
           <div className="space-y-4">
             <div className="text-sm font-bold text-red-500">
-              ⚠️ {view.charAt(0).toUpperCase() + view.slice(1)} Time Crisis
+              ⚠️ {view.charAt(0).toUpperCase() + view.slice(1)} Progress
             </div>
             
             {/* Detailed Progress */}
@@ -337,9 +357,9 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
                 data-testid="urgency-progress-detailed"
               />
               <div className="flex items-center justify-between text-xs">
-                <span className="text-red-400 font-medium">TIME LOST</span>
+                <span className="text-red-400 font-medium">Progress</span>
                 <span className="font-bold text-red-500">
-                  {Math.round(progress.percentage)}% GONE
+                  {Math.round(progress.percentage)}% elapsed
                 </span>
               </div>
             </div>
