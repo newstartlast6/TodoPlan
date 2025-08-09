@@ -17,6 +17,13 @@ export const tasks = pgTable("tasks", {
 export const insertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
   createdAt: true,
+}).extend({
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  title: z.string().min(1, "Title is required"),
+  priority: z.enum(["low", "medium", "high"]).default("medium"),
+  completed: z.boolean().default(false),
+  description: z.string().optional(),
 });
 
 export const updateTaskSchema = insertTaskSchema.partial();
