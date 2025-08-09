@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { UrgencyOverview } from "@/components/ui/urgency-overview";
+import { UrgencyMinimap } from "@/components/ui/urgency-minimap";
 import { Task } from "@shared/schema";
 import { calculateDayProgress, formatTimeRange, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -55,11 +55,13 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <UrgencyOverview 
-              tasks={tasks} 
-              currentDate={currentDate} 
-              view="day" 
-            />
+            <div className="bg-surface/50 rounded-lg p-3 border">
+              <UrgencyMinimap 
+                tasks={tasks} 
+                currentDate={currentDate} 
+                className="w-64"
+              />
+            </div>
             <Button onClick={onAddTask} className="flex items-center space-x-2" data-testid="button-add-task">
               <Plus className="w-4 h-4" />
               <span>Add Task</span>
