@@ -7,6 +7,7 @@ export const tasks = pgTable("tasks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   description: text("description"),
+  notes: text("notes"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   completed: boolean("completed").default(false),

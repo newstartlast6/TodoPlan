@@ -119,7 +119,7 @@ export function UrgencyMinimap({
                     className={cn(
                       "text-xs font-medium",
                       isDayPast
-                        ? "text-red-500 line-through"
+                        ? "text-black line-through"
                         : "text-foreground",
                     )}
                   >
@@ -185,7 +185,7 @@ export function UrgencyMinimap({
                     className={cn(
                       "text-xs font-medium",
                       isWeekPast
-                        ? "text-red-500 line-through"
+                        ? "text-black line-through"
                         : "text-foreground",
                     )}
                   >
@@ -249,7 +249,7 @@ export function UrgencyMinimap({
                     className={cn(
                       "text-xs font-medium",
                       isMonthPast
-                        ? "text-red-500 line-through"
+                        ? "text-black line-through"
                         : "text-foreground",
                     )}
                   >

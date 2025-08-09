@@ -1,13 +1,12 @@
-import { format, isToday, startOfDay, endOfDay, isSameDay } from "date-fns";
-import { CheckCircle, Clock, Play, Circle, Plus } from "lucide-react";
+import { format, isToday, isSameDay } from "date-fns";
+import { Clock, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
+import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
+import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
-import { calculateDayProgress, formatTimeRange, getUrgencyClass } from "@/lib/time-utils";
-import { cn } from "@/lib/utils";
+import { formatTimeRange } from "@/lib/time-utils";
 
 interface DayViewProps {
   tasks: Task[];
@@ -17,7 +16,7 @@ interface DayViewProps {
 }
 
 export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayViewProps) {
-  const dayProgress = calculateDayProgress(currentDate);
+  const { selectedTodoId, selectTodo } = useSelectedTodo();
   const dayTasks = tasks
     .filter(task => isSameDay(new Date(task.startTime), currentDate))
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
@@ -61,10 +60,6 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
               view="day"
               className="w-64"
             />
-            <Button onClick={onAddTask} className="flex items-center space-x-2" data-testid="button-add-task">
-              <Plus className="w-4 h-4" />
-              <span>Add Task</span>
-            </Button>
           </div>
         </div>
       </div>
@@ -74,36 +69,19 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
         <Card className="border-2 border-primary bg-accent" data-testid="current-task-card">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <Play className="text-primary w-5 h-5" />
               <h3 className="text-lg font-semibold text-foreground">Currently Working On</h3>
-              <Badge className="bg-primary text-primary-foreground">In Progress</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground" data-testid="current-task-title">{currentTask.title}</p>
-                {currentTask.description && (
-                  <p className="text-sm text-muted-foreground mt-1" data-testid="current-task-description">
-                    {currentTask.description}
-                  </p>
-                )}
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground" data-testid="current-task-time">
-                  {formatTimeRange(new Date(currentTask.startTime), new Date(currentTask.endTime))}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleTaskCompletion(currentTask.id, currentTask.completed || false)}
-                  className="mt-2"
-                  data-testid="button-complete-current"
-                >
-                  Mark Complete
-                </Button>
-              </div>
-            </div>
+            <SelectableTodoItem
+              task={currentTask}
+              isSelected={selectedTodoId === currentTask.id}
+              onSelect={selectTodo}
+              onToggleComplete={toggleTaskCompletion}
+              variant="default"
+              showTime={true}
+              className="border-0 bg-transparent p-0"
+            />
           </CardContent>
         </Card>
       )}
@@ -127,79 +105,18 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {dayTasks.map((task, index) => {
-                const isTaskCompleted = task.completed;
-                const isTaskCurrent = task.id === currentTask?.id;
-                const taskTime = new Date(task.startTime);
-                const now = new Date();
-                const isTaskPast = taskTime < now && !isCurrentDay;
-                
-                return (
-                  <div
-                    key={task.id}
-                    className={cn(
-                      "flex items-center space-x-4 p-4 rounded-lg border transition-all",
-                      isTaskCompleted && "opacity-70 bg-muted/30",
-                      isTaskCurrent && "bg-primary-lighter border-primary",
-                      isTaskPast && "opacity-60",
-                      !isTaskCompleted && !isTaskCurrent && !isTaskPast && "hover:bg-muted/50"
-                    )}
-                    data-testid={`task-${index}`}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleTaskCompletion(task.id, task.completed || false)}
-                      className="p-0 h-auto"
-                      data-testid={`task-toggle-${index}`}
-                    >
-                      {isTaskCompleted ? (
-                        <CheckCircle className="text-green-500 w-5 h-5" />
-                      ) : isTaskCurrent ? (
-                        <Play className="text-primary w-5 h-5" />
-                      ) : (
-                        <Circle className="text-gray-400 w-5 h-5" />
-                      )}
-                    </Button>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <h4 
-                          className={cn(
-                            "font-medium text-foreground",
-                            isTaskCompleted && "line-through"
-                          )}
-                          data-testid={`task-title-${index}`}
-                        >
-                          {task.title}
-                        </h4>
-                        {task.priority === 'high' && (
-                          <Badge variant="destructive" className="text-xs">High Priority</Badge>
-                        )}
-                        {isTaskCurrent && (
-                          <Badge className="text-xs bg-primary text-primary-foreground">Active</Badge>
-                        )}
-                      </div>
-                      
-                      {task.description && (
-                        <p className="text-sm text-muted-foreground mt-1" data-testid={`task-description-${index}`}>
-                          {task.description}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground" data-testid={`task-time-${index}`}>
-                        {formatTimeRange(new Date(task.startTime), new Date(task.endTime))}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(task.startTime), "h:mm a")}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="space-y-2">
+              {dayTasks.map((task) => (
+                <SelectableTodoItem
+                  key={task.id}
+                  task={task}
+                  isSelected={selectedTodoId === task.id}
+                  onSelect={selectTodo}
+                  onToggleComplete={toggleTaskCompletion}
+                  variant="default"
+                  showTime={true}
+                />
+              ))}
             </div>
           )}
         </CardContent>

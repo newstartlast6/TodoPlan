@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
+import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
 import { calculateYearProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ interface YearViewProps {
 }
 
 export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
+  const { selectedTodoId, selectTodo } = useSelectedTodo();
   const yearStart = startOfYear(currentDate);
   const yearEnd = endOfYear(currentDate);
   const yearProgress = calculateYearProgress(currentDate);
@@ -137,7 +139,9 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
                         <div
                           key={task.id}
                           className={cn(
-                            "text-xs p-2 rounded truncate",
+                            "text-xs p-2 rounded truncate cursor-pointer transition-all",
+                            "hover:ring-1 hover:ring-primary/50",
+                            selectedTodoId === task.id && "ring-1 ring-primary bg-primary/10",
                             task.completed 
                               ? "bg-green-100 text-green-700 line-through" 
                               : task.priority === 'high'
@@ -145,6 +149,10 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
                               : "bg-muted text-muted-foreground"
                           )}
                           title={task.title}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            selectTodo(task.id);
+                          }}
                           data-testid={`month-task-preview-${monthIndex}-${taskIndex}`}
                         >
                           {task.title}

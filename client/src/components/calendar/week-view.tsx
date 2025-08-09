@@ -1,12 +1,12 @@
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast } from "date-fns";
-import { CheckCircle, Clock, Play, Circle } from "lucide-react";
+import { CheckCircle, Clock, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
+import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
+import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
-import { calculateWeekProgress, formatTimeRange, getUrgencyClass } from "@/lib/time-utils";
+import { calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 
 interface WeekViewProps {
@@ -16,6 +16,7 @@ interface WeekViewProps {
 }
 
 export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
+  const { selectedTodoId, selectTodo } = useSelectedTodo();
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -31,9 +32,6 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
   };
 
   const getDayStatus = (day: Date) => {
-    const dayTasks = getTasksForDay(day);
-    const completedDayTasks = dayTasks.filter(task => task.completed);
-    
     if (isToday(day)) return 'current';
     if (isPast(day)) return 'completed';
     return 'planned';
@@ -135,62 +133,18 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
                     No tasks scheduled for this day
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {dayTasks.map((task, taskIndex) => {
-                      const isTaskCompleted = task.completed;
-                      const isTaskCurrent = isCurrentDay && !isTaskCompleted && new Date() >= new Date(task.startTime) && new Date() <= new Date(task.endTime);
-                      
-                      return (
-                        <div
-                          key={task.id}
-                          className={cn(
-                            "flex items-center space-x-3 p-3 rounded-lg transition-all",
-                            isTaskCompleted && "opacity-70",
-                            isTaskCurrent && "bg-primary-lighter",
-                            !isTaskCompleted && !isTaskCurrent && "hover:bg-muted/50"
-                          )}
-                          data-testid={`task-${dayIndex}-${taskIndex}`}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleTaskCompletion(task.id, task.completed || false)}
-                            className="p-0 h-auto"
-                            data-testid={`task-toggle-${dayIndex}-${taskIndex}`}
-                          >
-                            {isTaskCompleted ? (
-                              <CheckCircle className="text-green-500 w-4 h-4" />
-                            ) : isTaskCurrent ? (
-                              <Play className="text-primary w-4 h-4" />
-                            ) : (
-                              <Circle className="text-gray-400 w-4 h-4" />
-                            )}
-                          </Button>
-                          
-                          <span 
-                            className={cn(
-                              "flex-1 text-foreground",
-                              isTaskCompleted && "line-through"
-                            )}
-                            data-testid={`task-title-${dayIndex}-${taskIndex}`}
-                          >
-                            {task.title}
-                          </span>
-                          
-                          <span className="text-xs text-muted-foreground" data-testid={`task-time-${dayIndex}-${taskIndex}`}>
-                            {formatTimeRange(new Date(task.startTime), new Date(task.endTime))}
-                          </span>
-                          
-                          {task.priority === 'high' && (
-                            <Badge variant="destructive" className="text-xs">High</Badge>
-                          )}
-                          
-                          {isTaskCurrent && (
-                            <Badge className="text-xs bg-primary text-primary-foreground">In Progress</Badge>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-2">
+                    {dayTasks.map((task) => (
+                      <SelectableTodoItem
+                        key={task.id}
+                        task={task}
+                        isSelected={selectedTodoId === task.id}
+                        onSelect={selectTodo}
+                        onToggleComplete={toggleTaskCompletion}
+                        variant="compact"
+                        showTime={true}
+                      />
+                    ))}
                   </div>
                 )}
               </CardContent>

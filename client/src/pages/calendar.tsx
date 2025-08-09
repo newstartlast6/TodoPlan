@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Sidebar } from "@/components/calendar/sidebar";
+import { useSelectedTodo } from "@/hooks/use-selected-todo";
+import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
+import { ResponsiveLayout } from "@/components/layout/responsive-layout";
+import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
 import { DayView } from "@/components/calendar/day-view";
 import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
@@ -22,6 +25,7 @@ export default function Calendar() {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { selectedTodoId, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
 
   // Get date range for current view
   const { start: rangeStart, end: rangeEnd } = getTimeRangeForView(currentView, currentDate);
@@ -152,56 +156,78 @@ export default function Calendar() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex bg-background-page" data-testid="calendar-app">
-      <Sidebar tasks={tasks} currentView={currentView} />
-      
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-surface border-b border-border px-8 py-4" data-testid="calendar-header">
-          <div className="flex items-center justify-between">
-            {/* View Tabs */}
-            <div className="flex space-x-1 bg-muted rounded-lg p-1" data-testid="view-tabs">
-              {(['day', 'week', 'month', 'year'] as CalendarView[]).map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setCurrentView(view)}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
-                    currentView === view
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  data-testid={`tab-${view}`}
-                >
-                  {view}
-                </button>
-              ))}
-            </div>
+  // Render sidebar
+  const renderSidebar = () => (
+    <MinimalisticSidebar
+      currentView={currentView}
+      onViewChange={setCurrentView}
+    />
+  );
 
-            {/* Actions */}
-            <div className="flex items-center space-x-3" data-testid="header-actions">
-              <Button
-                onClick={() => setIsTaskFormOpen(true)}
-                className="flex items-center space-x-2"
-                disabled={createTaskMutation.isPending}
-                data-testid="button-add-task"
+  // Render main content
+  const renderMainContent = () => (
+    <div className="flex-1 flex flex-col">
+      {/* Header */}
+      <header className="bg-surface border-b border-border px-8 py-4" data-testid="calendar-header">
+        <div className="flex items-center justify-between">
+          {/* View Tabs */}
+          <div className="flex space-x-1 bg-slate-100 rounded-lg p-1" data-testid="view-tabs">
+            {(['day', 'week', 'month', 'year'] as CalendarView[]).map((view) => (
+              <button
+                key={view}
+                onClick={() => setCurrentView(view)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
+                  currentView === view
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                data-testid={`tab-${view}`}
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Task</span>
-              </Button>
-              <Button variant="ghost" size="icon" data-testid="button-settings">
-                <Settings className="w-4 h-4" />
-              </Button>
-            </div>
+                {view}
+              </button>
+            ))}
           </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="flex-1 p-8 overflow-y-auto" data-testid="calendar-main">
-          {renderCurrentView()}
-        </main>
-      </div>
+          {/* Actions */}
+          <div className="flex items-center space-x-3" data-testid="header-actions">
+            <Button
+              onClick={() => setIsTaskFormOpen(true)}
+              className="flex items-center space-x-2"
+              disabled={createTaskMutation.isPending}
+              data-testid="button-add-task"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Task</span>
+            </Button>
+            <Button variant="ghost" size="icon" data-testid="button-settings">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-8" data-testid="calendar-main">
+        {renderCurrentView()}
+      </main>
+    </div>
+  );
+
+  // Render detail pane
+  const renderDetailPane = () => (
+    <TodoDetailPane onClose={closeDetailPane} />
+  );
+
+  return (
+    <>
+      <ResponsiveLayout
+        sidebar={renderSidebar()}
+        main={renderMainContent()}
+        detail={renderDetailPane()}
+        isDetailOpen={isDetailPaneOpen}
+        onDetailClose={closeDetailPane}
+      />
 
       {/* Task Form Dialog */}
       <TaskForm
@@ -220,6 +246,6 @@ export default function Calendar() {
       >
         <Plus className="w-6 h-6" />
       </Button>
-    </div>
+    </>
   );
 }
