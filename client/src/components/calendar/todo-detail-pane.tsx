@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, Flag } from "lucide-react";
+import { X, Calendar, Clock, Flag, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +8,10 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { NotesEditor } from "@/components/calendar/notes-editor";
 import { PrioritySelector } from "@/components/calendar/priority-selector";
 import { TimePicker } from "@/components/calendar/time-picker";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
+import { TaskEstimation } from "@/components/timer/task-estimation";
+import { TimerDisplay } from "@/components/timer/timer-display";
+import { useTaskTimer, useTimerState } from "@/hooks/use-timer-state";
 import { Task, UpdateTask } from "@shared/schema";
 import { format, isBefore } from "date-fns";
 import { formatTimeRange } from "@/lib/time-utils";
@@ -22,6 +26,11 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { selectedTodoId, closeDetailPane } = useSelectedTodo();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Timer integration
+  const { activeSession } = useTimerState();
+  const taskTimer = useTaskTimer(selectedTodoId || '');
+  const isActiveTask = activeSession?.taskId === selectedTodoId;
 
   // Fetch the selected task details
   const { data: selectedTask, isLoading, error } = useQuery<Task>({
@@ -267,8 +276,62 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
       {/* Content - Single scroll container */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
+          {/* Timer Section */}
+          {!selectedTask.completed && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Timer className="w-4 h-4" />
+                  Time Tracking
+                </h4>
+                <TaskTimerButton
+                  taskId={selectedTask.id}
+                  taskTitle={selectedTask.title}
+                  variant="default"
+                />
+              </div>
+              
+              {/* Active Timer Display */}
+              {isActiveTask && (
+                <div className="mb-4">
+                  <TimerDisplay compact />
+                </div>
+              )}
+              
+              {/* Time Summary */}
+              {taskTimer.totalTimeSeconds > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="text-sm font-medium text-blue-900 mb-1">
+                    Time Logged Today
+                  </div>
+                  <div className="text-lg font-mono font-bold text-blue-800">
+                    {taskTimer.formattedTotalTime}
+                  </div>
+                  {taskTimer.sessionCount > 1 && (
+                    <div className="text-xs text-blue-700">
+                      {taskTimer.sessionCount} sessions
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Task Estimation */}
+          {!selectedTask.completed && (
+            <div>
+              <TaskEstimation
+                taskId={selectedTask.id}
+                taskTitle={selectedTask.title}
+                compact
+              />
+            </div>
+          )}
+
           {/* Basic Info Section */}
           <div>
+            <Separator className="mb-4" />
+            <h4 className="text-sm font-medium text-foreground mb-3">Schedule</h4>
             {/* Time Information */}
             <div className="flex items-center space-x-3">
               <Clock className="w-4 h-4 text-muted-foreground" />

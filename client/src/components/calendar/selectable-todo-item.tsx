@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Task } from "@shared/schema";
 import { formatTimeRange } from "@/lib/time-utils";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
+import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
+import { useTaskTimer } from "@/hooks/use-timer-state";
 import { cn } from "@/lib/utils";
 
 interface SelectableTodoItemProps {
@@ -14,6 +17,8 @@ interface SelectableTodoItemProps {
   variant?: 'default' | 'compact' | 'minimal';
   showTime?: boolean;
   showDate?: boolean;
+  showTimer?: boolean;
+  showEstimate?: boolean;
   className?: string;
 }
 
@@ -25,6 +30,8 @@ export function SelectableTodoItem({
   variant = 'default',
   showTime = true,
   showDate = false,
+  showTimer = true,
+  showEstimate = true,
   className,
 }: SelectableTodoItemProps) {
   const isTaskCompleted = task.completed;
@@ -32,10 +39,14 @@ export function SelectableTodoItem({
   const taskEndTime = new Date(task.endTime);
   const now = new Date();
   const isTaskCurrent = taskStartTime <= now && taskEndTime >= now && !isTaskCompleted;
+  
+  // Timer integration
+  const { isActiveTask, isRunning, formattedTotalTime } = useTaskTimer(task.id);
 
   const handleClick = (e: React.MouseEvent) => {
-    // Don't trigger selection when clicking the completion button
-    if ((e.target as HTMLElement).closest('[data-completion-button]')) {
+    // Don't trigger selection when clicking the completion button or timer controls
+    if ((e.target as HTMLElement).closest('[data-completion-button]') ||
+        (e.target as HTMLElement).closest('[data-timer-control]')) {
       return;
     }
     onSelect(task.id);
@@ -129,11 +140,28 @@ export function SelectableTodoItem({
             </Badge>
           )}
           
+          {/* Timer Status Badge */}
+          {isActiveTask && variant !== 'minimal' && (
+            <Badge className={cn(
+              "text-xs shrink-0",
+              isRunning 
+                ? "bg-green-100 text-green-800 border-green-300" 
+                : "bg-yellow-100 text-yellow-800 border-yellow-300"
+            )}>
+              {isRunning ? 'Timer Running' : 'Timer Paused'}
+            </Badge>
+          )}
+          
           {/* Current Task Badge */}
-          {isTaskCurrent && variant !== 'minimal' && (
+          {isTaskCurrent && !isActiveTask && variant !== 'minimal' && (
             <Badge className="text-xs bg-primary text-primary-foreground shrink-0">
               Active
             </Badge>
+          )}
+          
+          {/* Estimate Indicator */}
+          {showEstimate && variant !== 'minimal' && (
+            <TaskEstimateIndicator taskId={task.id} className="shrink-0" />
           )}
         </div>
         
@@ -143,32 +171,56 @@ export function SelectableTodoItem({
             {task.notes}
           </p>
         )}
+        
+        {/* Timer Total Time */}
+        {showTimer && formattedTotalTime !== '0:00' && variant !== 'minimal' && (
+          <div className="flex items-center gap-1 mt-1">
+            <Clock className="w-3 h-3 text-gray-500" />
+            <span className="text-xs text-gray-600 font-mono">
+              {formattedTotalTime} today
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Time and Date Info */}
-      {(showTime || showDate) && (
-        <div className="text-right shrink-0">
-          {showDate && (
-            <p className="text-xs text-muted-foreground" data-testid={`todo-date-${task.id}`}>
-              {format(taskStartTime, "MMM d")}
-            </p>
-          )}
-          {showTime && (
-            <p 
-              className={cn(
-                variant === 'minimal' ? "text-xs" : "text-sm",
-                "font-medium text-foreground"
-              )}
-              data-testid={`todo-time-${task.id}`}
-            >
-              {variant === 'minimal' 
-                ? format(taskStartTime, "h:mm a")
-                : formatTimeRange(taskStartTime, taskEndTime)
-              }
-            </p>
-          )}
-        </div>
-      )}
+      {/* Timer Controls and Time Info */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Timer Button */}
+        {showTimer && !isTaskCompleted && (
+          <div data-timer-control>
+            <TaskTimerButton
+              taskId={task.id}
+              taskTitle={task.title}
+              variant={variant === 'minimal' ? 'icon-only' : 'compact'}
+            />
+          </div>
+        )}
+        
+        {/* Time and Date Info */}
+        {(showTime || showDate) && (
+          <div className="text-right">
+            {showDate && (
+              <p className="text-xs text-muted-foreground" data-testid={`todo-date-${task.id}`}>
+                {format(taskStartTime, "MMM d")}
+              </p>
+            )}
+            {showTime && (
+              <p 
+                className={cn(
+                  variant === 'minimal' ? "text-xs" : "text-sm",
+                  "font-medium text-foreground"
+                )}
+                data-testid={`todo-time-${task.id}`}
+              >
+                {variant === 'minimal' 
+                  ? format(taskStartTime, "h:mm a")
+                  : formatTimeRange(taskStartTime, taskEndTime)
+                }
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Selection Indicator */}
       {isSelected && (

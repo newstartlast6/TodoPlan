@@ -1,4 +1,10 @@
-import { type User, type InsertUser, type Task, type InsertTask, type UpdateTask, tasks, users } from "@shared/schema";
+import { 
+  type User, type InsertUser, type Task, type InsertTask, type UpdateTask, 
+  type TimerSession, type InsertTimerSession, type UpdateTimerSession,
+  type TaskEstimate, type InsertTaskEstimate, type UpdateTaskEstimate,
+  type DailyTimeSummary,
+  tasks, users, timerSessions, taskEstimates 
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -14,15 +20,38 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: UpdateTask): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
+
+  // Timer session operations
+  getActiveTimerSession(): Promise<TimerSession | undefined>;
+  getTimerSession(id: string): Promise<TimerSession | undefined>;
+  getTimerSessionsByTask(taskId: string): Promise<TimerSession[]>;
+  createTimerSession(session: InsertTimerSession): Promise<TimerSession>;
+  updateTimerSession(id: string, session: UpdateTimerSession): Promise<TimerSession | undefined>;
+  deleteTimerSession(id: string): Promise<boolean>;
+  stopActiveTimerSessions(): Promise<void>;
+
+  // Task estimate operations
+  getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined>;
+  createTaskEstimate(estimate: InsertTaskEstimate): Promise<TaskEstimate>;
+  updateTaskEstimate(taskId: string, estimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined>;
+  deleteTaskEstimate(taskId: string): Promise<boolean>;
+
+  // Daily summary operations
+  getDailySummary(date: Date): Promise<DailyTimeSummary[]>;
+  getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private tasks: Map<string, Task>;
+  private timerSessions: Map<string, TimerSession>;
+  private taskEstimates: Map<string, TaskEstimate>;
 
   constructor() {
     this.users = new Map();
     this.tasks = new Map();
+    this.timerSessions = new Map();
+    this.taskEstimates = new Map();
     
     // Initialize with some sample tasks for demonstration
     this.initializeSampleData();
@@ -189,6 +218,139 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: string): Promise<boolean> {
     return this.tasks.delete(id);
+  }
+
+  // Timer session operations
+  async getActiveTimerSession(): Promise<TimerSession | undefined> {
+    return Array.from(this.timerSessions.values()).find(session => session.isActive);
+  }
+
+  async getTimerSession(id: string): Promise<TimerSession | undefined> {
+    return this.timerSessions.get(id);
+  }
+
+  async getTimerSessionsByTask(taskId: string): Promise<TimerSession[]> {
+    return Array.from(this.timerSessions.values())
+      .filter(session => session.taskId === taskId)
+      .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+  }
+
+  async createTimerSession(insertSession: InsertTimerSession): Promise<TimerSession> {
+    const id = randomUUID();
+    const session: TimerSession = {
+      ...insertSession,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.timerSessions.set(id, session);
+    return session;
+  }
+
+  async updateTimerSession(id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
+    const existingSession = this.timerSessions.get(id);
+    if (!existingSession) return undefined;
+    
+    const updatedSession: TimerSession = { 
+      ...existingSession, 
+      ...updateSession,
+      updatedAt: new Date()
+    };
+    this.timerSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+
+  async deleteTimerSession(id: string): Promise<boolean> {
+    return this.timerSessions.delete(id);
+  }
+
+  async stopActiveTimerSessions(): Promise<void> {
+    const activeSessions = Array.from(this.timerSessions.values()).filter(session => session.isActive);
+    const now = new Date();
+    
+    activeSessions.forEach(session => {
+      const elapsedSeconds = Math.floor((now.getTime() - session.startTime.getTime()) / 1000);
+      const updatedSession: TimerSession = {
+        ...session,
+        endTime: now,
+        durationSeconds: session.durationSeconds + elapsedSeconds,
+        isActive: false,
+        updatedAt: now,
+      };
+      this.timerSessions.set(session.id, updatedSession);
+    });
+  }
+
+  // Task estimate operations
+  async getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined> {
+    return Array.from(this.taskEstimates.values()).find(estimate => estimate.taskId === taskId);
+  }
+
+  async createTaskEstimate(insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
+    const id = randomUUID();
+    const estimate: TaskEstimate = {
+      ...insertEstimate,
+      id,
+      createdAt: new Date(),
+    };
+    this.taskEstimates.set(id, estimate);
+    return estimate;
+  }
+
+  async updateTaskEstimate(taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
+    const existingEstimate = Array.from(this.taskEstimates.values()).find(est => est.taskId === taskId);
+    if (!existingEstimate) return undefined;
+    
+    const updatedEstimate: TaskEstimate = { ...existingEstimate, ...updateEstimate };
+    this.taskEstimates.set(existingEstimate.id, updatedEstimate);
+    return updatedEstimate;
+  }
+
+  async deleteTaskEstimate(taskId: string): Promise<boolean> {
+    const estimate = Array.from(this.taskEstimates.entries()).find(([_, est]) => est.taskId === taskId);
+    if (!estimate) return false;
+    
+    return this.taskEstimates.delete(estimate[0]);
+  }
+
+  // Daily summary operations
+  async getDailySummary(date: Date): Promise<DailyTimeSummary[]> {
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+    
+    return this.getDailySummaryByDateRange(startOfDay, endOfDay);
+  }
+
+  async getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
+    const sessions = Array.from(this.timerSessions.values())
+      .filter(session => 
+        session.endTime && 
+        session.startTime >= startDate && 
+        session.startTime < endDate
+      );
+
+    const summaryMap = new Map<string, DailyTimeSummary>();
+
+    sessions.forEach(session => {
+      const dateKey = session.startTime.toISOString().split('T')[0];
+      const taskKey = `${dateKey}-${session.taskId}`;
+      
+      if (!summaryMap.has(taskKey)) {
+        summaryMap.set(taskKey, {
+          date: dateKey,
+          taskId: session.taskId,
+          totalSeconds: 0,
+          sessionCount: 0,
+          task: this.tasks.get(session.taskId),
+        });
+      }
+      
+      const summary = summaryMap.get(taskKey)!;
+      summary.totalSeconds += session.durationSeconds;
+      summary.sessionCount += 1;
+    });
+
+    return Array.from(summaryMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }
 }
 

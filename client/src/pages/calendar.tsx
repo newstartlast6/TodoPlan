@@ -4,6 +4,7 @@ import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
+import { TimerProvider } from "@/contexts/timer-context";
 import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
 import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
@@ -12,6 +13,8 @@ import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
 import { YearView } from "@/components/calendar/year-view";
 import { TaskForm } from "@/components/calendar/task-form";
+import { DailyProgressWidget } from "@/components/timer/daily-progress-dashboard";
+import { TimerDisplay } from "@/components/timer/timer-display";
 import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
 import { Task, InsertTask } from "@shared/schema";
@@ -158,10 +161,13 @@ export default function Calendar() {
 
   // Render sidebar
   const renderSidebar = () => (
-    <MinimalisticSidebar
-      currentView={currentView}
-      onViewChange={setCurrentView}
-    />
+    <div className="space-y-4">
+      <MinimalisticSidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+      />
+      <DailyProgressWidget />
+    </div>
   );
 
   // Render main content
@@ -220,7 +226,7 @@ export default function Calendar() {
   );
 
   return (
-    <>
+    <TimerProvider>
       <ResponsiveLayout
         sidebar={renderSidebar()}
         main={renderMainContent()}
@@ -228,6 +234,11 @@ export default function Calendar() {
         isDetailOpen={isDetailPaneOpen}
         onDetailClose={closeDetailPane}
       />
+
+      {/* Global Timer Display */}
+      <div className="fixed top-4 right-4 z-50">
+        <TimerDisplay compact />
+      </div>
 
       {/* Task Form Dialog */}
       <TaskForm
@@ -246,6 +257,6 @@ export default function Calendar() {
       >
         <Plus className="w-6 h-6" />
       </Button>
-    </>
+    </TimerProvider>
   );
 }
