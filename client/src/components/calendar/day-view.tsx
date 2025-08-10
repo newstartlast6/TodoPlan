@@ -132,76 +132,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
         </CardContent>
       </Card>
 
-      {/* Day Summary */}
-      {dayTasks.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Task Completion Summary */}
-          <Card data-testid="day-summary-card">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Task Progress</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600" data-testid="summary-completed">
-                    {completedTasks.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Completed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary" data-testid="summary-remaining">
-                    {dayTasks.length - completedTasks.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Remaining</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-muted-foreground" data-testid="summary-percentage">
-                    {dayTasks.length > 0 ? Math.round((completedTasks.length / dayTasks.length) * 100) : 0}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Progress</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Timer Summary */}
-          <Card data-testid="timer-summary-card">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Timer className="w-5 h-5" />
-                Time Tracking
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600 font-mono" data-testid="timer-total">
-                    {dayTimerFormatted}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Time Logged</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600" data-testid="timer-tasks">
-                    {timerTaskCount}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Tasks Timed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600" data-testid="timer-progress">
-                    {Math.round(timerProgress)}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Daily Target</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Detailed Timer Summary for Current Day */}
-      {isCurrentDay && dayTimerSeconds > 0 && (
-        <DailySummary
-          date={currentDate}
-          className="mt-6"
-          data-testid="detailed-timer-summary"
-        />
-      )}
     </div>
   );
 }

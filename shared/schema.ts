@@ -15,9 +15,30 @@ export const tasks = pgTable("tasks", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({
+// Base insert schema from drizzle
+const baseInsertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
   createdAt: true,
+});
+
+// Extend to accept ISO strings or Date for startTime/endTime by transforming to Date
+export const insertTaskSchema = baseInsertTaskSchema.extend({
+  startTime: z.preprocess((val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    }
+    return val;
+  }, z.date()),
+  endTime: z.preprocess((val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    }
+    return val;
+  }, z.date()),
 });
 
 export const updateTaskSchema = insertTaskSchema.partial();

@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, Flag, Timer } from "lucide-react";
+import { X, Calendar, Clock, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { NotesEditor } from "@/components/calendar/notes-editor";
-import { PrioritySelector } from "@/components/calendar/priority-selector";
 import { TimePicker } from "@/components/calendar/time-picker";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimation } from "@/components/timer/task-estimation";
@@ -128,9 +127,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     return null;
   };
 
-  const handlePriorityChange = (priority: 'low' | 'medium' | 'high') => {
-    updateTaskMutation.mutate({ priority });
-  };
+  
 
   const handleStartTimeChange = (startTime: Date) => {
     if (!selectedTask) return;
@@ -219,18 +216,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     );
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    return <Flag className="w-4 h-4" />;
-  };
+  
 
   return (
     <div className={cn("h-full flex flex-col bg-surface", className)} data-testid="todo-detail-pane">
@@ -242,14 +228,6 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               {selectedTask.title}
             </h2>
             <div className="flex items-center space-x-2 mt-1">
-              <Badge
-                variant="secondary"
-                className={cn("text-xs", getPriorityColor(selectedTask.priority))}
-                data-testid="todo-detail-priority"
-              >
-                {getPriorityIcon(selectedTask.priority)}
-                <span className="ml-1 capitalize">{selectedTask.priority} Priority</span>
-              </Badge>
               {selectedTask.completed && (
                 <Badge variant="default" className="text-xs bg-green-600 text-white">
                   Completed
@@ -365,15 +343,6 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             <Separator className="mb-4" />
             <h4 className="text-sm font-medium text-foreground mb-4">Task Properties</h4>
             <div className="space-y-4">
-              {/* Priority Selector */}
-              <div>
-                <PrioritySelector
-                  value={selectedTask.priority as 'low' | 'medium' | 'high'}
-                  onChange={handlePriorityChange}
-                  disabled={updateTaskMutation.isPending}
-                />
-              </div>
-
               {/* Time Pickers */}
               <div className="space-y-3">
                 <TimePicker

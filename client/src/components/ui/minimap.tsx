@@ -19,8 +19,6 @@ export function Minimap({ tasks, currentDate = new Date(), className }: MinimapP
 
   const getBlockColor = (task: Task) => {
     if (task.completed) return 'bg-gray-300';
-    if (task.priority === 'high') return 'bg-primary';
-    if (task.priority === 'medium') return 'bg-primary-light';
     return 'bg-gray-200';
   };
 
@@ -44,8 +42,8 @@ export function Minimap({ tasks, currentDate = new Date(), className }: MinimapP
                 <div 
                   className={cn(
                     "minimap-block",
-                    isDayPast ? "bg-gray-200 crossed-out" : 
-                    isCurrentDay ? "bg-primary animate-pulse-subtle" : "bg-gray-100"
+                     isDayPast ? "bg-gray-200 crossed-out" : 
+                     isCurrentDay ? "bg-gray-300 animate-pulse-subtle" : "bg-gray-100"
                   )}
                   title={`${format(day, 'EEEE')} - ${dayTasks.length} tasks`}
                   data-testid={`minimap-day-${dayIndex}`}

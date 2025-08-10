@@ -137,11 +137,7 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
                                 selectedTodoId === task.id && "ring-1 ring-primary bg-primary/10",
                                 task.completed 
                                   ? "bg-green-100 text-green-700 line-through" 
-                                  : task.priority === 'high'
-                                  ? "bg-red-100 text-red-700"
-                                  : task.priority === 'medium'
-                                  ? "bg-primary-lighter text-primary"
-                                  : "bg-muted text-muted-foreground"
+                              : "bg-muted text-muted-foreground"
                               )}
                               title={task.title}
                               onClick={(e) => {

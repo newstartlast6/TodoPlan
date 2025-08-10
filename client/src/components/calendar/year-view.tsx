@@ -122,15 +122,7 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
                     />
                   )}
                   
-                  {/* High Priority Tasks */}
-                  {monthTasks.filter(task => task.priority === 'high').length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-red-600">High Priority</span>
-                      <span className="font-medium text-red-600" data-testid={`month-high-priority-${monthIndex}`}>
-                        {monthTasks.filter(task => task.priority === 'high' && !task.completed).length}
-                      </span>
-                    </div>
-                  )}
+                   {/* Priority section removed */}
                   
                   {/* Recent/Upcoming Tasks Preview */}
                   {monthTasks.length > 0 ? (
@@ -142,11 +134,9 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
                             "text-xs p-2 rounded truncate cursor-pointer transition-all",
                             "hover:ring-1 hover:ring-primary/50",
                             selectedTodoId === task.id && "ring-1 ring-primary bg-primary/10",
-                            task.completed 
-                              ? "bg-green-100 text-green-700 line-through" 
-                              : task.priority === 'high'
-                              ? "bg-red-100 text-red-700"
-                              : "bg-muted text-muted-foreground"
+                             task.completed 
+                               ? "bg-green-100 text-green-700 line-through" 
+                               : "bg-muted text-muted-foreground"
                           )}
                           title={task.title}
                           onClick={(e) => {

@@ -13,7 +13,6 @@ import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
 import { YearView } from "@/components/calendar/year-view";
 import { TaskForm } from "@/components/calendar/task-form";
-import { DailyProgressWidget } from "@/components/timer/daily-progress-dashboard";
 import { TimerDisplay } from "@/components/timer/timer-display";
 import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
@@ -166,7 +165,6 @@ export default function Calendar() {
         currentView={currentView}
         onViewChange={setCurrentView}
       />
-      <DailyProgressWidget />
     </div>
   );
 

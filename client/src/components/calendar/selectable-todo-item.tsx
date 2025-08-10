@@ -135,12 +135,7 @@ export function SelectableTodoItem({
             {task.title}
           </h4>
           
-          {/* Priority Badge */}
-          {task.priority === 'high' && variant !== 'minimal' && (
-            <Badge variant="destructive" className="text-xs shrink-0">
-              High
-            </Badge>
-          )}
+          {/* Priority removed from UI */}
           
           {/* Timer Status Badge */}
           {isActiveTask && variant !== 'minimal' && (
