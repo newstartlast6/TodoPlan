@@ -202,3 +202,23 @@
     opacity: 0.8;
   }
 }
+
+/* Custom todo selection styles */
+.todo-selected {
+  background-color: rgb(219 234 254 / 0.6);
+  border-color: rgb(96 165 250);
+}
+
+.todo-hover {
+  background-color: rgb(219 234 254 / 0.4);
+}
+
+.todo-progress-color {
+  color: rgb(251 146 60);
+  background-color: rgb(251 146 60);
+}
+
+.todo-in-progress {
+  background-color: rgb(255 237 213 / 0.6);
+  border-color: rgb(251 146 60);
+}

@@ -21,10 +21,10 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
   const dayTasks = tasks
     .filter(task => isSameDay(new Date(task.startTime), currentDate))
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-  
+
   const completedTasks = dayTasks.filter(task => task.completed);
   const isCurrentDay = isToday(currentDate);
-  
+
   // Timer statistics for the day
   const {
     totalSeconds: dayTimerSeconds,
@@ -32,7 +32,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
     taskCount: timerTaskCount,
     progressPercentage: timerProgress,
   } = useDailyTimerStats(currentDate);
-  
+
   const toggleTaskCompletion = (taskId: string, completed: boolean) => {
     onTaskUpdate(taskId, { completed: !completed });
   };
@@ -40,9 +40,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
   const getCurrentTask = () => {
     if (!isCurrentDay) return null;
     const now = new Date();
-    return dayTasks.find(task => 
-      !task.completed && 
-      new Date(task.startTime) <= now && 
+    return dayTasks.find(task =>
+      !task.completed &&
+      new Date(task.startTime) <= now &&
       new Date(task.endTime) >= now
     );
   };
@@ -63,9 +63,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <UrgencyViewSimple 
-              tasks={tasks} 
-              currentDate={currentDate} 
+            <UrgencyViewSimple
+              tasks={tasks}
+              currentDate={currentDate}
               view="day"
               className="w-64"
             />
@@ -75,9 +75,10 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
 
       {/* Current Task Highlight */}
       {currentTask && (
-        <Card className="border-2 border-primary bg-accent" data-testid="current-task-card">
+        <Card className="border-2 border-orange-200 bg-orange-50/40" data-testid="current-task-card">
           <CardHeader>
             <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
               <h3 className="text-lg font-semibold text-foreground">Currently Working On</h3>
             </div>
           </CardHeader>
@@ -195,9 +196,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
 
       {/* Detailed Timer Summary for Current Day */}
       {isCurrentDay && dayTimerSeconds > 0 && (
-        <DailySummary 
-          date={currentDate} 
-          className="mt-6" 
+        <DailySummary
+          date={currentDate}
+          className="mt-6"
           data-testid="detailed-timer-summary"
         />
       )}

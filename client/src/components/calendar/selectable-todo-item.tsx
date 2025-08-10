@@ -58,27 +58,29 @@ export function SelectableTodoItem({
   };
 
   const baseClasses = cn(
-    "flex items-center space-x-3 p-3 rounded-lg border transition-all cursor-pointer",
-    "hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-    isSelected && "bg-primary/10 border-primary shadow-sm ring-1 ring-primary/20",
-    isTaskCompleted && "opacity-70 bg-muted/30",
-    isTaskCurrent && !isSelected && "bg-blue-50 border-blue-200",
+    "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
+    "hover:bg-blue-50/60 focus:outline-none",
+    isSelected && "bg-blue-50/60 shadow-sm",
+    isTaskCompleted && "opacity-60",
+    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
   const compactClasses = cn(
-    "flex items-center space-x-2 p-2 rounded-md border transition-all cursor-pointer text-sm",
-    "hover:bg-accent/50 focus:outline-none focus:ring-1 focus:ring-primary",
-    isSelected && "bg-primary/10 border-primary shadow-sm",
+    "flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer text-sm group",
+    "hover:bg-blue-50/50 focus:outline-none",
+    isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
+    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
   const minimalClasses = cn(
-    "flex items-center space-x-2 p-1 rounded transition-all cursor-pointer text-sm",
-    "hover:bg-accent/30",
-    isSelected && "bg-primary/10",
+    "flex items-center space-x-2 p-2 rounded-lg transition-all cursor-pointer text-sm group",
+    "hover:bg-blue-50/40",
+    isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
+    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
@@ -224,7 +226,12 @@ export function SelectableTodoItem({
 
       {/* Selection Indicator */}
       {isSelected && (
-        <div className="w-1 h-8 bg-primary rounded-full shrink-0" data-testid={`selection-indicator-${task.id}`} />
+        <div className="w-1 h-6 bg-blue-400 rounded-full shrink-0" data-testid={`selection-indicator-${task.id}`} />
+      )}
+      
+      {/* In Progress Indicator */}
+      {isTaskCurrent && !isSelected && (
+        <div className="w-1 h-6 bg-orange-400 rounded-full shrink-0" data-testid={`progress-indicator-${task.id}`} />
       )}
     </div>
   );
