@@ -6,6 +6,7 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
 import { calculateMonthProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
+import { GoalInline } from "@/components/calendar/goal-inline";
 
 interface MonthViewProps {
   tasks: Task[];
@@ -46,15 +47,13 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
   return (
     <div className="space-y-8" data-testid="month-view">
       {/* Month Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="space-y-1">
             <h2 className="text-2xl font-bold text-foreground" data-testid="month-title">
               {format(currentDate, "MMMM yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="month-summary">
-              {Math.floor(monthProgress.elapsed)} days completed • {Math.ceil(monthProgress.remaining)} days remaining
-            </p>
+            <GoalInline type="monthly" date={currentDate} label="MONTHLY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
             <UrgencyViewSimple 
@@ -65,6 +64,7 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
             />
           </div>
         </div>
+        
       </div>
 
       {/* Calendar Grid */}

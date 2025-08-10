@@ -8,6 +8,7 @@ import { DailySummary } from "@/components/timer/daily-summary";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { useDailyTimerStats } from "@/hooks/use-timer-state";
 import { Task } from "@shared/schema";
+import { GoalInline } from "@/components/calendar/goal-inline";
 
 interface DayViewProps {
   tasks: Task[];
@@ -24,6 +25,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
 
   const completedTasks = dayTasks.filter(task => task.completed);
   const isCurrentDay = isToday(currentDate);
+  const dayProgressPercent = dayTasks.length === 0 
+    ? 0 
+    : (completedTasks.length / dayTasks.length) * 100;
 
   // Timer statistics for the day
   const {
@@ -52,15 +56,13 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
   return (
     <div className="space-y-8" data-testid="day-view">
       {/* Day Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="space-y-1">
             <h2 className="text-3xl font-bold text-foreground" data-testid="day-title">
               {format(currentDate, "EEEE, MMMM d, yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="day-summary">
-              {completedTasks.length} of {dayTasks.length} tasks completed
-            </p>
+            <GoalInline type="daily" date={currentDate} label="DAILY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
             <UrgencyViewSimple
@@ -71,6 +73,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
             />
           </div>
         </div>
+        {/* Removed separate goal row; goal now shown under title */}
       </div>
 
       {/* Current Task Highlight */}
@@ -99,9 +102,22 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
       {/* Tasks List */}
       <Card data-testid="tasks-list-card">
         <CardHeader>
-          <h3 className="text-lg font-semibold text-foreground">
-            {isCurrentDay ? "Today's Schedule" : `Schedule for ${format(currentDate, "EEEE")}`}
-          </h3>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">
+                {isCurrentDay ? "Today's Schedule" : `Schedule for ${format(currentDate, "EEEE")}`}
+              </h3>
+              {isCurrentDay && (
+                <div className="text-sm text-muted-foreground" data-testid="day-schedule-summary">
+                  {completedTasks.length === dayTasks.length && dayTasks.length > 0 
+                    ? '100%'
+                    : Math.round(dayProgressPercent) + '%'} 
+                  • {dayTasks.length} tasks
+                </div>
+              )}
+            </div>
+            <GoalInline type="daily" date={currentDate} label="GOAL:" />
+          </div>
         </CardHeader>
         <CardContent>
           {dayTasks.length === 0 ? (

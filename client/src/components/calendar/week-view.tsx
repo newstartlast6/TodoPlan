@@ -1,4 +1,5 @@
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast } from "date-fns";
+import { useEffect, useState } from "react";
 import { CheckCircle, Clock, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,8 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
 import { calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
+import { GoalInline } from "@/components/calendar/goal-inline";
+import { getGoalFor } from "@/hooks/use-goals";
 
 interface WeekViewProps {
   tasks: Task[];
@@ -16,6 +19,12 @@ interface WeekViewProps {
 }
 
 export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
+  const [goalsRefresh, setGoalsRefresh] = useState(0);
+  useEffect(() => {
+    const handler = () => setGoalsRefresh((n) => n + 1);
+    window.addEventListener('goals:updated', handler);
+    return () => window.removeEventListener('goals:updated', handler);
+  }, []);
   const { selectedTodoId, selectTodo } = useSelectedTodo();
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -66,17 +75,15 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
   };
 
   return (
-    <div className="space-y-8" data-testid="week-view">
+    <div className="space-y-8" data-testid="week-view" data-goals-refresh={goalsRefresh}>
       {/* Week Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="space-y-1">
             <h2 className="text-2xl font-bold text-foreground" data-testid="week-title">
               Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="week-summary">
-              {Math.floor(weekProgress.elapsed / 100 * 7)} days completed • {7 - Math.floor(weekProgress.elapsed / 100 * 7)} days remaining
-            </p>
+            <GoalInline type="weekly" date={currentDate} label="WEEKLY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
             <UrgencyViewSimple 
@@ -86,7 +93,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
               className="w-64"
             />
           </div>
-        </div>
+        </div>        
       </div>
 
       {/* Days List */}
@@ -98,7 +105,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
           const isCurrentDay = isToday(day);
           const isDayCompleted = dayStatus === 'completed';
           
-          return (
+            return (
             <Card 
               key={dayIndex} 
               className={cn(
@@ -124,6 +131,9 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
                   <div className="text-sm text-muted-foreground" data-testid={`day-progress-${dayIndex}`}>
                     {dayStatus === 'completed' ? '100%' : Math.round(dayProgressPercent) + '%'} • {dayTasks.length} tasks
                   </div>
+                </div>
+                <div className="mt-1">
+                  <GoalInline type="daily" date={day} label="GOAL:" />
                 </div>
               </CardHeader>
               

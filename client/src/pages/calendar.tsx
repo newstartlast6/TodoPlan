@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
 import { Task, InsertTask } from "@shared/schema";
 import { cn } from "@/lib/utils";
+ 
 
 type CalendarView = 'day' | 'week' | 'month' | 'year';
 
@@ -25,9 +26,12 @@ export default function Calendar() {
   const [currentView, setCurrentView] = useState<CalendarView>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+ 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedTodoId, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+
+  // No goal chips in tabs; goals are displayed within each view
 
   // Get date range for current view
   const { start: rangeStart, end: rangeEnd } = getTimeRangeForView(currentView, currentDate);
@@ -176,21 +180,23 @@ export default function Calendar() {
         <div className="flex items-center justify-between">
           {/* View Tabs */}
           <div className="flex space-x-1 bg-slate-100 rounded-lg p-1" data-testid="view-tabs">
-            {(['day', 'week', 'month', 'year'] as CalendarView[]).map((view) => (
-              <button
-                key={view}
-                onClick={() => setCurrentView(view)}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
-                  currentView === view
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                data-testid={`tab-${view}`}
-              >
-                {view}
-              </button>
-            ))}
+            {(['day', 'week', 'month', 'year'] as CalendarView[]).map((view) => {
+              return (
+                <button
+                  key={view}
+                  onClick={() => setCurrentView(view)}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
+                    currentView === view
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid={`tab-${view}`}
+                >
+                  <span className="inline-flex items-center gap-2">{view}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Actions */}

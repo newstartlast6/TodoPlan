@@ -7,6 +7,7 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
 import { calculateYearProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
+import { GoalInline } from "@/components/calendar/goal-inline";
 
 interface YearViewProps {
   tasks: Task[];
@@ -48,15 +49,13 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
   return (
     <div className="space-y-8" data-testid="year-view">
       {/* Year Header */}
-      <div className="mb-8">
+      <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <div>
+          <div className="space-y-1">
             <h2 className="text-2xl font-bold text-foreground" data-testid="year-title">
               {format(currentDate, "yyyy")}
             </h2>
-            <p className="text-muted-foreground mt-1" data-testid="year-summary">
-              {Math.floor(yearProgress.elapsed / 100 * 12)} months completed • {12 - Math.floor(yearProgress.elapsed / 100 * 12)} months remaining
-            </p>
+            <GoalInline type="yearly" date={currentDate} label="YEARLY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
             <UrgencyViewSimple 
