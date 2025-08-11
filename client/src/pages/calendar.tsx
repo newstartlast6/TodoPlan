@@ -56,8 +56,11 @@ export default function Calendar() {
       const response = await apiRequest('POST', '/api/tasks', newTask);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (created: Task) => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      // Select the newly created task so it highlights and opens details
+      // and triggers inline edit in the list
+      window.dispatchEvent(new CustomEvent('tasks:select', { detail: created.id }));
       toast({
         title: "Task created",
         description: "Your task has been added successfully.",
@@ -78,6 +81,28 @@ export default function Calendar() {
       const response = await apiRequest('PUT', `/api/tasks/${id}`, updates);
       return response.json();
     },
+    onMutate: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+      // Cancel outgoing refetches to prevent overwriting
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks'] });
+      await queryClient.cancelQueries({ queryKey: ['task', id] });
+
+      // Snapshot all matching lists to roll back on error
+      const previousLists = queryClient.getQueriesData<Task[]>({ queryKey: ['/api/tasks'] });
+      const previousTask = queryClient.getQueryData<Task>(['task', id]);
+
+      // Optimistically update all task lists containing this id
+      queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+        if (!old) return old;
+        return old.map(task => (task.id === id ? { ...task, ...updates } : task));
+      });
+
+      // Optimistically update focused task detail cache
+      if (previousTask) {
+        queryClient.setQueryData(['task', id], { ...previousTask, ...updates });
+      }
+
+      return { previousLists, previousTask } as const;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
@@ -85,7 +110,16 @@ export default function Calendar() {
         description: "Your task has been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      // Roll back
+      if (context?.previousLists) {
+        for (const [queryKey, data] of context.previousLists) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+      if (context?.previousTask) {
+        queryClient.setQueryData(['task', (context.previousTask as Task).id], context.previousTask);
+      }
       toast({
         title: "Error",
         description: "Failed to update task. Please try again.",
@@ -94,12 +128,62 @@ export default function Calendar() {
     },
   });
 
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('DELETE', `/api/tasks/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      return true;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+      if (selectedTodoId === id) {
+        closeDetailPane();
+      }
+      toast({
+        title: 'Task deleted',
+        description: 'The task has been removed.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete task. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  });
+
   const handleCreateTask = (newTask: InsertTask) => {
     createTaskMutation.mutate(newTask);
   };
 
+  // Inline: create an empty task and let user type the title inline
+  const handleAddEmptyTaskInline = () => {
+    const now = new Date();
+    const start = new Date(currentDate);
+    start.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    const payload: InsertTask = {
+      title: "",
+      startTime: start,
+      endTime: end,
+      completed: false,
+      priority: "medium",
+    };
+
+    createTaskMutation.mutate(payload);
+  };
+
   const handleUpdateTask = (taskId: string, updates: Partial<Task>) => {
     updateTaskMutation.mutate({ id: taskId, updates });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    deleteTaskMutation.mutate(taskId);
   };
 
   const handleDateClick = (date: Date) => {
@@ -128,7 +212,8 @@ export default function Calendar() {
             tasks={tasks}
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
-            onAddTask={() => setIsTaskFormOpen(true)}
+            onTaskDelete={handleDeleteTask}
+            onAddTask={handleAddEmptyTaskInline}
           />
         );
       case 'week':
@@ -137,6 +222,7 @@ export default function Calendar() {
             tasks={tasks}
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
+            onTaskDelete={handleDeleteTask}
           />
         );
       case 'month':
@@ -200,7 +286,7 @@ export default function Calendar() {
           {/* Actions */}
           <div className="flex items-center space-x-3" data-testid="header-actions">
             <Button
-              onClick={() => setIsTaskFormOpen(true)}
+              onClick={handleAddEmptyTaskInline}
               className="flex items-center space-x-2"
               disabled={createTaskMutation.isPending}
               data-testid="button-add-task"
@@ -243,16 +329,11 @@ export default function Calendar() {
       </div>
 
       {/* Task Form Dialog */}
-      <TaskForm
-        open={isTaskFormOpen}
-        onOpenChange={setIsTaskFormOpen}
-        onSubmit={handleCreateTask}
-        defaultDate={currentDate}
-      />
+      {/* Form kept for future use; not used for inline quick-add */}
 
       {/* Floating Add Button (Mobile) */}
       <Button
-        onClick={() => setIsTaskFormOpen(true)}
+        onClick={handleAddEmptyTaskInline}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg md:hidden"
         size="icon"
         data-testid="floating-add-button"

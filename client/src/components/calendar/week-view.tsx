@@ -15,9 +15,10 @@ interface WeekViewProps {
   tasks: Task[];
   currentDate: Date;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
+  onTaskDelete?: (taskId: string) => void;
 }
 
-export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
+export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: WeekViewProps) {
   const [goalsRefresh, setGoalsRefresh] = useState(0);
   useEffect(() => {
     const handler = () => setGoalsRefresh((n) => n + 1);
@@ -150,8 +151,12 @@ export function WeekView({ tasks, currentDate, onTaskUpdate }: WeekViewProps) {
                         isSelected={selectedTodoId === task.id}
                         onSelect={selectTodo}
                         onToggleComplete={toggleTaskCompletion}
+                        onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                        onDelete={onTaskDelete}
                         variant="compact"
-                        showTime={true}
+                        showTime={false}
+                        showLoggedTime={false}
+                        startEditing={task.title === ""}
                       />
                     ))}
                   </div>

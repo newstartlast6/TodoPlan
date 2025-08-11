@@ -58,6 +58,19 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
     saveSelectionState(state);
   }, [state]);
 
+  // Allow external code to request selecting a task (e.g., right after create)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      const id = custom.detail;
+      if (id) {
+        setState(prev => ({ ...prev, selectedTodoId: id, isDetailPaneOpen: true }));
+      }
+    };
+    window.addEventListener('tasks:select', handler as EventListener);
+    return () => window.removeEventListener('tasks:select', handler as EventListener);
+  }, []);
+
   const selectTodo = useCallback((todoId: string | null) => {
     setState(prev => ({
       ...prev,

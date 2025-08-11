@@ -17,9 +17,10 @@ interface DayViewProps {
   currentDate: Date;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onAddTask: () => void;
+  onTaskDelete?: (taskId: string) => void;
 }
 
-export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayViewProps) {
+export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDelete }: DayViewProps) {
   const { selectedTodoId, selectTodo } = useSelectedTodo();
   const dayTasks = tasks
     .filter(task => isSameDay(new Date(task.startTime), currentDate))
@@ -119,9 +120,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
         <CardHeader>
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">
-                {isCurrentDay ? "Today's Schedule" : `Schedule for ${format(currentDate, "EEEE")}`}
-              </h3>
+              <h3 className="text-lg font-semibold text-foreground">Tasks</h3>
               {isCurrentDay && (
                 <div className="text-sm text-muted-foreground" data-testid="day-schedule-summary">
                   {completedTasks.length === dayTasks.length && dayTasks.length > 0 
@@ -138,7 +137,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
           {dayTasks.length === 0 ? (
             <div className="text-center py-12" data-testid="no-tasks">
               <Clock className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No tasks scheduled</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">No tasks yet</h3>
               <p className="text-muted-foreground mb-4">Add some tasks to get started with your day</p>
               <Button onClick={onAddTask} data-testid="button-add-first-task">
                 <Plus className="w-4 h-4 mr-2" />
@@ -154,8 +153,12 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
                   isSelected={selectedTodoId === task.id}
                   onSelect={selectTodo}
                   onToggleComplete={toggleTaskCompletion}
+                  onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                  onDelete={onTaskDelete}
                   variant="default"
-                  showTime={true}
+                  showTime={false}
+                  showLoggedTime={false}
+                  startEditing={task.title === ""}
                 />
               ))}
             </div>

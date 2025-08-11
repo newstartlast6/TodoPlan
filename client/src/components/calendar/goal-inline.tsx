@@ -13,6 +13,7 @@ interface GoalInlineProps {
 
 export function GoalInline({ type, date, placeholder, className, label }: GoalInlineProps) {
   const { goal, setGoal } = useGoal(type, date);
+  const hasGoal = (goal?.trim().length ?? 0) > 0;
 
   const defaultPlaceholder =
     placeholder ??
@@ -33,7 +34,9 @@ export function GoalInline({ type, date, placeholder, className, label }: GoalIn
         value={goal}
         onChange={setGoal}
         placeholder={defaultPlaceholder}
-        className="font-semibold"
+        className={cn(
+          hasGoal ? "font-semibold underline underline-offset-4 decoration-2" : undefined
+        )}
       />
     </div>
   );

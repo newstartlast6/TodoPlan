@@ -7,6 +7,9 @@ interface EditableTextProps {
   placeholder?: string;
   className?: string;
   autoFocusOnEmpty?: boolean;
+  editTrigger?: number; // increment to programmatically start editing
+  autoSaveOnIdle?: boolean; // emit onChange after user stops typing
+  idleMs?: number; // debounce duration for idle save
 }
 
 export function EditableText({
@@ -15,21 +18,53 @@ export function EditableText({
   placeholder = "Add goal...",
   className,
   autoFocusOnEmpty = false,
+  editTrigger,
+  autoSaveOnIdle = true,
+  idleMs = 800,
 }: EditableTextProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const editableRef = useRef<HTMLDivElement | null>(null);
+  const lastTriggerRef = useRef<number | undefined>(editTrigger);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isComposingRef = useRef(false);
+  const lastEmittedRef = useRef<string>(value);
+  const pendingEnterCommitRef = useRef(false);
+  const suppressNextBlurCommitRef = useRef(false);
+  const hasCommittedRef = useRef(false);
 
   useEffect(() => {
-    setDraft(value);
-  }, [value]);
+    // Avoid resetting caret position while actively editing
+    if (!isEditing) {
+      setDraft(value);
+    }
+  }, [value, isEditing]);
 
   useEffect(() => {
     if (isEditing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
+      // Reset per-edit flags when entering edit mode
+      hasCommittedRef.current = false;
+      suppressNextBlurCommitRef.current = false;
+      const el = editableRef.current;
+      if (!el) return;
+      el.focus();
+      // Place caret at end reliably even when content updates quickly
+      const placeCaretAtEnd = () => {
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        } catch {}
+      };
+      placeCaretAtEnd();
+      // Run once more on next frame for safety
+      requestAnimationFrame(placeCaretAtEnd);
+      setTimeout(placeCaretAtEnd, 0);
     }
-  }, [isEditing]);
+  }, [isEditing, draft]);
 
   useEffect(() => {
     if (autoFocusOnEmpty && !value) {
@@ -37,10 +72,32 @@ export function EditableText({
     }
   }, [autoFocusOnEmpty, value]);
 
+  // Programmatically start editing when trigger changes
+  useEffect(() => {
+    if (typeof editTrigger === 'number' && editTrigger !== lastTriggerRef.current) {
+      lastTriggerRef.current = editTrigger;
+      setIsEditing(true);
+    }
+  }, [editTrigger]);
+
   const commit = () => {
-    const trimmed = draft.trim();
-    onChange(trimmed);
+    if (hasCommittedRef.current) return;
+    // Clear any pending idle save to avoid duplicate emits
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+    // Read from DOM to ensure latest character is included
+    const el = editableRef.current;
+    const currentText = el ? (el.textContent ?? el.innerText ?? draft) : draft;
+    const trimmed = (currentText ?? "").trim();
+    if (trimmed !== lastEmittedRef.current) {
+      onChange(trimmed);
+      lastEmittedRef.current = trimmed;
+    }
+    setDraft(trimmed);
     setIsEditing(false);
+    hasCommittedRef.current = true;
   };
 
   const cancel = () => {
@@ -48,48 +105,112 @@ export function EditableText({
     setIsEditing(false);
   };
 
+  const scheduleIdleSave = () => {
+    if (!autoSaveOnIdle) return;
+    if (isComposingRef.current) return;
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      const el = editableRef.current;
+      const current = el ? el.innerText : draft;
+      const trimmed = current.trim();
+      if (trimmed !== lastEmittedRef.current) {
+        onChange(trimmed);
+        lastEmittedRef.current = trimmed;
+      }
+    }, idleMs);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
+
   if (isEditing) {
     return (
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit();
-          if (e.key === "Escape") cancel();
+      <div
+        ref={editableRef}
+        contentEditable
+        suppressContentEditableWarning
+        onBeforeInput={(e) => {
+          // Let the browser apply the input first
+          // We'll sync draft on the next frame
+          requestAnimationFrame(() => {
+            const el = editableRef.current;
+            if (!el) return;
+            setDraft(el.textContent ?? el.innerText ?? "");
+            scheduleIdleSave();
+          });
         }}
-        placeholder={placeholder}
+        onCompositionStart={() => { isComposingRef.current = true; }}
+        onCompositionEnd={(e) => {
+          isComposingRef.current = false;
+          // Sync draft from DOM after composition applies
+          requestAnimationFrame(() => {
+            const el = editableRef.current;
+            if (!el) return;
+            setDraft(el.textContent ?? el.innerText ?? "");
+            scheduleIdleSave();
+            if (pendingEnterCommitRef.current) {
+              pendingEnterCommitRef.current = false;
+              setTimeout(commit, 0);
+            }
+          });
+        }}
+        onBlur={() => {
+          if (suppressNextBlurCommitRef.current) {
+            suppressNextBlurCommitRef.current = false;
+            return;
+          }
+          commit();
+        }}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // Prevent immediate blur from causing a second commit
+            suppressNextBlurCommitRef.current = true;
+            if (isComposingRef.current) {
+              // Defer commit until composition ends to avoid losing last character
+              pendingEnterCommitRef.current = true;
+            } else {
+              // Defer to next frame to ensure state has applied
+              requestAnimationFrame(() => setTimeout(commit, 0));
+            }
+            return;
+          }
+          else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        }}
+        onKeyUp={(e) => {
+          if (e.key === 'Enter' && pendingEnterCommitRef.current && !isComposingRef.current) {
+            pendingEnterCommitRef.current = false;
+            requestAnimationFrame(() => setTimeout(commit, 0));
+          }
+        }}
+        role="textbox"
+        aria-label={placeholder}
         className={cn(
-          "bg-transparent border-0 outline-none text-foreground placeholder:text-muted-foreground/60",
-          "text-base whitespace-nowrap truncate",
+          "bg-transparent text-foreground outline-none border-0 inline-block max-w-full whitespace-nowrap overflow-hidden text-ellipsis placeholder:text-muted-foreground/60 min-w-[1ch] px-0.5",
           className
         )}
-      />
+        data-editable="true"
+      >
+        {draft}
+      </div>
     );
   }
 
   return (
-    <button
-      type="button"
+    <span
       onClick={() => setIsEditing(true)}
       className={cn(
-        "group inline-flex items-center gap-2 text-left",
+        "inline-block max-w-full whitespace-nowrap overflow-hidden text-ellipsis",
+        value ? "text-foreground" : "text-muted-foreground/70",
         className
       )}
     >
-      <span
-        className={cn(
-          "font-semibold tracking-tight",
-          value ? "text-foreground" : "text-muted-foreground/70"
-        )}
-      >
-        {value || placeholder}
-      </span>
-      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50 text-xs">
-        edit
-      </span>
-    </button>
+      {value || placeholder}
+    </span>
   );
 }
 

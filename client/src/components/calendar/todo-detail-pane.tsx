@@ -43,6 +43,12 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
       return response.json();
     },
     enabled: !!selectedTodoId,
+    // Keep showing current data between updates for smoother UX
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: false,
   });
 
   // Update task mutation
@@ -228,9 +234,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               {selectedTask.title}
             </h2>
             <div className="flex items-center space-x-2 mt-1">
-              {selectedTask.completed ? (
-                <Badge variant="default" className="text-xs bg-green-600 text-white">Completed</Badge>
-              ) : isActiveTask && isTimerRunning ? (
+              {isActiveTask && isTimerRunning ? (
                 <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
               ) : null}
             </div>
@@ -265,21 +269,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             />
           </div>
 
-          {/* Schedule */}
-          <div className="rounded-xl border border-border/50 bg-card/50 p-4">
-            <h4 className="text-xs tracking-wide uppercase text-muted-foreground mb-3">Schedule</h4>
-            <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium text-foreground" data-testid="todo-detail-time">
-                  {formatTimeRange(new Date(selectedTask.startTime), new Date(selectedTask.endTime))}
-                </p>
-                <p className="text-xs text-muted-foreground" data-testid="todo-detail-date">
-                  {format(new Date(selectedTask.startTime), "EEEE, MMMM d, yyyy")}
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Schedule removed from UI */}
 
           {/* Time Tracking */}
           {!selectedTask.completed && (
@@ -333,33 +323,16 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             <Separator />
 
             <div className="grid gap-4">
-              <div className="grid gap-3">
-                <TimePicker
-                  label="Start Time"
-                  value={new Date(selectedTask.startTime)}
-                  onChange={handleStartTimeChange}
-                  disabled={updateTaskMutation.isPending}
-                />
-                <TimePicker
-                  label="End Time"
-                  value={new Date(selectedTask.endTime)}
-                  onChange={handleEndTimeChange}
-                  disabled={updateTaskMutation.isPending}
-                />
-              </div>
+            {/* Time pickers removed from UI */}
 
               <Separator />
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  {selectedTask.completed ? (
-                    <Badge variant="default" className="text-xs bg-green-600 text-white">Completed</Badge>
-                  ) : isActiveTask && isTimerRunning ? (
+                  {isActiveTask && isTimerRunning ? (
                     <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">Planned</Badge>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Created</span>

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { pathToFileURL, fileURLToPath } from 'url';
 import express from 'express';
@@ -28,6 +28,7 @@ let tray: Tray | null = null;
 let isRunning = false;
 let httpServerRef: Server | null = null;
 let isQuitting = false;
+let isQuitConfirmed = false;
 let openAtLoginEnabled = false;
 let preferRendererTrayTitle = false;
 
@@ -236,7 +237,7 @@ function registerIpc() {
   });
 
   ipcMain.on('app:quit', () => {
-    isQuitting = true;
+    // Trigger standard quit flow; confirmation is handled in app.before-quit
     app.quit();
   });
 
@@ -306,7 +307,35 @@ app.on('window-all-closed', () => {
   if (!isMac) app.quit();
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async (event) => {
+  // Ask for confirmation once unless already confirmed
+  if (!isQuitConfirmed) {
+    event.preventDefault();
+    try {
+      const options = {
+        type: 'question' as const,
+        buttons: ['Quit', 'Cancel'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Quit TodoPlan',
+        message: 'Do you want to quit?',
+        detail: 'Any active timers will stop after you quit.',
+        normalizeAccessKeys: true,
+      };
+      const result = mainWindow
+        ? await dialog.showMessageBox(mainWindow, options)
+        : await dialog.showMessageBox(options);
+      const { response } = result;
+      if (response === 0) {
+        isQuitConfirmed = true;
+        isQuitting = true;
+        app.quit();
+      }
+    } catch {}
+    return;
+  }
+
+  // Perform shutdown cleanup only when confirmed
   isQuitting = true;
   if (httpServerRef) {
     try { httpServerRef.close(); } catch {}

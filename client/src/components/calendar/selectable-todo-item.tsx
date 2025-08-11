@@ -1,5 +1,6 @@
 import { format } from "date-fns";
-import { CheckCircle, Clock, Play, Circle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle, Clock, Circle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Task } from "@shared/schema";
@@ -8,18 +9,25 @@ import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
 import { useTaskTimer } from "@/hooks/use-timer-state";
 import { cn } from "@/lib/utils";
+import { EditableText } from "@/components/ui/editable-text";
 
 interface SelectableTodoItemProps {
   task: Task;
   isSelected: boolean;
   onSelect: (taskId: string) => void;
   onToggleComplete: (taskId: string, completed: boolean) => void;
+  onUpdate?: (taskId: string, updates: Partial<Task>) => void;
+  onDelete?: (taskId: string) => void;
   variant?: 'default' | 'compact' | 'minimal';
   showTime?: boolean;
   showDate?: boolean;
   showTimer?: boolean;
+  // Whether to show the small "time logged today" row under the title
+  showLoggedTime?: boolean;
   showEstimate?: boolean;
   className?: string;
+  // When true, programmatically start editing the title
+  startEditing?: boolean;
 }
 
 export function SelectableTodoItem({
@@ -27,18 +35,28 @@ export function SelectableTodoItem({
   isSelected,
   onSelect,
   onToggleComplete,
+  onUpdate,
+  onDelete,
   variant = 'default',
   showTime = true,
   showDate = false,
   showTimer = true,
+  showLoggedTime = false,
   showEstimate = true,
   className,
+  startEditing = false,
 }: SelectableTodoItemProps) {
   const isTaskCompleted = task.completed;
   const taskStartTime = new Date(task.startTime);
   const taskEndTime = new Date(task.endTime);
-  const now = new Date();
-  const isTaskCurrent = taskStartTime <= now && taskEndTime >= now && !isTaskCompleted;
+  const [titleEditTrigger, setTitleEditTrigger] = useState(0);
+  
+  // If parent asks to start editing, bump the trigger
+  useEffect(() => {
+    if (startEditing) {
+      setTitleEditTrigger((n) => n + 1);
+    }
+  }, [startEditing]);
   
   // Timer integration
   const { isActiveTask, isRunning, formattedTotalTime } = useTaskTimer(task.id);
@@ -50,6 +68,8 @@ export function SelectableTodoItem({
       return;
     }
     onSelect(task.id);
+    // Start inline editing of title on item click
+    setTitleEditTrigger((n) => n + 1);
   };
 
   const handleToggleComplete = (e: React.MouseEvent) => {
@@ -62,7 +82,6 @@ export function SelectableTodoItem({
     "hover:bg-blue-50/60 focus:outline-none",
     isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
-    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
@@ -71,7 +90,6 @@ export function SelectableTodoItem({
     "hover:bg-blue-50/50 focus:outline-none",
     isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
-    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
@@ -80,7 +98,6 @@ export function SelectableTodoItem({
     "hover:bg-blue-50/40",
     isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
-    isTaskCurrent && !isSelected && "bg-orange-50/60",
     className
   );
 
@@ -114,8 +131,6 @@ export function SelectableTodoItem({
       >
         {isTaskCompleted ? (
           <CheckCircle className="text-green-500 w-4 h-4" />
-        ) : isTaskCurrent ? (
-          <Play className="text-primary w-4 h-4" />
         ) : (
           <Circle className="text-gray-400 w-4 h-4" />
         )}
@@ -124,35 +139,35 @@ export function SelectableTodoItem({
       {/* Task Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center space-x-2">
-          <h4 
-            className={cn(
-              variant === 'minimal' ? "text-sm font-medium" : "font-medium",
-              "text-foreground truncate",
-              isTaskCompleted && "line-through"
-            )}
-            data-testid={`todo-title-${task.id}`}
-          >
-            {task.title}
-          </h4>
+          <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
+            <EditableText
+              value={task.title}
+              onChange={(newTitle) => {
+                // Only update when editing session ends (commit). EditableText calls this on blur/Enter
+                if (newTitle && newTitle !== task.title) {
+                  onUpdate?.(task.id, { title: newTitle });
+                }
+              }}
+              placeholder={task.title ? undefined : ""}
+              className={cn(
+                variant === 'minimal' ? "text-sm font-medium" : "font-medium",
+                "text-foreground truncate align-middle",
+                isTaskCompleted && "line-through"
+              )}
+              editTrigger={titleEditTrigger}
+              autoFocusOnEmpty
+            />
+          </div>
           
           {/* Priority removed from UI */}
           
-          {/* Timer Status Badge */}
-          {isActiveTask && variant !== 'minimal' && (
+          {/* Timer Status Badge - show only when running */}
+          {isActiveTask && isRunning && variant !== 'minimal' && (
             <Badge className={cn(
               "text-xs shrink-0",
-              isRunning
-                ? "bg-orange-500 text-white ring-1 ring-orange-600/20"
-                : "bg-yellow-100 text-yellow-800 border-yellow-300"
+              "bg-orange-500 text-white ring-1 ring-orange-600/20"
             )}>
-              {isRunning ? 'In Progress' : 'Paused'}
-            </Badge>
-          )}
-          
-          {/* Current Task Badge */}
-          {isTaskCurrent && !isActiveTask && variant !== 'minimal' && (
-            <Badge className="text-xs bg-primary text-primary-foreground shrink-0">
-              Active
+              In Progress
             </Badge>
           )}
           
@@ -169,8 +184,8 @@ export function SelectableTodoItem({
           </p>
         )}
         
-        {/* Timer Total Time */}
-        {showTimer && formattedTotalTime !== '0:00' && variant !== 'minimal' && (
+        {/* Timer Total Time (hidden by default) */}
+        {showLoggedTime && formattedTotalTime !== '0:00' && variant !== 'minimal' && (
           <div className="flex items-center gap-1 mt-1">
             <Clock className="w-3 h-3 text-gray-500" />
             <span className="text-xs text-gray-600 font-mono">
@@ -217,17 +232,32 @@ export function SelectableTodoItem({
             )}
           </div>
         )}
+
+        {/* Delete Button (subtle, appears on hover) */}
+        {onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+            className="hidden group-hover:inline-flex h-7 w-7 text-muted-foreground hover:text-destructive"
+            aria-label="Delete task"
+            data-testid={`delete-task-${task.id}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      {/* Selection Indicator */}
-      {isSelected && (
-        <div className="w-1 h-6 bg-blue-400 rounded-full shrink-0" data-testid={`selection-indicator-${task.id}`} />
-      )}
+      {/* Selection Indicator - always reserve space to avoid layout shift */}
+      <div
+        className={cn(
+          "w-1 h-6 rounded-full shrink-0",
+          isSelected ? "bg-blue-400" : "invisible bg-blue-400"
+        )}
+        data-testid={`selection-indicator-${task.id}`}
+      />
       
-      {/* In Progress Indicator */}
-      {isTaskCurrent && !isSelected && (
-        <div className="w-1 h-6 bg-orange-400 rounded-full shrink-0" data-testid={`progress-indicator-${task.id}`} />
-      )}
+      {/* In Progress Indicator removed - only show In Progress when timer is running */}
     </div>
   );
 }
