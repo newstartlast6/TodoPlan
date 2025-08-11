@@ -6,6 +6,7 @@ import express from 'express';
 import type { Express, Request, Response, NextFunction } from 'express';
 import { registerRoutes } from '../server/routes';
 import type { Server } from 'http';
+import fs from 'fs';
 
 // Basic time formatter for tray title
 function formatDuration(totalSeconds: number): string {
@@ -53,13 +54,20 @@ async function startExpressServer(port: number): Promise<Server> {
 
 function resolvePreloadPath(): string {
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'dist-electron', 'preload.js');
+    const base = path.join(process.resourcesPath, 'dist-electron');
+    const cjs = path.join(base, 'preload.cjs');
+    const js = path.join(base, 'preload.js');
+    return fs.existsSync(cjs) ? cjs : js;
   }
+  // In dev, prefer a plain CJS preload for maximum compatibility
+  const devCjs = path.join(process.cwd(), 'electron', 'preload.cjs');
+  if (fs.existsSync(devCjs)) return devCjs;
+  const distCjs = path.join(process.cwd(), 'dist-electron', 'preload.cjs');
+  if (fs.existsSync(distCjs)) return distCjs;
   return path.join(process.cwd(), 'dist-electron', 'preload.js');
 }
 
 async function waitForFile(filePath: string, timeoutMs = 5000): Promise<void> {
-  const fs = require('fs');
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {

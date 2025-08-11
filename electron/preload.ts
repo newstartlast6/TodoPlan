@@ -1,3 +1,4 @@
+// Use CommonJS-compatible imports for Electron preload runtime
 import { contextBridge, ipcRenderer } from 'electron';
 import path from 'path';
 import { pathToFileURL, fileURLToPath } from 'url';

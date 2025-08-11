@@ -45,10 +45,31 @@ export default defineConfig({
           },
           build: {
             outDir: path.resolve(import.meta.dirname, "dist-electron"),
+            ssr: true,
             rollupOptions: {
+              external: [
+                'electron',
+                'path',
+                'url',
+                'fs',
+              ],
               output: {
                 format: "cjs",
+                entryFileNames: () => `preload.cjs`,
+                exports: 'auto',
               },
+            },
+            target: 'node18',
+            minify: false,
+            sourcemap: false,
+            commonjsOptions: {
+              transformMixedEsModules: true,
+            },
+            // Ensure node platform for esbuild transforms
+            // @ts-ignore
+            esbuild: {
+              platform: 'node',
+              format: 'cjs',
             },
           },
         },

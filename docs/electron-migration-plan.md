@@ -199,6 +199,17 @@ Note: `vite-plugin-electron` will spawn Electron during `vite` dev automatically
 
 ---
 
+## Troubleshooting
+
+- Preload “Cannot use import statement outside a module”
+  - Ensure the preload bundle is built as CommonJS and that `BrowserWindow` points to a `.cjs` file.
+  - We emit `dist-electron/preload.cjs` and `electron/main.ts` resolves to `preload.cjs` when present.
+  - After rebuild, fully restart the Electron app so it loads the updated preload.
+
+- Tray title not updating / tray actions do nothing
+  - This happens if preload failed to load (no `window.electronAPI`). Fix preload first, then restart the app.
+  - Verify in DevTools: `typeof window.electronAPI === 'object'`.
+
 ## Future improvements
 
 - Migrate from renderer-driven timer to main-owned timer for robustness
