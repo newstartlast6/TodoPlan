@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { TimerState, TimerSession, DailyTimeSummary, DEFAULT_TIMER_CONFIG } from '@shared/timer-types';
+import { TimerState, TimerSession, DailyTimeSummary, DEFAULT_TIMER_CONFIG, TimerStatus } from '@shared/timer-types';
 import { TimerService } from '@shared/services/timer-service';
+import { apiRequest } from '@/lib/queryClient';
 import { PersistenceService, TimerRecoveryManager } from '@shared/services/persistence-service';
 import { SyncService, ConnectionMonitor } from '@shared/services/sync-service';
 import { TimerApiClient } from '../services/timer-api-client';
@@ -99,6 +100,22 @@ const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(timerReducer, initialState);
+  const taskTitleCacheRef = React.useRef<Map<string, string>>(new Map());
+  const currentTaskTitleRef = React.useRef<string>('');
+  const formatTrayTime = React.useCallback((totalSeconds: number): string => {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }, []);
+  const setTrayTitle = React.useCallback((seconds: number, title?: string) => {
+    const anyWindow = window as any;
+    const timeText = formatTrayTime(seconds);
+    const text = title ? `${timeText} ${title}` : timeText;
+    try { anyWindow?.electronAPI?.setTrayTitle?.(text); } catch {}
+  }, [formatTrayTime]);
   
   // Initialize services
   const persistenceService = React.useMemo(() => new PersistenceService(), []);
@@ -115,7 +132,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       const status = timerServiceRef.current?.getStatus();
       const anyWindow = window as any;
       if (anyWindow?.electronAPI?.notifyTimerState && status !== undefined) {
-        const statusStr = ['IDLE','RUNNING','PAUSED','STOPPED'][status] as 'IDLE' | 'RUNNING' | 'PAUSED' | 'STOPPED';
+        const statusMap: Record<TimerStatus, 'IDLE' | 'RUNNING' | 'PAUSED' | 'STOPPED'> = {
+          idle: 'IDLE',
+          running: 'RUNNING',
+          paused: 'PAUSED',
+          stopped: 'STOPPED',
+        };
+        const statusStr = statusMap[status as TimerStatus];
         anyWindow.electronAPI.notifyTimerState(statusStr);
       }
     });
@@ -398,6 +421,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       if (anyWindow?.electronAPI?.sendTimerTick) {
         anyWindow.electronAPI.sendTimerTick(session.durationSeconds);
       }
+      // Also set combined tray title with task name when available
+      setTrayTitle(session.durationSeconds, currentTaskTitleRef.current || undefined);
     };
 
     timerService.on('timer:tick', handleTimerTick);
@@ -406,6 +431,43 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       timerService.off('timer:tick', handleTimerTick);
     };
   }, [timerService]);
+
+  // Keep tray title in sync with active session/task title
+  useEffect(() => {
+    const active = state.activeSession;
+    const anyWindow = window as any;
+    if (!active) {
+      currentTaskTitleRef.current = '';
+      try { anyWindow?.electronAPI?.setTrayTitle?.('00:00'); } catch {}
+      return;
+    }
+
+    const { taskId, durationSeconds } = active;
+    const cached = taskTitleCacheRef.current.get(taskId);
+    if (cached) {
+      currentTaskTitleRef.current = cached;
+      setTrayTitle(durationSeconds, cached);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+        const task = await res.json();
+        const title = typeof task?.title === 'string' ? task.title : '';
+        if (!cancelled) {
+          taskTitleCacheRef.current.set(taskId, title);
+          currentTaskTitleRef.current = title;
+          setTrayTitle(durationSeconds, title);
+        }
+      } catch {
+        // Ignore
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [state.activeSession, setTrayTitle]);
 
   // Handle tray actions from Electron
   useEffect(() => {

@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("tray:action", handler);
     return () => ipcRenderer.off("tray:action", handler);
   },
+  setTrayTitle: (title) => {
+    ipcRenderer.send("tray:setTitle", { title });
+  },
   getOpenAtLogin: async () => ipcRenderer.invoke("app:getOpenAtLogin"),
   setOpenAtLogin: async (value) => ipcRenderer.invoke("app:setOpenAtLogin", value),
   quit: () => ipcRenderer.send("app:quit")

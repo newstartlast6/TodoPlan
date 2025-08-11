@@ -11,6 +11,7 @@ declare global {
       getOpenAtLogin: () => Promise<boolean>;
       setOpenAtLogin: (value: boolean) => Promise<boolean>;
       quit: () => void;
+      setTrayTitle: (title: string) => void;
     };
   }
 }

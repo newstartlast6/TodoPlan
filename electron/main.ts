@@ -14,7 +14,7 @@ function formatDuration(totalSeconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 const isMac = process.platform === 'darwin';
@@ -28,6 +28,7 @@ let isRunning = false;
 let httpServerRef: Server | null = null;
 let isQuitting = false;
 let openAtLoginEnabled = false;
+let preferRendererTrayTitle = false;
 
 async function startExpressServer(port: number): Promise<Server> {
   const exp: Express = express();
@@ -182,12 +183,15 @@ function createTray() {
 function registerIpc() {
   ipcMain.on('timer:tick', (_event, payload: { elapsedSeconds: number }) => {
     if (!tray) return;
+    if (preferRendererTrayTitle) return;
     const text = formatDuration(payload?.elapsedSeconds ?? 0);
     tray.setTitle(text);
   });
 
   ipcMain.on('timer:stateChanged', (_event, payload: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE' }) => {
     isRunning = payload?.status === 'RUNNING';
+    // Prefer renderer-provided combined title whenever not IDLE
+    preferRendererTrayTitle = payload?.status !== 'IDLE';
     // Refresh menu to reflect Pause/Resume toggle
     if (tray) {
       // Rebuild menu to update Pause/Resume label
@@ -216,6 +220,16 @@ function registerIpc() {
       mainWindow.show();
       mainWindow.focus();
     }
+  });
+
+  ipcMain.on('tray:setTitle', (_event, payload: { title?: string }) => {
+    try {
+      if (!tray) return;
+      const nextTitle = (payload && typeof payload.title === 'string') ? payload.title : '';
+      // macOS supports text titles in the menu bar; set directly
+      tray.setTitle(nextTitle);
+      preferRendererTrayTitle = true;
+    } catch {}
   });
 
   ipcMain.on('app:quit', () => {
