@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { 
   insertTaskSchema, updateTaskSchema,
   insertTimerSessionSchema, updateTimerSessionSchema,
-  insertTaskEstimateSchema, updateTaskEstimateSchema
+  insertTaskEstimateSchema, updateTaskEstimateSchema,
+  goalTypeEnum
 } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -96,6 +97,46 @@ function validateTimerRequest(schema: z.ZodSchema) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Goals endpoints
+  app.get("/api/goals", async (req, res) => {
+    try {
+      const typeRaw = req.query.type;
+      const dateRaw = req.query.anchorDate;
+      if (typeof typeRaw !== 'string' || typeof dateRaw !== 'string') {
+        return res.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type = goalTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const goal = await storage.getGoal(type, anchorDate);
+      res.json(goal ?? null);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid goal request", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to fetch goal" });
+    }
+  });
+
+  app.put("/api/goals", async (req, res) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, value } = req.body || {};
+      const type = goalTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== 'string' && !(dateRaw instanceof Date)) {
+        return res.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      if (typeof value !== 'string') {
+        return res.status(400).json({ message: "value must be a string" });
+      }
+      const updated = await storage.setGoal(type, anchorDate, value);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid goal data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save goal" });
+    }
+  });
   // Get tasks with optional date filtering
   app.get("/api/tasks", async (req, res) => {
     try {

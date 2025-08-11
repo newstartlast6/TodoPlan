@@ -75,6 +75,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_timer_sessions_updated_at ON timer_sessions;
 CREATE TRIGGER update_timer_sessions_updated_at 
     BEFORE UPDATE ON timer_sessions 
     FOR EACH ROW 

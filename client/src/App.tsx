@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SelectionProvider } from "@/hooks/use-selected-todo";
+import { TimerProvider } from "./contexts/timer-context";
 import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 
@@ -21,8 +22,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SelectionProvider>
-          <Toaster />
-          <Router />
+          <TimerProvider>
+            <Toaster />
+            <Router />
+          </TimerProvider>
         </SelectionProvider>
       </TooltipProvider>
     </QueryClientProvider>

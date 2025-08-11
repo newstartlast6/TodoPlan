@@ -111,8 +111,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     return new TimerService(DEFAULT_TIMER_CONFIG, (session) => {
       // TimerService callback may pass null to clear state; align type
       dispatch({ type: 'SET_ACTIVE_SESSION', payload: session ?? undefined });
+      // Notify Electron tray about state changes
+      const status = timerServiceRef.current?.getStatus();
+      const anyWindow = window as any;
+      if (anyWindow?.electronAPI?.notifyTimerState && status !== undefined) {
+        const statusStr = ['IDLE','RUNNING','PAUSED','STOPPED'][status] as 'IDLE' | 'RUNNING' | 'PAUSED' | 'STOPPED';
+        anyWindow.electronAPI.notifyTimerState(statusStr);
+      }
     });
   }, []);
+
+  // Keep a ref to TimerService for status during callback
+  const timerServiceRef = React.useRef<TimerService | null>(null);
+  React.useEffect(() => {
+    timerServiceRef.current = timerService;
+    return () => { timerServiceRef.current = null; };
+  }, [timerService]);
 
   // Timer recovery on app start
   useEffect(() => {
@@ -380,6 +394,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleTimerTick = (session: TimerSession) => {
       dispatch({ type: 'UPDATE_TIMER_TICK', payload: session });
+      const anyWindow = window as any;
+      if (anyWindow?.electronAPI?.sendTimerTick) {
+        anyWindow.electronAPI.sendTimerTick(session.durationSeconds);
+      }
     };
 
     timerService.on('timer:tick', handleTimerTick);
@@ -388,6 +406,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       timerService.off('timer:tick', handleTimerTick);
     };
   }, [timerService]);
+
+  // Handle tray actions from Electron
+  useEffect(() => {
+    const anyWindow = window as any;
+    if (!anyWindow?.electronAPI?.onTrayAction) return;
+    const off = anyWindow.electronAPI.onTrayAction(async (action: 'show' | 'hide' | 'pause' | 'resume' | 'stop') => {
+      try {
+        if (action === 'pause') await pauseTimer();
+        if (action === 'resume') await resumeTimer();
+        if (action === 'stop') await stopTimer();
+      } catch (e) {
+        console.error('Tray action failed', e);
+      }
+    });
+    return () => { try { off?.(); } catch {} };
+  }, [pauseTimer, resumeTimer, stopTimer]);
 
   // Cleanup on unmount
   useEffect(() => {

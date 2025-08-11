@@ -12,7 +12,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const fullUrl = resolveApiUrl(url);
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +30,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = Array.isArray(queryKey) ? (queryKey[0] as string) : (queryKey as unknown as string);
+    const fullUrl = resolveApiUrl(url);
+    const res = await fetch(fullUrl, {
       credentials: "include",
     });
 
@@ -55,3 +58,24 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+function resolveApiUrl(inputUrl: string): string {
+  // Absolute URLs pass through
+  if (/^https?:\/\//i.test(inputUrl)) return inputUrl;
+
+  // If running inside Electron, use preload-provided base URL
+  const anyWindow = window as any;
+  let electronApiBase: string | undefined;
+  try {
+    electronApiBase = anyWindow?.electronAPI?.getApiBaseUrl?.();
+  } catch {}
+
+  if (electronApiBase && inputUrl.startsWith("/")) {
+    // electronApiBase is like http://localhost:5002/api
+    const origin = electronApiBase.replace(/\/?api\/?$/, "");
+    return origin + inputUrl;
+  }
+
+  // Fallback: use same-origin
+  return inputUrl;
+}

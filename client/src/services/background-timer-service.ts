@@ -44,7 +44,11 @@ export class BackgroundTimerService {
     try {
       // Check if Web Workers are supported
       if (typeof Worker !== 'undefined') {
-        this.worker = new Worker('/timer-worker.js');
+        const anyWindow = window as any;
+        const workerUrl = anyWindow?.electronAPI?.getPublicAssetUrl
+          ? anyWindow.electronAPI.getPublicAssetUrl('timer-worker.js')
+          : '/timer-worker.js';
+        this.worker = new Worker(workerUrl);
         this.isWorkerSupported = true;
         this.setupWorkerListeners();
       } else {

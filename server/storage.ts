@@ -3,7 +3,8 @@ import {
   type TimerSession, type InsertTimerSession, type UpdateTimerSession,
   type TaskEstimate, type InsertTaskEstimate, type UpdateTaskEstimate,
   type DailyTimeSummary,
-  tasks, users, timerSessions, taskEstimates 
+  type Goal, type InsertGoal, type UpdateGoal,
+  tasks, users, timerSessions, taskEstimates, goals 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
@@ -40,6 +41,10 @@ export interface IStorage {
   // Daily summary operations
   getDailySummary(date: Date): Promise<DailyTimeSummary[]>;
   getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]>;
+
+  // Goals
+  getGoal(type: string, anchorDate: Date): Promise<Goal | undefined>;
+  setGoal(type: string, anchorDate: Date, value: string): Promise<Goal>;
 }
 
 export class MemStorage implements IStorage {
@@ -47,13 +52,14 @@ export class MemStorage implements IStorage {
   private tasks: Map<string, Task>;
   private timerSessions: Map<string, TimerSession>;
   private taskEstimates: Map<string, TaskEstimate>;
+  private goals: Map<string, Goal>;
 
   constructor() {
     this.users = new Map();
     this.tasks = new Map();
     this.timerSessions = new Map();
     this.taskEstimates = new Map();
-    
+    this.goals = new Map();
     // Initialize with some sample tasks for demonstration
     this.initializeSampleData();
   }
@@ -355,6 +361,32 @@ export class MemStorage implements IStorage {
     });
 
     return Array.from(summaryMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  private goalKey(type: string, anchorDate: Date): string {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    return `${type}:${d.toISOString().slice(0, 10)}`;
+  }
+
+  async getGoal(type: string, anchorDate: Date): Promise<Goal | undefined> {
+    const key = this.goalKey(type, anchorDate);
+    return this.goals.get(key);
+  }
+
+  async setGoal(type: string, anchorDate: Date, value: string): Promise<Goal> {
+    const key = this.goalKey(type, anchorDate);
+    const existing = this.goals.get(key);
+    const base: Goal = existing ?? {
+      id: randomUUID(),
+      type,
+      anchorDate: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()),
+      value: "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Goal;
+    const updated: Goal = { ...base, value, updatedAt: new Date() };
+    this.goals.set(key, updated);
+    return updated;
   }
 }
 
@@ -665,10 +697,49 @@ class DbStorage implements IStorage {
       }
     );
   }
+
+  async getGoal(type: string, anchorDate: Date): Promise<Goal | undefined> {
+    return this.withPersistence("get_goal", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const result = await this.db
+        .select()
+        .from(goals)
+        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async setGoal(type: string, anchorDate: Date, value: string): Promise<Goal> {
+    return this.withPersistence("set_goal", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const existing = await this.db
+        .select()
+        .from(goals)
+        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+        .limit(1);
+      if (existing[0]) {
+        const updated = await this.db
+          .update(goals)
+          .set({ value, updatedAt: new Date() } as any)
+          .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+          .returning();
+        return updated[0];
+      }
+      const inserted = await this.db
+        .insert(goals)
+        .values({ type, anchorDate: dateOnly, value } as any)
+        .returning();
+      return inserted[0];
+    });
+  }
 }
 
 export function createStorage(): IStorage {
-  if (isPostgresMode()) {
+  const usePostgres = isPostgresMode();
+  // Helpful runtime log to know which storage backend is active
+  console.log(`[storage] Using ${usePostgres ? 'Postgres' : 'In-Memory'} storage backend`);
+  if (usePostgres) {
     return new DbStorage();
   }
   return new MemStorage();

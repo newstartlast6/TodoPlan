@@ -1,5 +1,6 @@
 import { EditableText } from "@/components/ui/editable-text";
-import { GoalType, useGoal } from "@/hooks/use-goals";
+import { useGoal } from "@/hooks/use-goals";
+import type { GoalType } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
 interface GoalInlineProps {

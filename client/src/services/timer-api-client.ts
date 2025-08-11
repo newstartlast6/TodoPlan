@@ -7,6 +7,18 @@ import { TimerApiClient as ITimerApiClient } from '@shared/services/sync-service
 export class TimerApiClient implements ITimerApiClient {
   private baseUrl = '/api';
 
+  constructor() {
+    const anyWindow = window as any;
+    if (anyWindow?.electronAPI?.getApiBaseUrl) {
+      try {
+        this.baseUrl = anyWindow.electronAPI.getApiBaseUrl();
+        return;
+      } catch {}
+    }
+    // Fallback for web/dev
+    this.baseUrl = '/api';
+  }
+
   /**
    * Start a timer for a task
    */

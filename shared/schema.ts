@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -46,6 +46,41 @@ export const updateTaskSchema = insertTaskSchema.partial();
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type UpdateTask = z.infer<typeof updateTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// Goal types (shared between client and server)
+export const goalTypeEnum = z.enum(["daily", "weekly", "monthly", "yearly"]);
+export type GoalType = z.infer<typeof goalTypeEnum>;
+
+// Goals table: stores a free-form goal string per period type and period anchor date
+export const goals = pgTable("goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type").notNull(),
+  // Anchor date is normalized to the start of the period (Mon for weekly, 1st for monthly, Jan 1 for yearly)
+  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  value: text("value").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schema for goals accepts Date or ISO string for anchorDate
+export const insertGoalSchema = createInsertSchema(goals)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    type: goalTypeEnum,
+    anchorDate: z.preprocess((val) => {
+      if (val instanceof Date) return val;
+      if (typeof val === "string" || typeof val === "number") {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? val : d;
+      }
+      return val;
+    }, z.date()),
+  });
+
+export const updateGoalSchema = insertGoalSchema.partial().omit({ type: true, anchorDate: true });
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+export type UpdateGoal = z.infer<typeof updateGoalSchema>;
+export type Goal = typeof goals.$inferSelect;
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

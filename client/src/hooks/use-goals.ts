@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { format, startOfWeek, startOfMonth, startOfYear } from "date-fns";
-
-export type GoalType = "daily" | "weekly" | "monthly" | "yearly";
+import type { GoalType } from "@shared/schema";
 
 function getStorageKey(type: GoalType, anchorDate: Date): string {
   switch (type) {
@@ -28,57 +27,68 @@ function getStorageKey(type: GoalType, anchorDate: Date): string {
 }
 
 export function useGoal(type: GoalType, date: Date) {
-  const storageKey = useMemo(() => getStorageKey(type, date), [type, date]);
   const [goal, setGoal] = useState<string>("");
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      setGoal(saved ?? "");
-    } catch {
-      // ignore
-      setGoal("");
+  const anchorDate = useMemo(() => {
+    switch (type) {
+      case "weekly":
+        return startOfWeek(date, { weekStartsOn: 1 });
+      case "monthly":
+        return startOfMonth(date);
+      case "yearly":
+        return startOfYear(date);
+      default:
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
-  }, [storageKey]);
+  }, [type, date]);
 
-  const updateGoal = (next: string) => {
+  // Load goal from API
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          type,
+          anchorDate: anchorDate.toISOString(),
+        });
+        const res = await fetch(`/api/goals?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to load goal");
+        const data = await res.json();
+        if (!cancelled) setGoal(data?.value ?? "");
+      } catch {
+        if (!cancelled) setGoal("");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [type, anchorDate]);
+
+  const updateGoal = useCallback(async (next: string) => {
     setGoal(next);
     try {
-      if (!next) {
-        localStorage.removeItem(storageKey);
-      } else {
-        localStorage.setItem(storageKey, next);
-      }
+      const res = await fetch(`/api/goals`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, anchorDate: anchorDate.toISOString(), value: next }),
+      });
+      if (!res.ok) throw new Error("Failed to save goal");
       window.dispatchEvent(new CustomEvent("goals:updated"));
     } catch {
-      // ignore persistence errors
+      // keep optimistic UI; could show toast if needed
     }
-  };
+  }, [type, anchorDate]);
 
   return { goal, setGoal: updateGoal } as const;
 }
 
 export function getGoalFor(type: GoalType, date: Date): string {
-  try {
-    const key = getStorageKey(type, date);
-    return localStorage.getItem(key) ?? "";
-  } catch {
-    return "";
-  }
+  // Deprecated: kept for compatibility if some components still import it
+  return "";
 }
 
 export function setGoalFor(type: GoalType, date: Date, value: string) {
-  try {
-    const key = getStorageKey(type, date);
-    if (!value) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, value);
-    }
-    window.dispatchEvent(new CustomEvent("goals:updated"));
-  } catch {
-    // ignore
-  }
+  // Deprecated: use API-backed hook instead
 }
 
 

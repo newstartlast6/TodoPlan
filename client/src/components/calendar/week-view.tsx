@@ -10,7 +10,6 @@ import { Task } from "@shared/schema";
 import { calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
-import { getGoalFor } from "@/hooks/use-goals";
 
 interface WeekViewProps {
   tasks: Task[];

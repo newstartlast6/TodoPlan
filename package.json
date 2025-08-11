@@ -3,14 +3,37 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev:electron": "cross-env PORT=5002 vite",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:electron": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
+    "dist": "npm run build && electron-builder",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "db:migrate": "tsx scripts/run-migration.ts",
     "db:seed": "tsx scripts/seed.ts"
+  },
+  "build": {
+    "appId": "com.todoplan.desktop",
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.productivity"
+    },
+    "files": [
+      "dist/public/**",
+      "dist/index.js",
+      "dist-electron/**",
+      "electron/icons/**"
+    ],
+    "extraResources": [
+      {
+        "from": "dist-electron",
+        "to": "dist-electron"
+      }
+    ]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -101,7 +124,12 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.3",
     "typescript": "5.6.3",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "electron": "^31.3.1",
+    "vite-plugin-electron": "^0.28.8",
+    "electron-builder": "^24.13.3",
+    "@types/electron": "^1.6.12",
+    "cross-env": "^7.0.3"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

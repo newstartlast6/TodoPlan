@@ -44,11 +44,9 @@ export default function Calendar() {
         startDate: rangeStart.toISOString(),
         endDate: rangeEnd.toISOString(),
       });
-      const response = await fetch(`/api/tasks?${searchParams}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
-      }
-      return response.json();
+      const { apiRequest } = await import('@/lib/queryClient');
+      const res = await apiRequest('GET', `/api/tasks?${searchParams}`);
+      return res.json();
     },
   });
 
