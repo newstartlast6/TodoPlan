@@ -9,13 +9,22 @@ export class TimerApiClient implements ITimerApiClient {
 
   constructor() {
     const anyWindow = window as any;
+    const isHttpPage = typeof window !== 'undefined' && /^https?:/i.test(window.location.protocol);
+    const isDev = typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV;
+
+    // In dev over http(s), prefer relative /api so Vite proxy handles CORS
+    if (isHttpPage && isDev) {
+      this.baseUrl = '/api';
+      return;
+    }
+
+    // Otherwise (file:// or packaged), use Electron's API base if available
     if (anyWindow?.electronAPI?.getApiBaseUrl) {
       try {
         this.baseUrl = anyWindow.electronAPI.getApiBaseUrl();
         return;
       } catch {}
     }
-    // Fallback for web/dev
     this.baseUrl = '/api';
   }
 

@@ -1,20 +1,25 @@
 // Use CommonJS-compatible imports for Electron preload runtime
 import { contextBridge, ipcRenderer } from 'electron';
-import path from 'path';
-import { pathToFileURL, fileURLToPath } from 'url';
+// Avoid Node built-ins in preload to keep compatibility with sandboxed preload
 
 // Must match the port used by electron main process
 const API_PORT = parseInt(process.env.ELECTRON_API_PORT || '5002', 10);
 const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  getApiBaseUrl: (): string => API_BASE_URL,
+  // Prefer dev proxy by returning '/api' in development to avoid CORS
+  getApiBaseUrl: (): string => {
+    const isDev = (process.env.NODE_ENV === 'development');
+    if (isDev) return '/api';
+    return API_BASE_URL;
+  },
   getPublicAssetUrl: (relativePath: string): string => {
-    const base = process.env.NODE_ENV === 'development'
-      ? path.resolve(process.cwd(), 'client', 'public')
-      : path.resolve(process.cwd(), 'dist', 'public');
-    const fullPath = path.resolve(base, relativePath);
-    return pathToFileURL(fullPath).toString();
+    try {
+      const url = new URL(relativePath, globalThis.location?.href || '');
+      return url.toString();
+    } catch {
+      return `/${relativePath}`;
+    }
   },
   onTimerTick: (callback: (elapsedSeconds: number) => void) => {
     // Not used by renderer in current design; renderer sends ticks to main.

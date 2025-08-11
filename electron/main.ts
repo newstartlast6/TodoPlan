@@ -176,14 +176,9 @@ function createTray() {
   // Click toggles show/hide
   tray.on('click', () => {
     if (!mainWindow) return;
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-      mainWindow.webContents.send('tray:action', 'hide');
-    } else {
-      mainWindow.show();
-      mainWindow.focus();
-      mainWindow.webContents.send('tray:action', 'show');
-    }
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('tray:action', 'show');
     setTimeout(() => tray?.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
   });
 }

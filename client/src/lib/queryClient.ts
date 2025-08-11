@@ -70,7 +70,12 @@ function resolveApiUrl(inputUrl: string): string {
     electronApiBase = anyWindow?.electronAPI?.getApiBaseUrl?.();
   } catch {}
 
-  if (electronApiBase && inputUrl.startsWith("/")) {
+  // Prefer Vite dev proxy during development to avoid CORS
+  const isHttpPage = typeof window !== 'undefined' && /^https?:/i.test(window.location.protocol);
+  const isFilePage = typeof window !== 'undefined' && window.location.protocol === 'file:';
+  const isDev = typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV;
+
+  if (electronApiBase && inputUrl.startsWith("/") && (isFilePage || !isHttpPage || !isDev)) {
     // electronApiBase is like http://localhost:5002/api
     const origin = electronApiBase.replace(/\/?api\/?$/, "");
     return origin + inputUrl;
