@@ -221,7 +221,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   return (
     <div className={cn("h-full flex flex-col bg-surface", className)} data-testid="todo-detail-pane">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-b from-muted/20 to-transparent">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-foreground truncate" data-testid="todo-detail-title">
@@ -254,64 +254,21 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
       {/* Content - Single scroll container */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
-          {/* Timer Section */}
-          {!selectedTask.completed && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Timer className="w-4 h-4" />
-                  Time Tracking
-                </h4>
-                <TaskTimerButton
-                  taskId={selectedTask.id}
-                  taskTitle={selectedTask.title}
-                  variant="default"
-                />
-              </div>
-              
-              {/* Active Timer Display */}
-              {isActiveTask && (
-                <div className="mb-4">
-                  <TimerDisplay compact />
-                </div>
-              )}
-              
-              {/* Time Summary */}
-              {taskTimer.totalTimeSeconds > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <div className="text-sm font-medium text-blue-900 mb-1">
-                    Time Logged Today
-                  </div>
-                  <div className="text-lg font-mono font-bold text-blue-800">
-                    {taskTimer.formattedTotalTime}
-                  </div>
-                  {taskTimer.sessionCount > 1 && (
-                    <div className="text-xs text-blue-700">
-                      {taskTimer.sessionCount} sessions
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Notes Section - moved to top under title */}
+          <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+            <h4 className="text-xs tracking-wide uppercase text-muted-foreground mb-3">Notes</h4>
+            <NotesEditor
+              taskId={selectedTask.id}
+              initialNotes={selectedTask.notes || ""}
+              placeholder="Jot quick notes..."
+              className="min-h-[120px]"
+            />
+          </div>
 
-          {/* Task Estimation */}
-          {!selectedTask.completed && (
-            <div>
-              <TaskEstimation
-                taskId={selectedTask.id}
-                taskTitle={selectedTask.title}
-                compact
-              />
-            </div>
-          )}
-
-          {/* Basic Info Section */}
-          <div>
-            <Separator className="mb-4" />
-            <h4 className="text-sm font-medium text-foreground mb-3">Schedule</h4>
-            {/* Time Information */}
-            <div className="flex items-center space-x-3">
+          {/* Schedule */}
+          <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+            <h4 className="text-xs tracking-wide uppercase text-muted-foreground mb-3">Schedule</h4>
+            <div className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground" data-testid="todo-detail-time">
@@ -324,34 +281,65 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             </div>
           </div>
 
-          {/* Notes Section */}
-          <div>
-            <Separator className="mb-4" />
-            <h4 className="text-sm font-medium text-foreground mb-3">Notes</h4>
-            <div className="min-h-[120px]">
-              <NotesEditor
-                taskId={selectedTask.id}
-                initialNotes={selectedTask.notes || ""}
-                placeholder="Add notes to this task..."
-                className="min-h-[120px]"
-              />
-            </div>
-          </div>
+          {/* Time Tracking */}
+          {!selectedTask.completed && (
+            <div className="rounded-xl border border-border/50 bg-card/50 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs tracking-wide uppercase text-muted-foreground flex items-center gap-2">
+                  <Timer className="w-4 h-4" />
+                  Time Tracking
+                </h4>
+                <TaskTimerButton
+                  taskId={selectedTask.id}
+                  taskTitle={selectedTask.title}
+                  variant="default"
+                />
+              </div>
 
-          {/* Task Properties */}
-          <div>
-            <Separator className="mb-4" />
-            <h4 className="text-sm font-medium text-foreground mb-4">Task Properties</h4>
-            <div className="space-y-4">
-              {/* Time Pickers */}
-              <div className="space-y-3">
+              {isActiveTask && (
+                <div className="mb-3">
+                  <TimerDisplay compact />
+                </div>
+              )}
+
+              {taskTimer.totalTimeSeconds > 0 && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <div className="text-xs font-medium text-muted-foreground mb-1">
+                    Time Logged Today
+                  </div>
+                  <div className="text-lg font-mono font-semibold text-foreground">
+                    {taskTimer.formattedTotalTime}
+                  </div>
+                  {taskTimer.sessionCount > 1 && (
+                    <div className="text-xs text-muted-foreground">
+                      {taskTimer.sessionCount} sessions
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Estimation & Properties */}
+          <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-4">
+            {!selectedTask.completed && (
+              <TaskEstimation
+                taskId={selectedTask.id}
+                taskTitle={selectedTask.title}
+                compact
+              />
+            )}
+
+            <Separator />
+
+            <div className="grid gap-4">
+              <div className="grid gap-3">
                 <TimePicker
                   label="Start Time"
                   value={new Date(selectedTask.startTime)}
                   onChange={handleStartTimeChange}
                   disabled={updateTaskMutation.isPending}
                 />
-
                 <TimePicker
                   label="End Time"
                   value={new Date(selectedTask.endTime)}
@@ -360,8 +348,8 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 />
               </div>
 
-              {/* Read-only properties */}
               <Separator />
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
