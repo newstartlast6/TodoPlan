@@ -41,7 +41,7 @@ export class SyncService {
       // Group events by type for batch processing
       const eventGroups = this.groupEventsByType(pendingEvents);
       
-      for (const [eventType, events] of eventGroups) {
+      for (const [eventType, events] of Array.from(eventGroups.entries())) {
         try {
           const syncedIds = await this.syncEventGroup(eventType, events);
           await this.persistenceService.markEventsSynced(syncedIds);
@@ -220,7 +220,7 @@ export class SyncService {
   private async mergeTimerSessions(
     serverSession: TimerSession, 
     localSession: TimerSession
-  ): TimerSession {
+  ): Promise<TimerSession> {
     // Use the maximum duration (assuming both were tracking the same work)
     const maxDuration = Math.max(serverSession.durationSeconds, localSession.durationSeconds);
     

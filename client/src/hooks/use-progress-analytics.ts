@@ -225,18 +225,18 @@ export function useRealTimeProgress() {
   useEffect(() => {
     setMilestones(prev => prev.map(milestone => ({
       ...milestone,
-      achieved: todayStats.totalDailySeconds >= milestone.threshold,
-      achievedAt: todayStats.totalDailySeconds >= milestone.threshold && !milestone.achieved 
+      achieved: todayStats.totalSeconds >= milestone.threshold,
+      achievedAt: todayStats.totalSeconds >= milestone.threshold && !milestone.achieved 
         ? new Date() 
         : milestone.achievedAt,
     })));
-  }, [todayStats.totalDailySeconds]);
+  }, [todayStats.totalSeconds]);
 
   const nextMilestone = milestones.find(m => !m.achieved);
   const lastAchievedMilestone = milestones.filter(m => m.achieved).pop();
 
   const getMotivationalMessage = () => {
-    const { totalDailySeconds, progressPercentage, isOverTarget } = todayStats;
+    const { totalSeconds, progressPercentage, isOverTarget } = todayStats;
 
     if (isOverTarget) {
       return "🎉 Fantastic! You've exceeded your daily target!";
@@ -248,7 +248,7 @@ export function useRealTimeProgress() {
       return "⚡ Halfway there! Keep up the momentum!";
     } else if (progressPercentage >= 25) {
       return "🚀 Good start! You're building momentum!";
-    } else if (totalDailySeconds > 0) {
+    } else if (totalSeconds > 0) {
       return "✨ Every minute counts! Keep going!";
     } else {
       return "🌟 Ready to start your productive day?";

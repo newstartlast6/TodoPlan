@@ -109,7 +109,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   
   const timerService = React.useMemo(() => {
     return new TimerService(DEFAULT_TIMER_CONFIG, (session) => {
-      dispatch({ type: 'SET_ACTIVE_SESSION', payload: session });
+      // TimerService callback may pass null to clear state; align type
+      dispatch({ type: 'SET_ACTIVE_SESSION', payload: session ?? undefined });
     });
   }, []);
 
@@ -364,7 +365,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       
       // Get active session from server
       const activeSession = await apiClient.getActiveTimer();
-      dispatch({ type: 'SET_ACTIVE_SESSION', payload: activeSession });
+      dispatch({ type: 'SET_ACTIVE_SESSION', payload: activeSession ?? undefined });
       
       // Refresh daily summary
       await loadDailySummary();

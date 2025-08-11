@@ -1,14 +1,16 @@
 import { format, isToday, isSameDay } from "date-fns";
-import { Clock, Plus, Timer } from "lucide-react";
+import { Clock, Plus, Play } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
 import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
-import { DailySummary } from "@/components/timer/daily-summary";
+// import { DailySummary } from "@/components/timer/daily-summary";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { useDailyTimerStats } from "@/hooks/use-timer-state";
+import { useDailyTimerStats, useTimerState } from "@/hooks/use-timer-state";
 import { Task } from "@shared/schema";
 import { GoalInline } from "@/components/calendar/goal-inline";
+import { formatTimeRange } from "@/lib/time-utils";
 
 interface DayViewProps {
   tasks: Task[];
@@ -37,21 +39,18 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
     progressPercentage: timerProgress,
   } = useDailyTimerStats(currentDate);
 
+  // Timer-based current task
+  const { currentTaskId, isTimerRunning } = useTimerState();
+
   const toggleTaskCompletion = (taskId: string, completed: boolean) => {
     onTaskUpdate(taskId, { completed: !completed });
   };
 
-  const getCurrentTask = () => {
-    if (!isCurrentDay) return null;
-    const now = new Date();
-    return dayTasks.find(task =>
-      !task.completed &&
-      new Date(task.startTime) <= now &&
-      new Date(task.endTime) >= now
-    );
-  };
-
-  const currentTask = getCurrentTask();
+  const currentTask = (
+    isCurrentDay && isTimerRunning
+      ? dayTasks.find(task => task.id === currentTaskId && !task.completed)
+      : null
+  );
 
   return (
     <div className="space-y-8" data-testid="day-view">
@@ -76,25 +75,41 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask }: DayView
         {/* Removed separate goal row; goal now shown under title */}
       </div>
 
-      {/* Current Task Highlight */}
+      {/* Current Task Highlight (timer-based) */}
       {currentTask && (
         <Card className="border-2 border-orange-200 bg-orange-50/40" data-testid="current-task-card">
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+              <Play className="text-primary w-5 h-5" />
               <h3 className="text-lg font-semibold text-foreground">Currently Working On</h3>
+              <Badge className="bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <SelectableTodoItem
-              task={currentTask}
-              isSelected={selectedTodoId === currentTask.id}
-              onSelect={selectTodo}
-              onToggleComplete={toggleTaskCompletion}
-              variant="default"
-              showTime={true}
-              className="border-0 bg-transparent p-0"
-            />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground" data-testid="current-task-title">{currentTask.title}</p>
+                {currentTask.description && (
+                  <p className="text-sm text-muted-foreground mt-1" data-testid="current-task-description">
+                    {currentTask.description}
+                  </p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground" data-testid="current-task-time">
+                  {formatTimeRange(new Date(currentTask.startTime), new Date(currentTask.endTime))}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toggleTaskCompletion(currentTask.id, currentTask.completed || false)}
+                  className="mt-2"
+                  data-testid="button-complete-current"
+                >
+                  Mark Complete
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

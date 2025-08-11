@@ -141,11 +141,11 @@ export function SelectableTodoItem({
           {isActiveTask && variant !== 'minimal' && (
             <Badge className={cn(
               "text-xs shrink-0",
-              isRunning 
-                ? "bg-green-100 text-green-800 border-green-300" 
+              isRunning
+                ? "bg-orange-500 text-white ring-1 ring-orange-600/20"
                 : "bg-yellow-100 text-yellow-800 border-yellow-300"
             )}>
-              {isRunning ? 'Timer Running' : 'Timer Paused'}
+              {isRunning ? 'In Progress' : 'Paused'}
             </Badge>
           )}
           

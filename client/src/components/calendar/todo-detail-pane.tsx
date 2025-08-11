@@ -27,7 +27,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const queryClient = useQueryClient();
   
   // Timer integration
-  const { activeSession } = useTimerState();
+  const { activeSession, isTimerRunning, currentTaskId } = useTimerState();
   const taskTimer = useTaskTimer(selectedTodoId || '');
   const isActiveTask = activeSession?.taskId === selectedTodoId;
 
@@ -228,11 +228,11 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               {selectedTask.title}
             </h2>
             <div className="flex items-center space-x-2 mt-1">
-              {selectedTask.completed && (
-                <Badge variant="default" className="text-xs bg-green-600 text-white">
-                  Completed
-                </Badge>
-              )}
+              {selectedTask.completed ? (
+                <Badge variant="default" className="text-xs bg-green-600 text-white">Completed</Badge>
+              ) : isActiveTask && isTimerRunning ? (
+                <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
+              ) : null}
             </div>
           </div>
         </div>
@@ -365,9 +365,13 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge variant={selectedTask.completed ? "default" : "secondary"} className="text-xs">
-                    {selectedTask.completed ? "Completed" : "In Progress"}
-                  </Badge>
+                  {selectedTask.completed ? (
+                    <Badge variant="default" className="text-xs bg-green-600 text-white">Completed</Badge>
+                  ) : isActiveTask && isTimerRunning ? (
+                    <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">Planned</Badge>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Created</span>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { TimerError, TIMER_ERROR_CODES } from '@shared/services/timer-errors';
 
 interface ErrorReport {

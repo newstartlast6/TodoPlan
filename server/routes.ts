@@ -284,7 +284,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedSession = await storage.updateTimerSession(activeSession.id, {
         durationSeconds: totalSeconds,
         isActive: false,
-        updatedAt: now,
       });
 
       if (!updatedSession) {
@@ -370,7 +369,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedSession = await storage.updateTimerSession(sessionId, {
         isActive: true,
         startTime: new Date(), // Reset start time for new segment
-        updatedAt: new Date(),
       });
 
       if (!updatedSession) {
@@ -453,7 +451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime: now,
         durationSeconds: totalSeconds,
         isActive: false,
-        updatedAt: now,
       });
 
       if (!completedSession) {
@@ -521,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const totalSeconds = sessions
         .filter(session => session.endTime)
-        .reduce((sum, session) => sum + session.durationSeconds, 0);
+        .reduce((sum, session) => sum + (session.durationSeconds || 0), 0);
 
       res.json({
         taskId,

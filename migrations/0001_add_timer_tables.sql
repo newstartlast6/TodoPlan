@@ -1,6 +1,9 @@
 -- Migration: Add timer tracking tables
 -- Created: 2025-01-08
 
+-- Ensure pgcrypto is available for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Create timer_sessions table
 CREATE TABLE IF NOT EXISTS "timer_sessions" (
 	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

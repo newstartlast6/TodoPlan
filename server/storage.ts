@@ -6,8 +6,9 @@ import {
   tasks, users, timerSessions, taskEstimates 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { db } from "./db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { getDb, isPostgresMode } from "./db";
+import { eq, and, gte, lte, desc, lt, inArray, isNotNull } from "drizzle-orm";
+import { TimerPersistenceError } from "@shared/services/timer-errors";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -240,6 +241,9 @@ export class MemStorage implements IStorage {
     const session: TimerSession = {
       ...insertSession,
       id,
+      endTime: insertSession.endTime ?? null,
+      durationSeconds: insertSession.durationSeconds ?? 0,
+      isActive: insertSession.isActive ?? false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -273,7 +277,7 @@ export class MemStorage implements IStorage {
       const updatedSession: TimerSession = {
         ...session,
         endTime: now,
-        durationSeconds: session.durationSeconds + elapsedSeconds,
+        durationSeconds: (session.durationSeconds ?? 0) + elapsedSeconds,
         isActive: false,
         updatedAt: now,
       };
@@ -346,7 +350,7 @@ export class MemStorage implements IStorage {
       }
       
       const summary = summaryMap.get(taskKey)!;
-      summary.totalSeconds += session.durationSeconds;
+      summary.totalSeconds += session.durationSeconds ?? 0;
       summary.sessionCount += 1;
     });
 
@@ -354,7 +358,323 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database-backed storage using Drizzle + Postgres (Supabase)
+class DbStorage implements IStorage {
+  private get db() {
+    return getDb();
+  }
+
+  private async withPersistence<T>(
+    operation: string,
+    details: Record<string, unknown>,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("DB operation failed", {
+        operation,
+        details,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+      throw new TimerPersistenceError(`Database operation failed: ${operation}`, {
+        ...details,
+        error: errorMessage,
+      });
+    }
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.withPersistence("get_user", { id }, async () => {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return this.withPersistence("get_user_by_username", { username }, async () => {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    return this.withPersistence("create_user", { username: insertUser.username }, async () => {
+      const result = await this.db.insert(users).values(insertUser).returning();
+      return result[0];
+    });
+  }
+
+  async getTasks(startDate?: Date, endDate?: Date): Promise<Task[]> {
+    return this.withPersistence("get_tasks", {
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+    }, async () => {
+      if (startDate && endDate) {
+        return await this.db
+          .select()
+          .from(tasks)
+          .where(and(gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)))
+          .orderBy(tasks.startTime);
+      }
+      return await this.db.select().from(tasks).orderBy(tasks.startTime);
+    });
+  }
+
+  async getTask(id: string): Promise<Task | undefined> {
+    return this.withPersistence("get_task", { id }, async () => {
+      const result = await this.db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, id))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    return this.withPersistence("create_task", { title: insertTask.title }, async () => {
+      const result = await this.db.insert(tasks).values(insertTask).returning();
+      return result[0];
+    });
+  }
+
+  async updateTask(id: string, updateTask: UpdateTask): Promise<Task | undefined> {
+    return this.withPersistence("update_task", { id }, async () => {
+      const result = await this.db
+        .update(tasks)
+        .set(updateTask)
+        .where(eq(tasks.id, id))
+        .returning();
+      return result[0];
+    });
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    return this.withPersistence("delete_task", { id }, async () => {
+      const result = await this.db
+        .delete(tasks)
+        .where(eq(tasks.id, id))
+        .returning({ id: tasks.id });
+      return result.length > 0;
+    });
+  }
+
+  async getActiveTimerSession(): Promise<TimerSession | undefined> {
+    return this.withPersistence("get_active_timer_session", {}, async () => {
+      const result = await this.db
+        .select()
+        .from(timerSessions)
+        .where(eq(timerSessions.isActive, true))
+        .orderBy(desc(timerSessions.startTime))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async getTimerSession(id: string): Promise<TimerSession | undefined> {
+    return this.withPersistence("get_timer_session", { id }, async () => {
+      const result = await this.db
+        .select()
+        .from(timerSessions)
+        .where(eq(timerSessions.id, id))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async getTimerSessionsByTask(taskId: string): Promise<TimerSession[]> {
+    return this.withPersistence("get_timer_sessions_by_task", { taskId }, async () => {
+      return await this.db
+        .select()
+        .from(timerSessions)
+        .where(eq(timerSessions.taskId, taskId))
+        .orderBy(desc(timerSessions.startTime));
+    });
+  }
+
+  async createTimerSession(insertSession: InsertTimerSession): Promise<TimerSession> {
+    return this.withPersistence("create_timer_session", { taskId: insertSession.taskId }, async () => {
+      const now = new Date();
+      const withDefaults = {
+        ...insertSession,
+        endTime: insertSession.endTime ?? null,
+        durationSeconds: insertSession.durationSeconds ?? 0,
+        isActive: insertSession.isActive ?? false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const result = await this.db
+        .insert(timerSessions)
+        .values(withDefaults)
+        .returning();
+      return result[0];
+    });
+  }
+
+  async updateTimerSession(id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
+    return this.withPersistence("update_timer_session", { id }, async () => {
+      const now = new Date();
+      const result = await this.db
+        .update(timerSessions)
+        .set({ ...updateSession, updatedAt: now })
+        .where(eq(timerSessions.id, id))
+        .returning();
+      return result[0];
+    });
+  }
+
+  async deleteTimerSession(id: string): Promise<boolean> {
+    return this.withPersistence("delete_timer_session", { id }, async () => {
+      const result = await this.db
+        .delete(timerSessions)
+        .where(eq(timerSessions.id, id))
+        .returning({ id: timerSessions.id });
+      return result.length > 0;
+    });
+  }
+
+  async stopActiveTimerSessions(): Promise<void> {
+    return this.withPersistence("stop_active_timer_sessions", {}, async () => {
+      const db = this.db;
+      await db.transaction(async (tx) => {
+        const active = await tx
+          .select()
+          .from(timerSessions)
+          .where(eq(timerSessions.isActive, true));
+        if (active.length === 0) return;
+        const now = new Date();
+        for (const session of active) {
+          const start = new Date(session.startTime);
+          const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 1000));
+          const total = (session.durationSeconds ?? 0) + elapsed;
+          await tx
+            .update(timerSessions)
+            .set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now })
+            .where(eq(timerSessions.id, session.id));
+        }
+      });
+    });
+  }
+
+  async getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined> {
+    return this.withPersistence("get_task_estimate", { taskId }, async () => {
+      const result = await this.db
+        .select()
+        .from(taskEstimates)
+        .where(eq(taskEstimates.taskId, taskId))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async createTaskEstimate(insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
+    return this.withPersistence("create_task_estimate", { taskId: insertEstimate.taskId }, async () => {
+      const result = await this.db.insert(taskEstimates).values(insertEstimate).returning();
+      return result[0];
+    });
+  }
+
+  async updateTaskEstimate(taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
+    return this.withPersistence("update_task_estimate", { taskId }, async () => {
+      const result = await this.db
+        .update(taskEstimates)
+        .set(updateEstimate)
+        .where(eq(taskEstimates.taskId, taskId))
+        .returning();
+      return result[0];
+    });
+  }
+
+  async deleteTaskEstimate(taskId: string): Promise<boolean> {
+    return this.withPersistence("delete_task_estimate", { taskId }, async () => {
+      const result = await this.db
+        .delete(taskEstimates)
+        .where(eq(taskEstimates.taskId, taskId))
+        .returning({ id: taskEstimates.id });
+      return result.length > 0;
+    });
+  }
+
+  async getDailySummary(date: Date): Promise<DailyTimeSummary[]> {
+    return this.withPersistence("get_daily_summary", { date: date.toISOString() }, async () => {
+      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+      return await this.getDailySummaryByDateRange(startOfDay, endOfDay);
+    });
+  }
+
+  async getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
+    return this.withPersistence(
+      "get_daily_summary_by_range",
+      { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
+      async () => {
+        const rows = await this.db
+          .select()
+          .from(timerSessions)
+          .where(
+            and(
+              isNotNull(timerSessions.endTime),
+              gte(timerSessions.startTime, startDate),
+              lt(timerSessions.startTime, endDate)
+            )
+          );
+
+        const summaryMap = new Map<string, DailyTimeSummary>();
+        const taskIds = new Set<string>();
+
+        for (const s of rows) {
+          const dateKey = new Date(s.startTime).toISOString().split("T")[0];
+          const key = `${dateKey}-${s.taskId}`;
+          if (!summaryMap.has(key)) {
+            summaryMap.set(key, {
+              date: dateKey,
+              taskId: s.taskId,
+              totalSeconds: 0,
+              sessionCount: 0,
+            });
+          }
+          const curr = summaryMap.get(key)!;
+          curr.totalSeconds += s.durationSeconds || 0;
+          curr.sessionCount += 1;
+          taskIds.add(s.taskId);
+        }
+
+        if (taskIds.size > 0) {
+          const taskList = await this.db
+            .select()
+            .from(tasks)
+            .where(inArray(tasks.id, Array.from(taskIds)));
+          const idToTask = new Map(taskList.map((t) => [t.id, t] as const));
+          Array.from(summaryMap.values()).forEach((item) => {
+            item.task = idToTask.get(item.taskId);
+          });
+        }
+
+        return Array.from(summaryMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+      }
+    );
+  }
+}
+
+export function createStorage(): IStorage {
+  if (isPostgresMode()) {
+    return new DbStorage();
+  }
+  return new MemStorage();
+}
+
+export const storage: IStorage = createStorage();
 
 // export class DbStorage implements IStorage {
 //   async getUser(id: string): Promise<User | undefined> {
