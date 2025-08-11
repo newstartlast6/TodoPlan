@@ -1,35 +1,31 @@
-import { contextBridge, ipcRenderer } from "electron";
-import path from "path";
-import { pathToFileURL } from "url";
-const API_PORT = parseInt(process.env.ELECTRON_API_PORT || "5002", 10);
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
-contextBridge.exposeInMainWorld("electronAPI", {
-  getApiBaseUrl: () => API_BASE_URL,
-  getPublicAssetUrl: (relativePath) => {
-    const base = process.env.NODE_ENV === "development" ? path.resolve(process.cwd(), "client", "public") : path.resolve(process.cwd(), "dist", "public");
-    const fullPath = path.resolve(base, relativePath);
-    return pathToFileURL(fullPath).toString();
+import { contextBridge as s, ipcRenderer as t } from "electron";
+import i from "path";
+import { pathToFileURL as c } from "url";
+const p = parseInt(process.env.ELECTRON_API_PORT || "5002", 10), a = `http://localhost:${p}/api`;
+s.exposeInMainWorld("electronAPI", {
+  getApiBaseUrl: () => a,
+  getPublicAssetUrl: (e) => {
+    const n = process.env.NODE_ENV === "development" ? i.resolve(process.cwd(), "client", "public") : i.resolve(process.cwd(), "dist", "public"), o = i.resolve(n, e);
+    return c(o).toString();
   },
-  onTimerTick: (callback) => {
-    const handler = (_event, payload) => callback(payload.elapsedSeconds);
-    ipcRenderer.on("timer:tick", handler);
-    return () => ipcRenderer.off("timer:tick", handler);
+  onTimerTick: (e) => {
+    const n = (o, r) => e(r.elapsedSeconds);
+    return t.on("timer:tick", n), () => t.off("timer:tick", n);
   },
-  sendTimerTick: (elapsedSeconds) => {
-    ipcRenderer.send("timer:tick", { elapsedSeconds });
+  sendTimerTick: (e) => {
+    t.send("timer:tick", { elapsedSeconds: e });
   },
-  notifyTimerState: (status) => {
-    ipcRenderer.send("timer:stateChanged", { status });
+  notifyTimerState: (e) => {
+    t.send("timer:stateChanged", { status: e });
   },
-  onTrayAction: (callback) => {
-    const handler = (_event, action) => callback(action);
-    ipcRenderer.on("tray:action", handler);
-    return () => ipcRenderer.off("tray:action", handler);
+  onTrayAction: (e) => {
+    const n = (o, r) => e(r);
+    return t.on("tray:action", n), () => t.off("tray:action", n);
   },
-  setTrayTitle: (title) => {
-    ipcRenderer.send("tray:setTitle", { title });
+  setTrayTitle: (e) => {
+    t.send("tray:setTitle", { title: e });
   },
-  getOpenAtLogin: async () => ipcRenderer.invoke("app:getOpenAtLogin"),
-  setOpenAtLogin: async (value) => ipcRenderer.invoke("app:setOpenAtLogin", value),
-  quit: () => ipcRenderer.send("app:quit")
+  getOpenAtLogin: async () => t.invoke("app:getOpenAtLogin"),
+  setOpenAtLogin: async (e) => t.invoke("app:setOpenAtLogin", e),
+  quit: () => t.send("app:quit")
 });

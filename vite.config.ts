@@ -45,6 +45,11 @@ export default defineConfig({
           },
           build: {
             outDir: path.resolve(import.meta.dirname, "dist-electron"),
+            rollupOptions: {
+              output: {
+                format: "cjs",
+              },
+            },
           },
         },
       },
