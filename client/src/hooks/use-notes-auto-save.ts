@@ -58,27 +58,25 @@ export function useNotesAutoSave({
     },
     onMutate: async (updates) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks'] });
       await queryClient.cancelQueries({ queryKey: ['task', taskId] });
 
-      // Snapshot the previous value
-      const previousTasks = queryClient.getQueryData(['tasks']);
-      const previousTask = queryClient.getQueryData(['task', taskId]);
+      // Snapshot the previous values for rollback
+      const previousLists = queryClient.getQueriesData<Task[]>({ queryKey: ['/api/tasks'] });
+      const previousTask = queryClient.getQueryData<Task>(['task', taskId]);
 
-      // Optimistically update the cache
-      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
+      // Optimistically update all task lists containing this id
+      queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
         if (!old) return old;
-        return old.map(task => 
-          task.id === taskId ? { ...task, ...updates } : task
-        );
+        return old.map(task => (task.id === taskId ? { ...task, ...updates } : task));
       });
 
-      queryClient.setQueryData(['task', taskId], (old: Task | undefined) => {
-        if (!old) return old;
-        return { ...old, ...updates };
-      });
+      // Optimistically update focused task detail cache
+      if (previousTask) {
+        queryClient.setQueryData(['task', taskId], { ...previousTask, ...updates });
+      }
 
-      return { previousTasks, previousTask };
+      return { previousLists, previousTask } as const;
     },
     onSuccess: (updatedTask) => {
       setState(prev => ({
@@ -93,8 +91,10 @@ export function useNotesAutoSave({
     },
     onError: (error, variables, context) => {
       // Rollback optimistic updates
-      if (context?.previousTasks) {
-        queryClient.setQueryData(['tasks'], context.previousTasks);
+      if (context?.previousLists) {
+        for (const [queryKey, data] of context.previousLists) {
+          queryClient.setQueryData(queryKey, data);
+        }
       }
       if (context?.previousTask) {
         queryClient.setQueryData(['task', taskId], context.previousTask);
@@ -144,6 +144,17 @@ export function useNotesAutoSave({
       isDirty: newNotes !== initialNotes,
       error: null,
     }));
+
+    // Immediately reflect notes in all task lists and detail cache for responsive UI
+    // These are optimistic and may be rolled back on mutation error
+    queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+      if (!old) return old;
+      return old.map(task => (task.id === taskId ? { ...task, notes: newNotes } : task));
+    });
+    const existingTask = queryClient.getQueryData<Task>(['task', taskId]);
+    if (existingTask) {
+      queryClient.setQueryData(['task', taskId], { ...existingTask, notes: newNotes });
+    }
 
     // Trigger debounced save
     debouncedSave(newNotes);

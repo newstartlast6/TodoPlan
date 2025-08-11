@@ -10,6 +10,17 @@ import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
 import { useTaskTimer } from "@/hooks/use-timer-state";
 import { cn } from "@/lib/utils";
 import { EditableText } from "@/components/ui/editable-text";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface SelectableTodoItemProps {
   task: Task;
@@ -77,26 +88,33 @@ export function SelectableTodoItem({
     onToggleComplete(task.id, task.completed || false);
   };
 
+  const isRunningActive = isActiveTask && isRunning;
+
   const baseClasses = cn(
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
-    "hover:bg-blue-50/60 focus:outline-none",
-    isSelected && "bg-blue-50/60 shadow-sm",
+    isRunningActive ? "hover:bg-orange-50/60" : "hover:bg-blue-50/60",
+    "focus:outline-none",
+    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
   );
 
   const compactClasses = cn(
     "flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer text-sm group",
-    "hover:bg-blue-50/50 focus:outline-none",
-    isSelected && "bg-blue-50/60 shadow-sm",
+    isRunningActive ? "hover:bg-orange-50/50" : "hover:bg-blue-50/50",
+    "focus:outline-none",
+    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
   );
 
   const minimalClasses = cn(
     "flex items-center space-x-2 p-2 rounded-lg transition-all cursor-pointer text-sm group",
-    "hover:bg-blue-50/40",
-    isSelected && "bg-blue-50/60",
+    isRunningActive ? "hover:bg-orange-50/40" : "hover:bg-blue-50/40",
+    isRunningActive && "bg-orange-50/60 ring-1 ring-orange-200",
+    !isRunningActive && isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
     className
   );
@@ -119,6 +137,17 @@ export function SelectableTodoItem({
       aria-selected={isSelected}
       data-testid={`selectable-todo-${task.id}`}
     >
+
+      {/* Selection Indicator - always reserve space to avoid layout shift */}
+      <div
+        className={cn(
+          "w-1 h-6 rounded-full shrink-0",
+          isSelected ? "bg-blue-400" : isRunningActive ? "bg-orange-400" : "invisible bg-blue-400"
+        )}
+        data-testid={`selection-indicator-${task.id}`}
+      />
+      
+      {/* In Progress Indicator removed - only show In Progress when timer is running */}
       {/* Completion Button */}
       <Button
         variant="ghost"
@@ -135,10 +164,12 @@ export function SelectableTodoItem({
           <Circle className="text-gray-400 w-4 h-4" />
         )}
       </Button>
+      
 
       {/* Task Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center space-x-2">
+          
           <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
             <EditableText
               value={task.title}
@@ -233,31 +264,47 @@ export function SelectableTodoItem({
           </div>
         )}
 
-        {/* Delete Button (subtle, appears on hover) */}
+        {/* Delete Button (only when selected, with confirmation) */}
         {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-            className="hidden group-hover:inline-flex h-7 w-7 text-muted-foreground hover:text-destructive"
-            aria-label="Delete task"
-            data-testid={`delete-task-${task.id}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); }}
+                className={cn(
+                  "h-7 w-7 text-muted-foreground hover:text-destructive",
+                  isSelected ? "inline-flex" : "hidden"
+                )}
+                aria-label="Delete task"
+                data-testid={`delete-task-${task.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the task and remove it from your calendar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(task.id);
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
-      {/* Selection Indicator - always reserve space to avoid layout shift */}
-      <div
-        className={cn(
-          "w-1 h-6 rounded-full shrink-0",
-          isSelected ? "bg-blue-400" : "invisible bg-blue-400"
-        )}
-        data-testid={`selection-indicator-${task.id}`}
-      />
-      
-      {/* In Progress Indicator removed - only show In Progress when timer is running */}
     </div>
   );
 }
