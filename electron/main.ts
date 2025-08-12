@@ -18,6 +18,15 @@ function formatDuration(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+// Keep the tray title compact; allow override via env if desired
+const TRAY_TITLE_MAX_CHARS = parseInt(process.env.TRAY_TITLE_MAX_CHARS || '20', 10);
+function truncateTrayTitle(raw: string): string {
+  if (!raw) return '';
+  const normalized = String(raw).replace(/\s+/g, ' ').trim();
+  if (normalized.length <= TRAY_TITLE_MAX_CHARS) return normalized;
+  return normalized.slice(0, Math.max(1, TRAY_TITLE_MAX_CHARS - 1)) + '…';
+}
+
 const isMac = process.platform === 'darwin';
 const isDev = !app.isPackaged;
 // Use a dedicated env var for API port to avoid conflicts with Vite dev server port
@@ -119,7 +128,7 @@ function createTray() {
   const emptyIconDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
   const icon = nativeImage.createFromDataURL(emptyIconDataUrl);
   tray = new Tray(icon);
-  tray.setTitle('00:00');
+  tray.setTitle(truncateTrayTitle('00:00'));
   tray.setToolTip('TodoPlan Timer');
 
   const buildMenu = () => {
@@ -189,7 +198,7 @@ function registerIpc() {
     if (!tray) return;
     if (preferRendererTrayTitle) return;
     const text = formatDuration(payload?.elapsedSeconds ?? 0);
-    tray.setTitle(text);
+    tray.setTitle(truncateTrayTitle(text));
   });
 
   ipcMain.on('timer:stateChanged', (_event, payload: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE' }) => {
@@ -231,7 +240,9 @@ function registerIpc() {
       if (!tray) return;
       const nextTitle = (payload && typeof payload.title === 'string') ? payload.title : '';
       // macOS supports text titles in the menu bar; set directly
-      tray.setTitle(nextTitle);
+      tray.setTitle(truncateTrayTitle(nextTitle));
+      // Keep full value visible on hover
+      try { tray.setToolTip(nextTitle); } catch {}
       preferRendererTrayTitle = true;
     } catch {}
   });
