@@ -3,6 +3,15 @@ import { pgTable, text, varchar, timestamp, boolean, integer, date } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const lists = pgTable("lists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  emoji: text("emoji").notNull().default("📋"),
+  color: text("color"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const tasks = pgTable("tasks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -12,6 +21,7 @@ export const tasks = pgTable("tasks", {
   endTime: timestamp("end_time").notNull(),
   completed: boolean("completed").default(false),
   priority: varchar("priority").notNull().default("medium"), // low, medium, high
+  listId: varchar("list_id").references(() => lists.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -46,6 +56,19 @@ export const updateTaskSchema = insertTaskSchema.partial();
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type UpdateTask = z.infer<typeof updateTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// List schemas
+export const insertListSchema = createInsertSchema(lists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateListSchema = insertListSchema.partial();
+
+export type InsertList = z.infer<typeof insertListSchema>;
+export type UpdateList = z.infer<typeof updateListSchema>;
+export type List = typeof lists.$inferSelect;
 
 // Goal types (shared between client and server)
 export const goalTypeEnum = z.enum(["daily", "weekly", "monthly", "yearly"]);

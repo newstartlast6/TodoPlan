@@ -15,6 +15,7 @@ import { Task, UpdateTask } from "@shared/schema";
 import { format, isBefore } from "date-fns";
 import { formatTimeRange } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
+import { listsKeys } from "@/hooks/use-lists";
 
 interface TodoDetailPaneProps {
   onClose?: () => void;
@@ -25,7 +26,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { selectedTodoId, closeDetailPane } = useSelectedTodo();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Timer integration
   const { activeSession, isTimerRunning, currentTaskId } = useTimerState();
   const taskTimer = useTaskTimer(selectedTodoId || '');
@@ -93,11 +94,19 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             );
           }
         );
+
       }
 
       return { previousTask, previousTasks };
     },
     onSuccess: (updatedTask) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['task', selectedTodoId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+
+      // Invalidate lists cache to refresh counts if needed
+      queryClient.invalidateQueries({ queryKey: listsKeys.lists() });
+
       toast({
         title: "Task updated",
         description: "Your changes have been saved successfully.",
@@ -111,6 +120,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
       if (context?.previousTasks) {
         queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, context.previousTasks);
       }
+
 
       toast({
         title: "Error",
@@ -133,7 +143,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     return null;
   };
 
-  
+
 
   const handleStartTimeChange = (startTime: Date) => {
     if (!selectedTask) return;
@@ -222,7 +232,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     );
   }
 
-  
+
 
   return (
     <div className={cn("h-full flex flex-col bg-surface", className)} data-testid="todo-detail-pane">
@@ -323,7 +333,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             <Separator />
 
             <div className="grid gap-4">
-            {/* Time pickers removed from UI */}
+              {/* Time pickers removed from UI */}
 
               <Separator />
 

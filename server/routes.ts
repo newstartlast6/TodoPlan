@@ -5,6 +5,7 @@ import {
   insertTaskSchema, updateTaskSchema,
   insertTimerSessionSchema, updateTimerSessionSchema,
   insertTaskEstimateSchema, updateTaskEstimateSchema,
+  insertListSchema, updateListSchema,
   goalTypeEnum
 } from "@shared/schema";
 import { z } from "zod";
@@ -97,6 +98,85 @@ function validateTimerRequest(schema: z.ZodSchema) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Lists endpoints
+  
+  // Get all lists with task counts
+  app.get("/api/lists", async (req, res) => {
+    try {
+      const lists = await storage.getLists();
+      res.json(lists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch lists" });
+    }
+  });
+
+  // Get single list
+  app.get("/api/lists/:id", async (req, res) => {
+    try {
+      const list = await storage.getList(req.params.id);
+      if (!list) {
+        return res.status(404).json({ message: "List not found" });
+      }
+      res.json(list);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch list" });
+    }
+  });
+
+  // Create new list
+  app.post("/api/lists", async (req, res) => {
+    try {
+      const validatedData = insertListSchema.parse(req.body);
+      const list = await storage.createList(validatedData);
+      res.status(201).json(list);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid list data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create list" });
+    }
+  });
+
+  // Update list
+  app.put("/api/lists/:id", async (req, res) => {
+    try {
+      const validatedData = updateListSchema.parse(req.body);
+      const list = await storage.updateList(req.params.id, validatedData);
+      if (!list) {
+        return res.status(404).json({ message: "List not found" });
+      }
+      res.json(list);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid list data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update list" });
+    }
+  });
+
+  // Delete list
+  app.delete("/api/lists/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteList(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "List not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete list" });
+    }
+  });
+
+  // Get tasks for specific list
+  app.get("/api/lists/:id/tasks", async (req, res) => {
+    try {
+      const tasks = await storage.getTasksByList(req.params.id);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tasks for list" });
+    }
+  });
+
   // Goals endpoints
   app.get("/api/goals", async (req, res) => {
     try {

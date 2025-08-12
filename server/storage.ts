@@ -4,7 +4,8 @@ import {
   type TaskEstimate, type InsertTaskEstimate, type UpdateTaskEstimate,
   type DailyTimeSummary,
   type Goal, type InsertGoal, type UpdateGoal,
-  tasks, users, timerSessions, taskEstimates, goals 
+  type List, type InsertList, type UpdateList,
+  tasks, users, timerSessions, taskEstimates, goals, lists 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
@@ -15,6 +16,14 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // List operations
+  getLists(): Promise<List[]>;
+  getList(id: string): Promise<List | undefined>;
+  createList(list: InsertList): Promise<List>;
+  updateList(id: string, list: UpdateList): Promise<List | undefined>;
+  deleteList(id: string): Promise<boolean>;
+  getTasksByList(listId: string): Promise<Task[]>;
   
   // Task operations
   getTasks(startDate?: Date, endDate?: Date): Promise<Task[]>;
@@ -49,6 +58,7 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private lists: Map<string, List>;
   private tasks: Map<string, Task>;
   private timerSessions: Map<string, TimerSession>;
   private taskEstimates: Map<string, TaskEstimate>;
@@ -56,6 +66,7 @@ export class MemStorage implements IStorage {
 
   constructor() {
     this.users = new Map();
+    this.lists = new Map();
     this.tasks = new Map();
     this.timerSessions = new Map();
     this.taskEstimates = new Map();
@@ -181,6 +192,58 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  // List operations
+  async getLists(): Promise<List[]> {
+    return Array.from(this.lists.values()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async getList(id: string): Promise<List | undefined> {
+    return this.lists.get(id);
+  }
+
+  async createList(insertList: InsertList): Promise<List> {
+    const id = randomUUID();
+    const list: List = {
+      ...insertList,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.lists.set(id, list);
+    return list;
+  }
+
+  async updateList(id: string, updateList: UpdateList): Promise<List | undefined> {
+    const existingList = this.lists.get(id);
+    if (!existingList) return undefined;
+    
+    const updatedList: List = { 
+      ...existingList, 
+      ...updateList,
+      updatedAt: new Date()
+    };
+    this.lists.set(id, updatedList);
+    return updatedList;
+  }
+
+  async deleteList(id: string): Promise<boolean> {
+    // Set list_id to null for all tasks in this list
+    Array.from(this.tasks.values())
+      .filter(task => task.listId === id)
+      .forEach(task => {
+        const updatedTask = { ...task, listId: null };
+        this.tasks.set(task.id, updatedTask);
+      });
+    
+    return this.lists.delete(id);
+  }
+
+  async getTasksByList(listId: string): Promise<Task[]> {
+    return Array.from(this.tasks.values())
+      .filter(task => task.listId === listId)
+      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
   async getTasks(startDate?: Date, endDate?: Date): Promise<Task[]> {
@@ -444,6 +507,73 @@ class DbStorage implements IStorage {
     return this.withPersistence("create_user", { username: insertUser.username }, async () => {
       const result = await this.db.insert(users).values(insertUser).returning();
       return result[0];
+    });
+  }
+
+  // List operations
+  async getLists(): Promise<List[]> {
+    return this.withPersistence("get_lists", {}, async () => {
+      return await this.db.select().from(lists).orderBy(lists.createdAt);
+    });
+  }
+
+  async getList(id: string): Promise<List | undefined> {
+    return this.withPersistence("get_list", { id }, async () => {
+      const result = await this.db
+        .select()
+        .from(lists)
+        .where(eq(lists.id, id))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async createList(insertList: InsertList): Promise<List> {
+    return this.withPersistence("create_list", { name: insertList.name }, async () => {
+      const result = await this.db.insert(lists).values(insertList).returning();
+      return result[0];
+    });
+  }
+
+  async updateList(id: string, updateList: UpdateList): Promise<List | undefined> {
+    return this.withPersistence("update_list", { id }, async () => {
+      const result = await this.db
+        .update(lists)
+        .set({ ...updateList, updatedAt: new Date() })
+        .where(eq(lists.id, id))
+        .returning();
+      return result[0];
+    });
+  }
+
+  async deleteList(id: string): Promise<boolean> {
+    return this.withPersistence("delete_list", { id }, async () => {
+      const db = this.db;
+      return await db.transaction(async (tx) => {
+        // Set list_id to null for all tasks in this list
+        await tx
+          .update(tasks)
+          .set({ listId: null })
+          .where(eq(tasks.listId, id));
+        
+        // Delete the list
+        const result = await tx
+          .delete(lists)
+          .where(eq(lists.id, id))
+          .returning({ id: lists.id });
+        
+        return result.length > 0;
+      });
+    });
+  }
+
+  async getTasksByList(listId: string): Promise<Task[]> {
+    return this.withPersistence("get_tasks_by_list", { listId }, async () => {
+      return await this.db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.listId, listId))
+        .orderBy(tasks.startTime);
     });
   }
 
