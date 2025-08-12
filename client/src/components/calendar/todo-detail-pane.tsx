@@ -345,9 +345,9 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 <div className="text-lg font-mono font-semibold text-foreground">
                   {(() => {
                     const persisted = (selectedTask as any).timeLoggedSeconds || 0;
-                    // If this is the active session (running or paused), trust the session's durationSeconds
-                    if (activeSession && activeSession.taskId === selectedTodoId) {
-                      return TimerCalculator.formatDuration(activeSession.durationSeconds || 0);
+                    // While running show live session total; when paused show persisted value
+                    if (isActiveTask && isTimerRunning) {
+                      return TimerCalculator.formatDuration(activeSession?.durationSeconds || 0);
                     }
                     return TimerCalculator.formatDuration(persisted);
                   })()}

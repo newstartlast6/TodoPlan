@@ -232,10 +232,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const res = await apiRequest('GET', `/api/tasks/${taskId}`);
         const task: any = await res.json();
         const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
-        console.log('[TimerContext] startTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
+        // Debug logging removed
         timerService.setAccumulatedSeconds(baseSeconds);
       } catch {
-        console.warn('[TimerContext] startTimer: failed to fetch task for seeding, defaulting to 0', { taskId });
+        // Debug logging removed
         timerService.setAccumulatedSeconds(0);
       }
 
@@ -256,7 +256,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const server = await apiClient.startTimer(taskId);
           serverSessionIdRef.current = server.session.id;
         } catch (e) {
-          console.error('Failed to start server timer session', e);
+          // Silently ignore server timer start issues
         }
         await persistenceService.queueEvent({
           id: `start_${Date.now()}`,
@@ -299,7 +299,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: any) => Array.isArray(old) ? old.map((t) => t.id === taskId ? { ...t, timeLoggedSeconds: updatedTask?.timeLoggedSeconds || 0 } : t) : old);
           } catch {}
         } catch (e) {
-          console.error('Failed to pause server timer session', e);
+          // Silently ignore server timer pause issues
         }
         await persistenceService.queueEvent({
           id: `pause_${Date.now()}`,
@@ -330,10 +330,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const res = await apiRequest('GET', `/api/tasks/${taskId}`);
           const task: any = await res.json();
           const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
-          console.log('[TimerContext] resumeTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
+          // Debug logging removed
           timerService.setAccumulatedSeconds(baseSeconds);
         } catch {
-          console.warn('[TimerContext] resumeTimer: failed to fetch task for seeding');
+          // Debug logging removed
         }
       }
 
@@ -355,7 +355,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
             }
           }
         } catch (e) {
-          console.error('Failed to resume server timer session', e);
+          // Silently ignore server timer resume issues
         }
         await persistenceService.queueEvent({
           id: `resume_${Date.now()}`,
@@ -429,17 +429,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       // Stop the current server and local timers, then start the new one (server + local)
       const stopResult = await timerService.stopTimer();
       if (stopResult.success) {
-        try { await apiClient.stopTimer(); } catch (e) { console.error('Failed to stop server session during switch', e); }
+        try { await apiClient.stopTimer(); } catch (e) { /* ignore */ }
       }
       // Seed base before starting new task
       try {
         const res = await apiRequest('GET', `/api/tasks/${taskId}`);
         const task: any = await res.json();
         const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
-        console.log('[TimerContext] switchTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
+        // Debug logging removed
         timerService.setAccumulatedSeconds(baseSeconds);
       } catch {
-        console.warn('[TimerContext] switchTimer: failed to fetch task for seeding, defaulting to 0', { taskId });
+        // Debug logging removed
         timerService.setAccumulatedSeconds(0);
       }
       const result = await timerService.startTimer(taskId);
@@ -451,7 +451,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const server = await apiClient.startTimer(taskId);
           serverSessionIdRef.current = server.session.id;
         } catch (e) {
-          console.error('Failed to start server session during switch', e);
+          // Silently ignore server session start issues
         }
         // Queue both stop and start events
         const now = new Date().toISOString();

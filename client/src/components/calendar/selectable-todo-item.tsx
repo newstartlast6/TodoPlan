@@ -85,20 +85,26 @@ export function SelectableTodoItem({
   const persistedSeconds = (task as any).timeLoggedSeconds || 0;
   const holdRef = useRef<number>(0);
   const isRunningActiveComputed = isActiveTask && isRunning;
+  // Track latest running session value
   useEffect(() => {
-    if (isRunningActive) {
+    if (isRunningActiveComputed) {
       holdRef.current = Math.max(holdRef.current, currentSessionSeconds || 0);
     }
   }, [isRunningActiveComputed, currentSessionSeconds]);
-  const displaySeconds = isRunningActiveComputed ? (currentSessionSeconds || 0) : persistedSeconds;
-  if (isRunningActiveComputed) {
-    // eslint-disable-next-line no-console
-    console.log('[SelectableTodoItem] running display', {
-      taskId: task.id,
-      persistedSeconds,
-      currentSessionSeconds,
-    });
-  }
+
+  // When not running, hold the last running value until persisted catches up
+  const displaySeconds = isRunningActiveComputed
+    ? (currentSessionSeconds || 0)
+    : Math.max(persistedSeconds, holdRef.current || 0);
+
+  // Reset hold once persisted matches or exceeds the held value
+  useEffect(() => {
+    if (!isRunningActiveComputed && persistedSeconds >= (holdRef.current || 0)) {
+      holdRef.current = 0;
+    }
+  }, [isRunningActiveComputed, persistedSeconds]);
+
+  // Debug logging removed
   useEffect(() => {
     holdRef.current = 0;
   }, [isRunningActiveComputed, persistedSeconds]);

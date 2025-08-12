@@ -343,12 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const session = await storage.createTimerSession(sessionData);
       
-      // Log successful timer start
-      console.log('Timer started successfully', {
-        sessionId: session.id,
-        taskId,
-        timestamp: new Date().toISOString(),
-      });
+      // Logging removed
 
       res.status(201).json({ 
         session,
@@ -394,15 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prefer client-reported total seconds if provided
       const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      console.log('[Server] timers/pause', {
-        sessionId: activeSession.id,
-        taskId: activeSession.taskId,
-        startTime: startTime.toISOString(),
-        now: now.toISOString(),
-        previousDuration: activeSession.durationSeconds,
-        elapsedSeconds,
-        clientTotal,
-      });
+      // Logging removed
       const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
       // Snap up to at least last reported duration to avoid off-by-one
       const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
@@ -436,11 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Failed to increment task logged time on pause', { taskId: activeSession.taskId, deltaSeconds, error: e });
       }
 
-      console.log('Timer paused successfully', {
-        sessionId: activeSession.id,
-        totalSeconds,
-        timestamp: now.toISOString(),
-      });
+      // Logging removed
 
       res.json({ 
         session: updatedSession,
@@ -521,11 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      console.log('Timer resumed successfully', {
-        sessionId,
-        taskId: session.taskId,
-        timestamp: new Date().toISOString(),
-      });
+      // Logging removed
 
       res.json({ 
         session: updatedSession,
@@ -582,15 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prefer client-reported total seconds if provided
       const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      console.log('[Server] timers/stop', {
-        sessionId: activeSession.id,
-        taskId: activeSession.taskId,
-        startTime: startTime.toISOString(),
-        now: now.toISOString(),
-        previousDuration: activeSession.durationSeconds,
-        elapsedSeconds,
-        clientTotal,
-      });
+      // Logging removed
       const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
       const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
       const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
@@ -624,12 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Failed to increment task logged time on stop', { taskId: activeSession.taskId, deltaSeconds, error: e });
       }
 
-      console.log('Timer stopped successfully', {
-        sessionId: activeSession.id,
-        taskId: activeSession.taskId,
-        totalSeconds,
-        timestamp: now.toISOString(),
-      });
+      // Logging removed
 
       res.json({ 
         session: completedSession,
