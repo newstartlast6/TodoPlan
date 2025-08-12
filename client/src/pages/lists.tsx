@@ -143,26 +143,22 @@ export function Lists() {
   // Render main content
   const renderMainContent = () => (
     <div className="h-full bg-gray-50 flex relative">
-      {/* Floating panel on Lists page too (no overlay) */}
-      {isPlanPanelOpen && (
-        <div className="hidden md:block absolute top-6 right-6 z-30 max-h-[calc(100vh-160px)]">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-2xl flex flex-col h-full max-h-[calc(100vh-160px)]">
-            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-              <div className="text-sm font-semibold text-gray-500">Plan</div>
-              <button
-                aria-label="Close plan"
-                className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100"
-                onClick={() => setIsPlanPanelOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="h-full overflow-y-auto p-4">
-              <PlanPanel variant="floating" />
-            </div>
-          </div>
+      {/* Right-side sliding Plan Panel (no overlay) */}
+      <div
+        className={[
+          "hidden md:block fixed inset-y-0 right-0 z-40 w-[480px] transform transition-transform duration-300",
+          isPlanPanelOpen ? "translate-x-0" : "translate-x-full",
+        ].join(" ")}
+        style={{ filter: 'drop-shadow(-12px 0 24px rgba(0,0,0,0.18))' }}
+      >
+        <div className="relative h-full">
+          <PlanPanel
+            variant="floating"
+            className="w-full h-full rounded-none border-0 border-l border-border shadow-none"
+            onClose={() => setIsPlanPanelOpen(false)}
+          />
         </div>
-      )}
+      </div>
       {/* Panel 1: Lists Sidebar */}
       <div className="w-80 flex-shrink-0">
         <ListsPanel

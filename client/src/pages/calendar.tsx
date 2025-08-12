@@ -333,28 +333,23 @@ export default function Calendar() {
 
       {/* Main Content */}
       <main className="flex-1 p-8 relative" data-testid="calendar-main">
-        {/* Floating Plan Panel (no overlay; keeps background fully interactive) */}
-        {isPlanPanelOpen && (
-          <div className="hidden md:block absolute top-6 right-6 z-30 max-h-[calc(100vh-160px)]">
-            <div className="bg-white rounded-xl border border-border shadow-2xl flex flex-col h-full max-h-[calc(100vh-160px)]">
-              {/* Header with close */}
-              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-white">
-                <div className="text-sm font-semibold text-muted-foreground">Plan</div>
-                <button
-                  aria-label="Close plan"
-                  className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted"
-                  onClick={() => setIsPlanPanelOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              {/* Scrollable content */}
-              <div className="h-full overflow-y-auto p-4">
-                <PlanPanel variant="floating" />
-              </div>
-            </div>
+        {/* Right-side sliding Plan Panel (no overlay; background remains interactive) */}
+        <div
+          className={cn(
+            "hidden md:block fixed inset-y-0 right-0 z-40 w-[420px] transform transition-transform duration-300",
+            isPlanPanelOpen ? "translate-x-0" : "translate-x-full"
+          )}
+          style={{ filter: 'drop-shadow(-12px 0 24px rgba(0,0,0,0.18))' }}
+        >
+          {/* Panel content */}
+          <div className="relative h-full">
+            <PlanPanel
+              variant="floating"
+              className="w-full h-full rounded-none border-0 border-l border-border shadow-none"
+              onClose={() => setIsPlanPanelOpen(false)}
+            />
           </div>
-        )}
+        </div>
 
         <div className="flex-1 min-w-0">
           {renderCurrentView()}
