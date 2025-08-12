@@ -123,8 +123,8 @@ export function TaskTimerButton({
             )}
           </Button>
           
-          {totalTimeSeconds > 0 && !isActiveTask && (
-            <span className="text-xs text-gray-500 font-mono">
+          {!isActiveTask && (
+            <span className="text-xs text-muted-foreground font-mono">
               {formattedTotalTime}
             </span>
           )}
@@ -174,12 +174,10 @@ export function TaskTimerButton({
           )}
         </Button>
 
-        {totalTimeSeconds > 0 && (
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Total time today:</span>
-            <span className="font-mono">{formattedTotalTime}</span>
-          </div>
-        )}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>Time logged</span>
+          <span className="font-mono">{formattedTotalTime}</span>
+        </div>
       </div>
 
       <TimerSwitchModal

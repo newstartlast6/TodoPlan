@@ -9,7 +9,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
-import { eq, and, gte, lte, desc, lt, inArray, isNotNull, or, isNull } from "drizzle-orm";
+import { eq, and, gte, lte, desc, lt, inArray, isNotNull, or, isNull, sql } from "drizzle-orm";
 import { TimerPersistenceError } from "@shared/services/timer-errors";
 
 export interface IStorage {
@@ -40,6 +40,8 @@ export interface IStorage {
   updateTimerSession(id: string, session: UpdateTimerSession): Promise<TimerSession | undefined>;
   deleteTimerSession(id: string): Promise<boolean>;
   stopActiveTimerSessions(): Promise<void>;
+  // Task logged time aggregation
+  incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void>;
 
   // Task estimate operations
   getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined>;
@@ -93,6 +95,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       {
         id: randomUUID(),
@@ -106,6 +109,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       // Tuesday - completed
       {
@@ -120,6 +124,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       // Today - mixed
       {
@@ -134,6 +139,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       {
         id: randomUUID(),
@@ -147,6 +153,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       {
         id: randomUUID(),
@@ -160,6 +167,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       {
         id: randomUUID(),
@@ -173,6 +181,7 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
       // Tomorrow
       {
@@ -187,10 +196,11 @@ export class MemStorage implements IStorage {
         createdAt: new Date(),
         listId: null,
         scheduledDate: null,
+        timeLoggedSeconds: 0,
       },
     ];
-    
-    sampleTasks.forEach(task => this.tasks.set(task.id, task));
+    // Ensure default timeLoggedSeconds
+    sampleTasks.forEach(task => this.tasks.set(task.id, { ...task, timeLoggedSeconds: (task as any).timeLoggedSeconds ?? 0 } as Task));
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -309,6 +319,7 @@ export class MemStorage implements IStorage {
       priority: insertTask.priority || "medium",
       listId: insertTask.listId ?? null,
       scheduledDate: (insertTask as any).scheduledDate ?? null,
+      timeLoggedSeconds: (insertTask as any).timeLoggedSeconds ?? 0,
     };
     this.tasks.set(id, task);
     return task;
@@ -388,7 +399,19 @@ export class MemStorage implements IStorage {
         updatedAt: now,
       };
       this.timerSessions.set(session.id, updatedSession);
+      // Also increment the associated task's logged time
+      const task = this.tasks.get(session.taskId);
+      if (task) {
+        this.tasks.set(session.taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + Math.max(0, elapsedSeconds) });
+      }
     });
+  }
+
+  async incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void> {
+    const task = this.tasks.get(taskId);
+    if (!task) return;
+    const add = Math.max(0, Math.floor(deltaSeconds || 0));
+    this.tasks.set(taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + add });
   }
 
   // Task estimate operations
@@ -770,8 +793,23 @@ class DbStorage implements IStorage {
             .update(timerSessions)
             .set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now })
             .where(eq(timerSessions.id, session.id));
+          // Increment the task's logged time
+          await tx
+            .update(tasks)
+            .set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${elapsed}` } as any)
+            .where(eq(tasks.id, session.taskId));
         }
       });
+    });
+  }
+
+  async incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void> {
+    return this.withPersistence("increment_task_logged_time", { taskId, deltaSeconds }, async () => {
+      const add = Math.max(0, Math.floor(deltaSeconds || 0));
+      await this.db
+        .update(tasks)
+        .set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${add}` } as any)
+        .where(eq(tasks.id, taskId));
     });
   }
 

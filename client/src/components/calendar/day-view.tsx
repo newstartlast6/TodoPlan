@@ -183,9 +183,9 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
                   onToggleComplete={toggleTaskCompletion}
                   onUpdate={(id, updates) => onTaskUpdate(id, updates)}
                   onDelete={onTaskDelete}
-                  variant="default"
+                   variant="default"
                   showTime={false}
-                  showLoggedTime={false}
+                   showLoggedTime={true}
                   startEditing={task.title === ""}
                 />
               ))}

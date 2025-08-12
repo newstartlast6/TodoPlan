@@ -40,6 +40,7 @@ export function useCreateTaskInList() {
           id: `temp-${Date.now()}`,
           ...newTask,
           createdAt: new Date(),
+          timeLoggedSeconds: 0 as any,
         };
         return [...old, optimisticTask];
       });

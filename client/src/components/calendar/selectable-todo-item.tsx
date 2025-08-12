@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { EditableText } from "@/components/ui/editable-text";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
+import { TimerCalculator } from "@shared/services/timer-service";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -58,7 +59,7 @@ export function SelectableTodoItem({
   showTime = true,
   showDate = false,
   showTimer = true,
-  showLoggedTime = false,
+  showLoggedTime = true,
   showEstimate = true,
   className,
   startEditing = false,
@@ -78,7 +79,10 @@ export function SelectableTodoItem({
   }, [startEditing]);
   
   // Timer integration
-  const { isActiveTask, isRunning, formattedTotalTime } = useTaskTimer(task.id);
+  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(task.id);
+  const persistedSeconds = (task as any).timeLoggedSeconds || 0;
+  const displaySeconds = isActiveTask && isRunning ? persistedSeconds + (currentSessionSeconds || 0) : persistedSeconds;
+  const formattedPersistedTime = TimerCalculator.formatDuration(displaySeconds);
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger selection when clicking the completion button or timer controls
@@ -226,12 +230,12 @@ export function SelectableTodoItem({
           </p>
         )}
         
-        {/* Timer Total Time (hidden by default) */}
-        {showLoggedTime && formattedTotalTime !== '0:00' && variant !== 'minimal' && (
+        {/* Time Logged (always visible; persisted per-task, continues while running) */}
+        {showLoggedTime && variant !== 'minimal' && (
           <div className="flex items-center gap-1 mt-1">
-            <Clock className="w-3 h-3 text-gray-500" />
-            <span className="text-xs text-gray-600 font-mono">
-              {formattedTotalTime} today
+            <Clock className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground font-mono">
+              {formattedPersistedTime}
             </span>
           </div>
         )}

@@ -57,6 +57,7 @@ const sampleTask: Task = {
   completed: false,
   createdAt: new Date('2024-01-15T08:00:00Z'),
   updatedAt: new Date('2024-01-15T08:00:00Z'),
+  timeLoggedSeconds: 0,
 };
 
 describe('Timer Integration Tests', () => {
@@ -212,7 +213,7 @@ describe('Timer Integration Tests', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('1:00 today')).toBeInTheDocument();
+      expect(screen.getByText('1:00')).toBeInTheDocument();
     });
 
     it('should not trigger selection when clicking timer controls', () => {

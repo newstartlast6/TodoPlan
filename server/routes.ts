@@ -414,6 +414,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Increment task's persisted logged time with the delta in this segment
+      const deltaSeconds = elapsedSeconds;
+      try {
+        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
+      } catch (e) {
+        console.error('Failed to increment task logged time on pause', { taskId: activeSession.taskId, deltaSeconds, error: e });
+      }
+
       console.log('Timer paused successfully', {
         sessionId: activeSession.id,
         totalSeconds,
@@ -581,6 +589,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Increment task's persisted logged time with the delta in this final segment
+      const deltaSeconds = elapsedSeconds;
+      try {
+        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
+      } catch (e) {
+        console.error('Failed to increment task logged time on stop', { taskId: activeSession.taskId, deltaSeconds, error: e });
+      }
+
       console.log('Timer stopped successfully', {
         sessionId: activeSession.id,
         taskId: activeSession.taskId,
@@ -604,6 +620,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ session: activeSession });
     } catch (error) {
       res.status(500).json({ message: "Failed to get active timer" });
+    }
+  });
+
+  // Get overall logged time for a task (persisted)
+  app.get("/api/tasks/:id/time-logged", async (req, res) => {
+    try {
+      const task = await storage.getTask(req.params.id);
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+      res.json({ taskId: task.id, timeLoggedSeconds: (task as any).timeLoggedSeconds ?? 0 });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get task logged time' });
+    }
+  });
+
+  // Increment persisted logged time for a task
+  app.post("/api/tasks/:id/time-logged/increment", async (req, res) => {
+    try {
+      const taskId = req.params.id;
+      const { deltaSeconds } = req.body || {};
+      if (typeof deltaSeconds !== 'number' || !isFinite(deltaSeconds)) {
+        return res.status(400).json({ message: 'deltaSeconds must be a number' });
+      }
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+      await storage.incrementTaskLoggedTime(taskId, Math.max(0, Math.floor(deltaSeconds)));
+      const updated = await storage.getTask(taskId);
+      res.json({ taskId, timeLoggedSeconds: (updated as any)?.timeLoggedSeconds ?? 0 });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to increment task logged time' });
     }
   });
 

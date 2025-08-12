@@ -254,6 +254,14 @@ export class TimerService {
   }
 
   /**
+   * Seed the timer's accumulated seconds before starting a session.
+   * Use this to continue timing from a previously persisted total.
+   */
+  setAccumulatedSeconds(seconds: number): void {
+    this.accumulatedSeconds = Math.max(0, Math.floor(seconds || 0));
+  }
+
+  /**
    * Add event listener
    */
   on(event: string, callback: Function): void {

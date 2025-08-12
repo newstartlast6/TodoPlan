@@ -23,6 +23,8 @@ export const tasks = pgTable("tasks", {
   priority: varchar("priority").notNull().default("medium"), // low, medium, high
   listId: varchar("list_id").references(() => lists.id, { onDelete: "set null" }),
   scheduledDate: timestamp("scheduled_date"),
+  // Persisted aggregate of all-time seconds logged across all sessions for this task
+  timeLoggedSeconds: integer("time_logged_seconds").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -183,7 +183,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                         onDelete={onTaskDelete}
                         variant="compact"
                         showTime={false}
-                        showLoggedTime={false}
+                        showLoggedTime={true}
                         startEditing={task.title === ""}
                       />
                     ))}

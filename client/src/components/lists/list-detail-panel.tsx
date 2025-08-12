@@ -278,7 +278,7 @@ export function ListDetailPanel({
                   showTime={true}
                   showDate={false}
                   showTimer={true}
-                  showLoggedTime={false}
+                  showLoggedTime={true}
                   showEstimate={true}
                 />
               </div>

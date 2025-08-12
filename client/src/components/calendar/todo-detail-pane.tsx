@@ -16,6 +16,7 @@ import { format, isBefore } from "date-fns";
 import { formatTimeRange } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { listsKeys } from "@/hooks/use-lists";
+import { TimerCalculator } from "@shared/services/timer-service";
 
 interface TodoDetailPaneProps {
   onClose?: () => void;
@@ -302,21 +303,23 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 </div>
               )}
 
-              {taskTimer.totalTimeSeconds > 0 && (
-                <div className="rounded-lg border border-border bg-muted/30 p-3">
-                  <div className="text-xs font-medium text-muted-foreground mb-1">
-                    Time Logged Today
-                  </div>
-                  <div className="text-lg font-mono font-semibold text-foreground">
-                    {taskTimer.formattedTotalTime}
-                  </div>
-                  {taskTimer.sessionCount > 1 && (
-                    <div className="text-xs text-muted-foreground">
-                      {taskTimer.sessionCount} sessions
-                    </div>
-                  )}
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <div className="text-xs font-medium text-muted-foreground mb-1">
+                  Time Logged
                 </div>
-              )}
+                <div className="text-lg font-mono font-semibold text-foreground">
+                  {(() => {
+                    const persisted = (selectedTask as any).timeLoggedSeconds || 0;
+                    const runningBoost = isActiveTask && isTimerRunning ? (taskTimer.currentSessionSeconds || 0) : 0;
+                    return TimerCalculator.formatDuration(persisted + runningBoost);
+                  })()}
+                </div>
+                {taskTimer.sessionCount > 1 && (
+                  <div className="text-xs text-muted-foreground">
+                    {taskTimer.sessionCount} sessions today
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

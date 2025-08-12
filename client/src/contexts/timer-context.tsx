@@ -146,6 +146,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   // Keep a ref to TimerService for status during callback
   const timerServiceRef = React.useRef<TimerService | null>(null);
+  // Track the server-side session id to coordinate pause/resume/stop
+  const serverSessionIdRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     timerServiceRef.current = timerService;
     return () => { timerServiceRef.current = null; };
@@ -226,6 +228,20 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
+      // Seed accumulated time from persisted total for this task so we continue from where we left off
+      try {
+        const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+        const task: any = await res.json();
+        if (typeof task?.timeLoggedSeconds === 'number') {
+          timerService.setAccumulatedSeconds(task.timeLoggedSeconds || 0);
+        } else {
+          timerService.setAccumulatedSeconds(0);
+        }
+      } catch {
+        // Fallback to 0 if request fails
+        timerService.setAccumulatedSeconds(0);
+      }
+
       const result = await timerService.startTimer(taskId);
       
       if (result.requiresConfirmation) {
@@ -238,6 +254,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       
       if (result.success && result.session) {
         await persistenceService.saveActiveSession(result.session);
+        // Start a server-side session to persist deltas on pause/stop
+        try {
+          const server = await apiClient.startTimer(taskId);
+          serverSessionIdRef.current = server.session.id;
+        } catch (e) {
+          console.error('Failed to start server timer session', e);
+        }
         await persistenceService.queueEvent({
           id: `start_${Date.now()}`,
           type: 'start',
@@ -265,6 +288,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       
       if (result.success && result.session) {
         await persistenceService.saveActiveSession(result.session);
+        // Persist the pause server-side to accumulate logged time
+        try {
+          await apiClient.pauseTimer();
+        } catch (e) {
+          console.error('Failed to pause server timer session', e);
+        }
         await persistenceService.queueEvent({
           id: `pause_${Date.now()}`,
           type: 'pause',
@@ -292,6 +321,22 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       
       if (result.success && result.session) {
         await persistenceService.saveActiveSession(result.session);
+        // Resume the server session as well
+        try {
+          const sid = serverSessionIdRef.current;
+          if (sid) {
+            await apiClient.resumeTimer(sid);
+          } else {
+            // Fallback: fetch active and resume it
+            const active = await apiClient.getActiveTimer();
+            if (active) {
+              serverSessionIdRef.current = active.id;
+              await apiClient.resumeTimer(active.id);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to resume server timer session', e);
+        }
         await persistenceService.queueEvent({
           id: `resume_${Date.now()}`,
           type: 'resume',
@@ -319,6 +364,14 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       
       if (result.success && result.session) {
         await persistenceService.saveActiveSession(null);
+        // Complete the server session and clear server session id
+        try {
+          await apiClient.stopTimer();
+        } catch (e) {
+          console.error('Failed to stop server timer session', e);
+        } finally {
+          serverSessionIdRef.current = null;
+        }
         await persistenceService.queueEvent({
           id: `stop_${Date.now()}`,
           type: 'stop',
@@ -345,10 +398,28 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      const result = await timerService.switchTimer(taskId);
+      // Stop the current server and local timers, then start the new one (server + local)
+      const stopResult = await timerService.stopTimer();
+      if (stopResult.success) {
+        try { await apiClient.stopTimer(); } catch (e) { console.error('Failed to stop server session during switch', e); }
+      }
+      // Seed accumulated seconds for new task
+      try {
+        const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+        const task: any = await res.json();
+        timerService.setAccumulatedSeconds(typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0);
+      } catch { timerService.setAccumulatedSeconds(0); }
+      const result = await timerService.startTimer(taskId);
       
       if (result.success && result.session) {
         await persistenceService.saveActiveSession(result.session);
+        // Start server session for the new task
+        try {
+          const server = await apiClient.startTimer(taskId);
+          serverSessionIdRef.current = server.session.id;
+        } catch (e) {
+          console.error('Failed to start server session during switch', e);
+        }
         // Queue both stop and start events
         const now = new Date().toISOString();
         await persistenceService.queueEvent({
@@ -375,7 +446,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
       return { success: false };
     }
-  }, [timerService, persistenceService, state.activeSession]);
+  }, [timerService, persistenceService, state.activeSession, apiClient]);
 
   const loadDailySummary = useCallback(async (date?: Date) => {
     try {
@@ -389,6 +460,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const confirmTimerSwitch = useCallback(async (newTaskId: string) => {
     dispatch({ type: 'SET_CONFIRMATION_NEEDED', payload: undefined });
+    // Use our switch implementation (stop then start with seeding)
     return await switchTimer(newTaskId);
   }, [switchTimer]);
 
