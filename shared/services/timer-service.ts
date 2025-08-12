@@ -27,7 +27,7 @@ export class TimerService {
         throw new TimerValidationError('Invalid task ID', { taskId });
       }
 
-      // Check if there's already an active timer
+      // If there is an active session, require confirmation (avoid accidental switch)
       if (this.activeSession && this.activeSession.isActive) {
         return {
           success: false,
@@ -37,7 +37,12 @@ export class TimerService {
         };
       }
 
-      // Create new timer session
+      // If there's a paused session lingering, discard it to avoid carrying over its accumulated seconds
+      if (this.activeSession && !this.activeSession.isActive) {
+        this.reset();
+      }
+
+      // Create new timer session (start from seeded accumulatedSeconds)
       const now = new Date();
       this.activeSession = {
         id: this.generateId(),
@@ -79,14 +84,17 @@ export class TimerService {
         });
       }
 
-      // Calculate elapsed time and update accumulated seconds
+      // Calculate elapsed time and update accumulated seconds (snap to at least last displayed)
       const elapsedSeconds = this.calculateElapsedSeconds();
-      this.accumulatedSeconds += elapsedSeconds;
-      
+      const recomputedTotal = this.accumulatedSeconds + elapsedSeconds;
+      const lastDisplayed = this.activeSession?.durationSeconds ?? this.accumulatedSeconds;
+      const snappedTotal = Math.max(recomputedTotal, lastDisplayed);
+      this.accumulatedSeconds = snappedTotal;
+
       // Update session
       this.activeSession = {
         ...this.activeSession,
-        durationSeconds: this.accumulatedSeconds,
+        durationSeconds: snappedTotal,
         isActive: false,
         updatedAt: new Date()
       };
@@ -122,7 +130,7 @@ export class TimerService {
         };
       }
 
-      // Resume the timer
+      // Resume the timer; keep accumulatedSeconds as the seeded base
       this.activeSession = {
         ...this.activeSession,
         isActive: true,
@@ -159,9 +167,11 @@ export class TimerService {
         };
       }
 
-      // Calculate final elapsed time
+      // Calculate final elapsed time (snap to at least last displayed)
       const elapsedSeconds = this.activeSession.isActive ? this.calculateElapsedSeconds() : 0;
-      const totalSeconds = this.accumulatedSeconds + elapsedSeconds;
+      const recomputedTotal = this.accumulatedSeconds + elapsedSeconds;
+      const lastDisplayed = this.activeSession?.durationSeconds ?? this.accumulatedSeconds;
+      const totalSeconds = Math.max(recomputedTotal, lastDisplayed);
 
       // Complete the session
       const completedSession = {

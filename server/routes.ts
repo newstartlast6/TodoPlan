@@ -391,8 +391,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Prefer client-reported total seconds if provided
+      const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      const totalSeconds = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      // Snap up to at least last reported duration to avoid off-by-one
+      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
+      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
 
       if (totalSeconds < 0) {
         throw new TimerValidationError(
@@ -565,8 +570,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
+      // Prefer client-reported total seconds if provided
+      const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      const totalSeconds = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
+      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
 
       if (totalSeconds < 0) {
         throw new TimerValidationError(

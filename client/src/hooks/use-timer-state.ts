@@ -23,11 +23,11 @@ export function useTimerState() {
   // Format current elapsed time
   const formattedElapsedTime = TimerCalculator.formatDuration(currentElapsedSeconds);
 
-  // Daily progress calculations
-  const dailyProgressPercentage = (state.totalDailySeconds / (config.dailyTargetHours * 3600)) * 100;
-  const isOverDailyTarget = state.totalDailySeconds > (config.dailyTargetHours * 3600);
-  const formattedDailyTotal = TimerCalculator.formatDuration(state.totalDailySeconds);
-  const formattedRemainingTime = TimerCalculator.formatDuration(state.remainingSeconds);
+  // Daily progress removed per simplification request
+  const dailyProgressPercentage = 0;
+  const isOverDailyTarget = false;
+  const formattedDailyTotal = '0:00';
+  const formattedRemainingTime = '0:00';
 
   return {
     // Raw state
@@ -44,15 +44,15 @@ export function useTimerState() {
     formattedElapsedTime,
 
     // Daily progress
-    totalDailySeconds: state.totalDailySeconds,
-    remainingSeconds: state.remainingSeconds,
+    totalDailySeconds: 0,
+    remainingSeconds: 0,
     dailyProgressPercentage,
     isOverDailyTarget,
     formattedDailyTotal,
     formattedRemainingTime,
 
     // Config
-    dailyTargetHours: config.dailyTargetHours,
+    dailyTargetHours: 0,
   };
 }
 

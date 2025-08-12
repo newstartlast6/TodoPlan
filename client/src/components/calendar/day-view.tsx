@@ -1,4 +1,5 @@
 import { format, isToday, isSameDay } from "date-fns";
+import { useMemo } from "react";
 import { Clock, Plus, Play } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { formatTimeRange } from "@/lib/time-utils";
+import { TimerCalculator } from "@shared/services/timer-service";
 
 interface DayViewProps {
   tasks: Task[];
@@ -32,7 +34,11 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
       const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
       return isSameDay(st, currentDate) || (sd ? isSameDay(sd, currentDate) : false);
     })
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    .sort((a, b) => {
+      const aKey = (a.createdAt ?? a.startTime) as unknown as string;
+      const bKey = (b.createdAt ?? b.startTime) as unknown as string;
+      return new Date(aKey).getTime() - new Date(bKey).getTime();
+    });
 
   const completedTasks = dayTasks.filter(task => task.completed);
   const isCurrentDay = isToday(currentDate);
@@ -41,15 +47,10 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
     : (completedTasks.length / dayTasks.length) * 100;
 
   // Timer statistics for the day
-  const {
-    totalSeconds: dayTimerSeconds,
-    formattedTotal: dayTimerFormatted,
-    taskCount: timerTaskCount,
-    progressPercentage: timerProgress,
-  } = useDailyTimerStats(currentDate);
+  // Remove daily summary; we will compute total based on tasks and current session only
 
   // Timer-based current task
-  const { currentTaskId, isTimerRunning } = useTimerState();
+  const { currentTaskId, isTimerRunning, currentElapsedSeconds } = useTimerState();
 
   const toggleTaskCompletion = (taskId: string, completed: boolean) => {
     onTaskUpdate(taskId, { completed: !completed });
@@ -60,6 +61,20 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
       ? dayTasks.find(task => task.id === currentTaskId && !task.completed)
       : null
   );
+
+  // Total time for today's tasks (persisted + live running boost if active task is in today's list)
+  const dayTotalLoggedSeconds = useMemo(() => {
+    // If a session is active for a task in today's list, use its durationSeconds as that task's total; otherwise use persisted
+    const activeTaskId = currentTaskId;
+    return dayTasks.reduce((sum, t) => {
+      if (isTimerRunning && activeTaskId === t.id) {
+        // currentElapsedSeconds is the current session total (seeded base + elapsed)
+        return sum + (currentElapsedSeconds || 0);
+      }
+      return sum + (Number((t as any).timeLoggedSeconds) || 0);
+    }, 0);
+  }, [dayTasks, isTimerRunning, currentTaskId, currentElapsedSeconds]);
+  const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalLoggedSeconds);
 
   return (
     <div className="space-y-8" data-testid="day-view">
@@ -158,7 +173,14 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
                 </div>
               )}
             </div>
-            <GoalInline type="daily" date={currentDate} label="GOAL:" />
+            <div className="flex items-center justify-between">
+              <GoalInline type="daily" date={currentDate} label="GOAL:" />
+              {isCurrentDay && (
+                <div className="text-sm text-muted-foreground font-semibold" data-testid="day-total-time">
+                  Total Time: {dayTotalFormatted}
+                </div>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>

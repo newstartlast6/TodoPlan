@@ -5,6 +5,7 @@ import { useTaskTimer } from '@/hooks/use-timer-state';
 import { useTimerActions } from '@/hooks/use-timer-state';
 import { TimerSwitchModal } from './timer-switch-modal';
 import { cn } from '@/lib/utils';
+import { TimerCalculator } from '@shared/services/timer-service';
 
 interface TaskTimerButtonProps {
   taskId: string;
@@ -12,6 +13,7 @@ interface TaskTimerButtonProps {
   variant?: 'default' | 'compact' | 'icon-only';
   className?: string;
   disabled?: boolean;
+  initialLoggedSeconds?: number; // persisted all-time total for this task
 }
 
 export function TaskTimerButton({ 
@@ -19,31 +21,29 @@ export function TaskTimerButton({
   taskTitle,
   variant = 'default',
   className,
-  disabled = false
+  disabled = false,
+  initialLoggedSeconds = 0,
 }: TaskTimerButtonProps) {
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [switchFromTask, setSwitchFromTask] = useState<string>('');
   
-  const {
-    isActiveTask,
-    isRunning,
-    formattedTotalTime,
-    formattedCurrentSession,
-    totalTimeSeconds,
-  } = useTaskTimer(taskId);
+  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(taskId);
+  const persistedSeconds = Math.max(0, Math.floor(initialLoggedSeconds || 0));
+  const displaySeconds = isActiveTask && isRunning ? persistedSeconds + (currentSessionSeconds || 0) : persistedSeconds;
+  const formattedDisplayTime = TimerCalculator.formatDuration(displaySeconds);
 
-  const { startTimer, pauseTimer } = useTimerActions();
+  const { startTimer, pauseTimer, resumeTimer } = useTimerActions();
 
   const handleTimerAction = async () => {
     if (isActiveTask) {
-      // If this task has the active timer, pause it
-      await pauseTimer();
+      if (isRunning) {
+        await pauseTimer();
+      } else {
+        await resumeTimer();
+      }
     } else {
-      // Try to start timer for this task
       const result = await startTimer(taskId);
-      
       if (result.requiresConfirmation && result.currentActiveTask) {
-        // Show confirmation modal
         setSwitchFromTask(result.currentActiveTask);
         setShowSwitchModal(true);
       }
@@ -66,14 +66,14 @@ export function TaskTimerButton({
       <>
         <Button
           size="sm"
-          variant={isActiveTask ? (isRunning ? "default" : "secondary") : "ghost"}
+          variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
           onClick={handleTimerAction}
           disabled={disabled}
           className={cn("h-8 w-8 p-0", className)}
-          title={isActiveTask ? (isRunning ? 'Pause timer' : 'Timer paused') : 'Start timer'}
+          title={isActiveTask ? (isRunning ? 'Pause timer' : 'Start timer') : 'Start timer'}
         >
           {isActiveTask ? (
-            isRunning ? <Pause className="w-4 h-4" /> : <Clock className="w-4 h-4" />
+            isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />
           ) : (
             <Play className="w-4 h-4" />
           )}
@@ -98,36 +98,23 @@ export function TaskTimerButton({
         <div className={cn("flex items-center gap-2", className)}>
           <Button
             size="sm"
-            variant={isActiveTask ? (isRunning ? "default" : "secondary") : "ghost"}
+            variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
             onClick={handleTimerAction}
             disabled={disabled}
             className="h-7 px-2"
           >
             {isActiveTask ? (
               isRunning ? (
-                <>
-                  <Pause className="w-3 h-3 mr-1" />
-                  <span className="font-mono text-xs">{formattedCurrentSession}</span>
-                </>
+                <Pause className="w-3 h-3" />
               ) : (
-                <>
-                  <Clock className="w-3 h-3 mr-1" />
-                  <span className="font-mono text-xs">{formattedCurrentSession}</span>
-                </>
+                <Play className="w-3 h-3" />
               )
             ) : (
-              <>
-                <Play className="w-3 h-3 mr-1" />
-                Start
-              </>
+              <Play className="w-3 h-3" />
             )}
           </Button>
           
-          {!isActiveTask && (
-            <span className="text-xs text-muted-foreground font-mono">
-              {formattedTotalTime}
-            </span>
-          )}
+          {/* No additional label to avoid duplicate time display */}
         </div>
 
         <TimerSwitchModal
@@ -149,35 +136,30 @@ export function TaskTimerButton({
         <Button
           onClick={handleTimerAction}
           disabled={disabled}
-          variant={isActiveTask ? (isRunning ? "default" : "secondary") : "outline"}
+          variant={isActiveTask ? (isRunning ? "default" : "default") : "default"}
           className="w-full"
         >
           {isActiveTask ? (
             isRunning ? (
               <>
                 <Pause className="w-4 h-4 mr-2" />
-                Pause Timer
-                <span className="ml-auto font-mono">{formattedCurrentSession}</span>
+                Pause
               </>
             ) : (
               <>
-                <Clock className="w-4 h-4 mr-2" />
-                Timer Paused
-                <span className="ml-auto font-mono">{formattedCurrentSession}</span>
+                <Play className="w-4 h-4 mr-2" />
+                Start
               </>
             )
           ) : (
             <>
               <Play className="w-4 h-4 mr-2" />
-              Start Timer
+              Start
             </>
           )}
         </Button>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Time logged</span>
-          <span className="font-mono">{formattedTotalTime}</span>
-        </div>
+        {/* Removed extra "Time logged" row to avoid duplication with list item/detail pane */}
       </div>
 
       <TimerSwitchModal

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle, Clock, Circle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,9 +79,23 @@ export function SelectableTodoItem({
   }, [startEditing]);
   
   // Timer integration
+  // Show while running: current session total (seeded base + elapsed)
+  // When paused: hold the last running total until persisted catches up
   const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(task.id);
   const persistedSeconds = (task as any).timeLoggedSeconds || 0;
-  const displaySeconds = isActiveTask && isRunning ? persistedSeconds + (currentSessionSeconds || 0) : persistedSeconds;
+  const holdRef = useRef<number>(0);
+  const isRunningActiveComputed = isActiveTask && isRunning;
+  useEffect(() => {
+    if (isRunningActive) {
+      holdRef.current = Math.max(holdRef.current, currentSessionSeconds || 0);
+    }
+  }, [isRunningActiveComputed, currentSessionSeconds]);
+  const displaySeconds = isRunningActiveComputed
+    ? (currentSessionSeconds || 0)
+    : persistedSeconds;
+  useEffect(() => {
+    holdRef.current = 0;
+  }, [isRunningActiveComputed, persistedSeconds]);
   const formattedPersistedTime = TimerCalculator.formatDuration(displaySeconds);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -100,7 +114,7 @@ export function SelectableTodoItem({
     onToggleComplete(task.id, task.completed || false);
   };
 
-  const isRunningActive = isActiveTask && isRunning;
+  const isRunningActive = isRunningActiveComputed;
 
   const baseClasses = cn(
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
@@ -207,15 +221,7 @@ export function SelectableTodoItem({
           
           {/* Priority removed from UI */}
           
-          {/* Timer Status Badge - show only when running */}
-          {isActiveTask && isRunning && variant !== 'minimal' && (
-            <Badge className={cn(
-              "text-xs shrink-0",
-              "bg-orange-500 text-white ring-1 ring-orange-600/20"
-            )}>
-              In Progress
-            </Badge>
-          )}
+          {/* Timer Status Badge removed for persisted-only display */}
           
           {/* Estimate Indicator */}
           {showEstimate && variant !== 'minimal' && (
@@ -250,6 +256,7 @@ export function SelectableTodoItem({
               taskId={task.id}
               taskTitle={task.title}
               variant={variant === 'minimal' ? 'icon-only' : 'compact'}
+              initialLoggedSeconds={(task as any).timeLoggedSeconds || 0}
             />
           </div>
         )}
@@ -316,18 +323,30 @@ export function SelectableTodoItem({
             </AlertDialogTrigger>
             <AlertDialogContent onClick={(e) => e.stopPropagation()}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                <AlertDialogTitle>Remove from day or delete?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the task and remove it from your calendar.
+                  Choose Unschedule to keep the task but remove it from this day. Choose Delete to permanently remove the task.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                {onUpdate && (
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdate(task.id, { scheduledDate: null });
+                    }}
+                    data-testid={`unschedule-task-${task.id}`}
+                  >
+                    Unschedule
+                  </AlertDialogAction>
+                )}
                 <AlertDialogAction
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete(task.id);
+                    onDelete?.(task.id);
                   }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete
                 </AlertDialogAction>

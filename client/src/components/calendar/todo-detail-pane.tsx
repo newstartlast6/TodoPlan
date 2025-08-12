@@ -9,7 +9,6 @@ import { NotesEditor } from "@/components/calendar/notes-editor";
 import { TimePicker } from "@/components/calendar/time-picker";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimation } from "@/components/timer/task-estimation";
-import { TimerDisplay } from "@/components/timer/timer-display";
 import { useTaskTimer, useTimerState } from "@/hooks/use-timer-state";
 import { Task, UpdateTask } from "@shared/schema";
 import { format, isBefore } from "date-fns";
@@ -297,11 +296,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 />
               </div>
 
-              {isActiveTask && (
-                <div className="mb-3">
-                  <TimerDisplay compact />
-                </div>
-              )}
+              {/* Remove separate session display to avoid dual values */}
 
               <div className="rounded-lg border border-border bg-muted/30 p-3">
                 <div className="text-xs font-medium text-muted-foreground mb-1">
@@ -310,8 +305,11 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 <div className="text-lg font-mono font-semibold text-foreground">
                   {(() => {
                     const persisted = (selectedTask as any).timeLoggedSeconds || 0;
-                    const runningBoost = isActiveTask && isTimerRunning ? (taskTimer.currentSessionSeconds || 0) : 0;
-                    return TimerCalculator.formatDuration(persisted + runningBoost);
+                    // If this is the active session (running or paused), trust the session's durationSeconds
+                    if (activeSession && activeSession.taskId === selectedTodoId) {
+                      return TimerCalculator.formatDuration(activeSession.durationSeconds || 0);
+                    }
+                    return TimerCalculator.formatDuration(persisted);
                   })()}
                 </div>
                 {taskTimer.sessionCount > 1 && (

@@ -49,10 +49,11 @@ export class TimerApiClient implements ITimerApiClient {
   /**
    * Pause the current active timer
    */
-  async pauseTimer(): Promise<{ session: TimerSession; totalElapsedSeconds: number }> {
+  async pauseTimer(clientTotalSeconds?: number): Promise<{ session: TimerSession; totalElapsedSeconds: number }> {
     const response = await fetch(`${this.baseUrl}/timers/pause`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientTotalSeconds }),
     });
 
     if (!response.ok) {
@@ -84,10 +85,11 @@ export class TimerApiClient implements ITimerApiClient {
   /**
    * Stop the current active timer
    */
-  async stopTimer(): Promise<{ session: TimerSession }> {
+  async stopTimer(clientTotalSeconds?: number): Promise<{ session: TimerSession }> {
     const response = await fetch(`${this.baseUrl}/timers/stop`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientTotalSeconds }),
     });
 
     if (!response.ok) {

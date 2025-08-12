@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { TimerState, TimerSession, DailyTimeSummary, DEFAULT_TIMER_CONFIG, TimerStatus } from '@shared/timer-types';
 import { TimerService } from '@shared/services/timer-service';
 import { apiRequest } from '@/lib/queryClient';
@@ -56,15 +57,12 @@ function timerReducer(state: TimerStateWithConfirmation, action: TimerAction): T
       };
     
     case 'SET_DAILY_SUMMARY':
-      const totalDailySeconds = action.payload.reduce((sum, item) => sum + item.totalSeconds, 0);
-      const targetSeconds = DEFAULT_TIMER_CONFIG.dailyTargetHours * 60 * 60;
-      const remainingSeconds = Math.max(0, targetSeconds - totalDailySeconds);
-      
+      // Simplified: ignore daily summary mechanics
       return {
         ...state,
-        dailySummary: action.payload,
-        totalDailySeconds,
-        remainingSeconds,
+        dailySummary: [],
+        totalDailySeconds: 0,
+        remainingSeconds: 0,
         isLoading: false,
       };
     
@@ -100,6 +98,7 @@ const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(timerReducer, initialState);
+  const queryClient = useQueryClient();
   const taskTitleCacheRef = React.useRef<Map<string, string>>(new Map());
   const currentTaskTitleRef = React.useRef<string>('');
   const formatTrayTime = React.useCallback((totalSeconds: number): string => {
@@ -228,17 +227,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // Seed accumulated time from persisted total for this task so we continue from where we left off
+      // Seed the local timer with the latest persisted total before starting
       try {
         const res = await apiRequest('GET', `/api/tasks/${taskId}`);
         const task: any = await res.json();
-        if (typeof task?.timeLoggedSeconds === 'number') {
-          timerService.setAccumulatedSeconds(task.timeLoggedSeconds || 0);
-        } else {
-          timerService.setAccumulatedSeconds(0);
-        }
+        const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
+        timerService.setAccumulatedSeconds(baseSeconds);
       } catch {
-        // Fallback to 0 if request fails
         timerService.setAccumulatedSeconds(0);
       }
 
@@ -290,7 +285,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         await persistenceService.saveActiveSession(result.session);
         // Persist the pause server-side to accumulate logged time
         try {
-          await apiClient.pauseTimer();
+          await apiClient.pauseTimer(result.session.durationSeconds);
+          // Refresh persisted task total in caches so UI updates immediately
+          try {
+            const taskId = result.session.taskId;
+            const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+            const updatedTask = await res.json();
+            // Update detail cache
+            queryClient.setQueryData(['task', taskId], (old: any) => old ? { ...old, timeLoggedSeconds: updatedTask?.timeLoggedSeconds || 0 } : updatedTask);
+            // Update lists cache
+            queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: any) => Array.isArray(old) ? old.map((t) => t.id === taskId ? { ...t, timeLoggedSeconds: updatedTask?.timeLoggedSeconds || 0 } : t) : old);
+          } catch {}
         } catch (e) {
           console.error('Failed to pause server timer session', e);
         }
@@ -316,7 +321,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const resumeTimer = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      
+      // Seed from persisted total before resuming to keep display == counting
+      const taskId = state.activeSession?.taskId;
+      if (taskId) {
+        try {
+          const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+          const task: any = await res.json();
+          const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
+          timerService.setAccumulatedSeconds(baseSeconds);
+        } catch {}
+      }
+
       const result = await timerService.resumeTimer();
       
       if (result.success && result.session) {
@@ -366,7 +381,15 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         await persistenceService.saveActiveSession(null);
         // Complete the server session and clear server session id
         try {
-          await apiClient.stopTimer();
+          await apiClient.stopTimer(result.session.durationSeconds);
+          // Refresh persisted total
+          try {
+            const taskId = result.session.taskId;
+            const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+            const updatedTask = await res.json();
+            queryClient.setQueryData(['task', taskId], (old: any) => old ? { ...old, timeLoggedSeconds: updatedTask?.timeLoggedSeconds || 0 } : updatedTask);
+            queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: any) => Array.isArray(old) ? old.map((t) => t.id === taskId ? { ...t, timeLoggedSeconds: updatedTask?.timeLoggedSeconds || 0 } : t) : old);
+          } catch {}
         } catch (e) {
           console.error('Failed to stop server timer session', e);
         } finally {
@@ -403,12 +426,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       if (stopResult.success) {
         try { await apiClient.stopTimer(); } catch (e) { console.error('Failed to stop server session during switch', e); }
       }
-      // Seed accumulated seconds for new task
-      try {
-        const res = await apiRequest('GET', `/api/tasks/${taskId}`);
-        const task: any = await res.json();
-        timerService.setAccumulatedSeconds(typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0);
-      } catch { timerService.setAccumulatedSeconds(0); }
       const result = await timerService.startTimer(taskId);
       
       if (result.success && result.session) {

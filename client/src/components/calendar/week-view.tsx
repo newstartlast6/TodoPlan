@@ -1,5 +1,5 @@
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Clock, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,8 @@ import { GoalInline } from "@/components/calendar/goal-inline";
 import { useDrop } from 'react-dnd';
 import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
+import { useTimerState } from '@/hooks/use-timer-state';
+import { TimerCalculator } from '@shared/services/timer-service';
 
 interface WeekViewProps {
   tasks: Task[];
@@ -34,6 +36,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const weekProgress = calculateWeekProgress(currentDate);
+  const { isTimerRunning, currentTaskId, currentElapsedSeconds } = useTimerState();
   
   const completedTasks = tasks.filter(task => task.completed);
   const totalTasks = tasks.length;
@@ -45,7 +48,11 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
         const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
         return isSameDay(st, day) || (sd ? isSameDay(sd, day) : false);
       })
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort((a, b) => {
+        const aKey = (a.createdAt ?? a.startTime) as unknown as string;
+        const bKey = (b.createdAt ?? b.startTime) as unknown as string;
+        return new Date(aKey).getTime() - new Date(bKey).getTime();
+      });
   };
 
   const getDayStatus = (day: Date) => {
@@ -112,6 +119,14 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
           const dayProgressPercent = getDayProgress(day);
           const isCurrentDay = isToday(day);
           const isDayCompleted = dayStatus === 'completed';
+          // Total Time for this day: for the active task use live session total; others use persisted
+          const dayTotalSeconds = dayTasks.reduce((sum, t) => {
+            if (isTimerRunning && currentTaskId === t.id) {
+              return sum + (currentElapsedSeconds || 0);
+            }
+            return sum + (Number((t as any).timeLoggedSeconds) || 0);
+          }, 0);
+          const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalSeconds);
           
             return (
             <Card 
@@ -140,8 +155,11 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                     {dayStatus === 'completed' ? '100%' : Math.round(dayProgressPercent) + '%'} • {dayTasks.length} tasks
                   </div>
                 </div>
-                <div className="mt-1">
+                <div className="mt-1 flex items-center justify-between">
                   <GoalInline type="daily" date={day} label="GOAL:" />
+                  <div className="text-sm text-muted-foreground font-semibold" data-testid={`day-total-time-${dayIndex}`}>
+                    Total Time: {dayTotalFormatted}
+                  </div>
                 </div>
               </CardHeader>
               

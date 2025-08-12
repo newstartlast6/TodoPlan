@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,15 @@ export default function Calendar() {
       return res.json();
     },
   });
+
+  // Stable ordering by creation time (fallback to startTime)
+  const tasksSorted = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      const aDate = (a.createdAt ?? a.startTime) as unknown as Date;
+      const bDate = (b.createdAt ?? b.startTime) as unknown as Date;
+      return new Date(aDate).getTime() - new Date(bDate).getTime();
+    });
+  }, [tasks]);
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -219,7 +228,7 @@ export default function Calendar() {
       case 'day':
         return (
           <DayView
-            tasks={tasks}
+            tasks={tasksSorted}
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
@@ -229,7 +238,7 @@ export default function Calendar() {
       case 'week':
         return (
           <WeekView
-            tasks={tasks}
+            tasks={tasksSorted}
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
@@ -238,7 +247,7 @@ export default function Calendar() {
       case 'month':
         return (
           <MonthView
-            tasks={tasks}
+            tasks={tasksSorted}
             currentDate={currentDate}
             onDateClick={handleDateClick}
             onTaskUpdate={handleUpdateTask}
@@ -247,7 +256,7 @@ export default function Calendar() {
       case 'year':
         return (
           <YearView
-            tasks={tasks}
+            tasks={tasksSorted}
             currentDate={currentDate}
             onMonthClick={handleMonthClick}
           />
