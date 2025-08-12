@@ -24134,7 +24134,7 @@ var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
-var max$1 = Math.max;
+var max$2 = Math.max;
 var min$1 = Math.min;
 var pow$1 = Math.pow;
 var round$1 = Math.round;
@@ -24263,91 +24263,77 @@ function requireObject_getPrototypeOf() {
   Object_getPrototypeOf = $Object2.getPrototypeOf || null;
   return Object_getPrototypeOf;
 }
-var implementation;
-var hasRequiredImplementation;
-function requireImplementation() {
-  if (hasRequiredImplementation) return implementation;
-  hasRequiredImplementation = 1;
-  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
-  var toStr2 = Object.prototype.toString;
-  var max2 = Math.max;
-  var funcType = "[object Function]";
-  var concatty = function concatty2(a, b) {
-    var arr = [];
-    for (var i = 0; i < a.length; i += 1) {
-      arr[i] = a[i];
+var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+var toStr$1 = Object.prototype.toString;
+var max$1 = Math.max;
+var funcType = "[object Function]";
+var concatty = function concatty2(a, b) {
+  var arr = [];
+  for (var i = 0; i < a.length; i += 1) {
+    arr[i] = a[i];
+  }
+  for (var j = 0; j < b.length; j += 1) {
+    arr[j + a.length] = b[j];
+  }
+  return arr;
+};
+var slicy = function slicy2(arrLike, offset) {
+  var arr = [];
+  for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
+    arr[j] = arrLike[i];
+  }
+  return arr;
+};
+var joiny = function(arr, joiner) {
+  var str = "";
+  for (var i = 0; i < arr.length; i += 1) {
+    str += arr[i];
+    if (i + 1 < arr.length) {
+      str += joiner;
     }
-    for (var j = 0; j < b.length; j += 1) {
-      arr[j + a.length] = b[j];
-    }
-    return arr;
-  };
-  var slicy = function slicy2(arrLike, offset) {
-    var arr = [];
-    for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
-      arr[j] = arrLike[i];
-    }
-    return arr;
-  };
-  var joiny = function(arr, joiner) {
-    var str = "";
-    for (var i = 0; i < arr.length; i += 1) {
-      str += arr[i];
-      if (i + 1 < arr.length) {
-        str += joiner;
-      }
-    }
-    return str;
-  };
-  implementation = function bind2(that) {
-    var target = this;
-    if (typeof target !== "function" || toStr2.apply(target) !== funcType) {
-      throw new TypeError(ERROR_MESSAGE + target);
-    }
-    var args = slicy(arguments, 1);
-    var bound;
-    var binder = function() {
-      if (this instanceof bound) {
-        var result = target.apply(
-          this,
-          concatty(args, arguments)
-        );
-        if (Object(result) === result) {
-          return result;
-        }
-        return this;
-      }
-      return target.apply(
-        that,
+  }
+  return str;
+};
+var implementation$1 = function bind(that) {
+  var target = this;
+  if (typeof target !== "function" || toStr$1.apply(target) !== funcType) {
+    throw new TypeError(ERROR_MESSAGE + target);
+  }
+  var args = slicy(arguments, 1);
+  var bound;
+  var binder = function() {
+    if (this instanceof bound) {
+      var result = target.apply(
+        this,
         concatty(args, arguments)
       );
-    };
-    var boundLength = max2(0, target.length - args.length);
-    var boundArgs = [];
-    for (var i = 0; i < boundLength; i++) {
-      boundArgs[i] = "$" + i;
+      if (Object(result) === result) {
+        return result;
+      }
+      return this;
     }
-    bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
-    if (target.prototype) {
-      var Empty = function Empty2() {
-      };
-      Empty.prototype = target.prototype;
-      bound.prototype = new Empty();
-      Empty.prototype = null;
-    }
-    return bound;
+    return target.apply(
+      that,
+      concatty(args, arguments)
+    );
   };
-  return implementation;
-}
-var functionBind;
-var hasRequiredFunctionBind;
-function requireFunctionBind() {
-  if (hasRequiredFunctionBind) return functionBind;
-  hasRequiredFunctionBind = 1;
-  var implementation2 = requireImplementation();
-  functionBind = Function.prototype.bind || implementation2;
-  return functionBind;
-}
+  var boundLength = max$1(0, target.length - args.length);
+  var boundArgs = [];
+  for (var i = 0; i < boundLength; i++) {
+    boundArgs[i] = "$" + i;
+  }
+  bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
+  if (target.prototype) {
+    var Empty = function Empty2() {
+    };
+    Empty.prototype = target.prototype;
+    bound.prototype = new Empty();
+    Empty.prototype = null;
+  }
+  return bound;
+};
+var implementation = implementation$1;
+var functionBind = Function.prototype.bind || implementation;
 var functionCall;
 var hasRequiredFunctionCall;
 function requireFunctionCall() {
@@ -24377,11 +24363,11 @@ var hasRequiredActualApply;
 function requireActualApply() {
   if (hasRequiredActualApply) return actualApply;
   hasRequiredActualApply = 1;
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var $apply2 = requireFunctionApply();
   var $call2 = requireFunctionCall();
   var $reflectApply = requireReflectApply();
-  actualApply = $reflectApply || bind2.call($call2, $apply2);
+  actualApply = $reflectApply || bind3.call($call2, $apply2);
   return actualApply;
 }
 var callBindApplyHelpers;
@@ -24389,7 +24375,7 @@ var hasRequiredCallBindApplyHelpers;
 function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
@@ -24397,7 +24383,7 @@ function requireCallBindApplyHelpers() {
     if (args.length < 1 || typeof args[0] !== "function") {
       throw new $TypeError2("a function is required");
     }
-    return $actualApply(bind2, $call2, args);
+    return $actualApply(bind3, $call2, args);
   };
   return callBindApplyHelpers;
 }
@@ -24459,8 +24445,8 @@ function requireHasown() {
   hasRequiredHasown = 1;
   var call = Function.prototype.call;
   var $hasOwn = Object.prototype.hasOwnProperty;
-  var bind2 = requireFunctionBind();
-  hasown = bind2.call(call, $hasOwn);
+  var bind3 = functionBind;
+  hasown = bind3.call(call, $hasOwn);
   return hasown;
 }
 var undefined$1;
@@ -24474,7 +24460,7 @@ var $TypeError$3 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
-var max = max$1;
+var max = max$2;
 var min = min$1;
 var pow = pow$1;
 var round = round$1;
@@ -24679,13 +24665,13 @@ var LEGACY_ALIASES = {
   "%WeakMapPrototype%": ["WeakMap", "prototype"],
   "%WeakSetPrototype%": ["WeakSet", "prototype"]
 };
-var bind = requireFunctionBind();
+var bind2 = functionBind;
 var hasOwn$1 = requireHasown();
-var $concat$1 = bind.call($call, Array.prototype.concat);
-var $spliceApply = bind.call($apply, Array.prototype.splice);
-var $replace$1 = bind.call($call, String.prototype.replace);
-var $strSlice = bind.call($call, String.prototype.slice);
-var $exec = bind.call($call, RegExp.prototype.exec);
+var $concat$1 = bind2.call($call, Array.prototype.concat);
+var $spliceApply = bind2.call($apply, Array.prototype.splice);
+var $replace$1 = bind2.call($call, String.prototype.replace);
+var $strSlice = bind2.call($call, String.prototype.slice);
+var $exec = bind2.call($call, RegExp.prototype.exec);
 var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
 var reEscapeChar = /\\(\\)?/g;
 var stringToPath = function stringToPath2(string) {
@@ -24890,20 +24876,20 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
   return fn;
 };
 (function(module) {
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var GetIntrinsic3 = getIntrinsic;
   var setFunctionLength$1 = setFunctionLength;
   var $TypeError2 = type;
   var $apply2 = GetIntrinsic3("%Function.prototype.apply%");
   var $call2 = GetIntrinsic3("%Function.prototype.call%");
-  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind2.call($call2, $apply2);
+  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind3.call($call2, $apply2);
   var $defineProperty2 = esDefineProperty;
   var $max = GetIntrinsic3("%Math.max%");
   module.exports = function callBind2(originalFunction) {
     if (typeof originalFunction !== "function") {
       throw new $TypeError2("a function is required");
     }
-    var func = $reflectApply(bind2, $call2, arguments);
+    var func = $reflectApply(bind3, $call2, arguments);
     return setFunctionLength$1(
       func,
       1 + $max(0, originalFunction.length - (arguments.length - 1)),
@@ -24911,7 +24897,7 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
     );
   };
   var applyBind = function applyBind2() {
-    return $reflectApply(bind2, $apply2, arguments);
+    return $reflectApply(bind3, $apply2, arguments);
   };
   if ($defineProperty2) {
     $defineProperty2(module.exports, "apply", { value: applyBind });
@@ -46285,7 +46271,7 @@ const tasks = pgTable("tasks", {
   // low, medium, high
   listId: varchar("list_id").references(() => lists.id, { onDelete: "set null" }),
   scheduledDate: timestamp("scheduled_date"),
-  // Persisted aggregate of all-time seconds logged across all sessions
+  // Persisted aggregate of all-time seconds logged across all sessions for this task
   timeLoggedSeconds: integer("time_logged_seconds").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow()
 });
@@ -46936,7 +46922,7 @@ class MemStorage {
         timeLoggedSeconds: 0
       }
     ];
-    sampleTasks.forEach((task) => this.tasks.set(task.id, task));
+    sampleTasks.forEach((task) => this.tasks.set(task.id, { ...task, timeLoggedSeconds: task.timeLoggedSeconds ?? 0 }));
   }
   async getUser(id) {
     return this.users.get(id);
@@ -47033,7 +47019,7 @@ class MemStorage {
       priority: insertTask.priority || "medium",
       listId: insertTask.listId ?? null,
       scheduledDate: insertTask.scheduledDate ?? null,
-      timeLoggedSeconds: 0
+      timeLoggedSeconds: insertTask.timeLoggedSeconds ?? 0
     };
     this.tasks.set(id, task);
     return task;
@@ -47099,7 +47085,17 @@ class MemStorage {
         updatedAt: now
       };
       this.timerSessions.set(session.id, updatedSession);
+      const task = this.tasks.get(session.taskId);
+      if (task) {
+        this.tasks.set(session.taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + Math.max(0, elapsedSeconds) });
+      }
     });
+  }
+  async incrementTaskLoggedTime(taskId, deltaSeconds) {
+    const task = this.tasks.get(taskId);
+    if (!task) return;
+    const add = Math.max(0, Math.floor(deltaSeconds || 0));
+    this.tasks.set(taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + add });
   }
   // Task estimate operations
   async getTaskEstimate(taskId) {
@@ -47135,40 +47131,25 @@ class MemStorage {
   }
   async getDailySummaryByDateRange(startDate, endDate) {
     const sessions = Array.from(this.timerSessions.values()).filter(
-      (session) => session.endTime && // overlap with [startDate, endDate)
-      session.endTime > startDate && session.startTime < endDate
+      (session) => session.endTime && session.startTime >= startDate && session.startTime < endDate
     );
-    const startOfDay = (d2) => new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
-    const addDays = (d2, days) => new Date(d2.getTime() + days * 24 * 60 * 60 * 1e3);
     const summaryMap = /* @__PURE__ */ new Map();
-    for (const session of sessions) {
-      const sStart = new Date(Math.max(session.startTime.getTime(), startDate.getTime()));
-      const sEnd = new Date(Math.min(session.endTime.getTime(), endDate.getTime()));
-      if (sEnd <= sStart) continue;
-      let cursor = new Date(sStart);
-      while (cursor < sEnd) {
-        const dayStart = startOfDay(cursor);
-        const nextDayStart = addDays(dayStart, 1);
-        const sliceStart = cursor;
-        const sliceEnd = new Date(Math.min(sEnd.getTime(), nextDayStart.getTime()));
-        const seconds = Math.max(0, Math.floor((sliceEnd.getTime() - sliceStart.getTime()) / 1e3));
-        const dateKey = dayStart.toISOString().split("T")[0];
-        const taskKey = `${dateKey}-${session.taskId}`;
-        if (!summaryMap.has(taskKey)) {
-          summaryMap.set(taskKey, {
-            date: dateKey,
-            taskId: session.taskId,
-            totalSeconds: 0,
-            sessionCount: 0,
-            task: this.tasks.get(session.taskId)
-          });
-        }
-        const summary = summaryMap.get(taskKey);
-        summary.totalSeconds += seconds;
-        summary.sessionCount += 1;
-        cursor = sliceEnd;
+    sessions.forEach((session) => {
+      const dateKey = session.startTime.toISOString().split("T")[0];
+      const taskKey = `${dateKey}-${session.taskId}`;
+      if (!summaryMap.has(taskKey)) {
+        summaryMap.set(taskKey, {
+          date: dateKey,
+          taskId: session.taskId,
+          totalSeconds: 0,
+          sessionCount: 0,
+          task: this.tasks.get(session.taskId)
+        });
       }
-    }
+      const summary = summaryMap.get(taskKey);
+      summary.totalSeconds += session.durationSeconds ?? 0;
+      summary.sessionCount += 1;
+    });
     return Array.from(summaryMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }
   goalKey(type3, anchorDate) {
@@ -47193,13 +47174,6 @@ class MemStorage {
     const updated = { ...base, value, updatedAt: /* @__PURE__ */ new Date() };
     this.goals.set(key, updated);
     return updated;
-  }
-  async incrementTaskLoggedTime(taskId, deltaSeconds) {
-    const t = this.tasks.get(taskId);
-    if (!t) return;
-    const current = t.timeLoggedSeconds || 0;
-    t.timeLoggedSeconds = current + Math.max(0, Math.floor(deltaSeconds));
-    this.tasks.set(taskId, t);
   }
 }
 class DbStorage {
@@ -47321,11 +47295,6 @@ class DbStorage {
       return result.length > 0;
     });
   }
-  async incrementTaskLoggedTime(taskId, deltaSeconds) {
-    return this.withPersistence("increment_task_logged_time", { taskId, deltaSeconds }, async () => {
-      await this.db.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${Math.max(0, Math.floor(deltaSeconds))}` }).where(eq(tasks.id, taskId));
-    });
-  }
   async getActiveTimerSession() {
     return this.withPersistence("get_active_timer_session", {}, async () => {
       const result = await this.db.select().from(timerSessions).where(eq(timerSessions.isActive, true)).orderBy(desc(timerSessions.startTime)).limit(1);
@@ -47383,8 +47352,15 @@ class DbStorage {
           const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 1e3));
           const total = (session.durationSeconds ?? 0) + elapsed;
           await tx.update(timerSessions).set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now }).where(eq(timerSessions.id, session.id));
+          await tx.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${elapsed}` }).where(eq(tasks.id, session.taskId));
         }
       });
+    });
+  }
+  async incrementTaskLoggedTime(taskId, deltaSeconds) {
+    return this.withPersistence("increment_task_logged_time", { taskId, deltaSeconds }, async () => {
+      const add = Math.max(0, Math.floor(deltaSeconds || 0));
+      await this.db.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${add}` }).where(eq(tasks.id, taskId));
     });
   }
   async getTaskEstimate(taskId) {
@@ -47750,11 +47726,6 @@ async function registerRoutes(app2) {
         isActive: true
       });
       const session = await storage.createTimerSession(sessionData);
-      console.log("Timer started successfully", {
-        sessionId: session.id,
-        taskId,
-        timestamp: (/* @__PURE__ */ new Date()).toISOString()
-      });
       res2.status(201).json({
         session,
         message: "Timer started successfully"
@@ -47764,6 +47735,7 @@ async function registerRoutes(app2) {
     }
   });
   app2.post("/api/timers/pause", async (req2, res2) => {
+    var _a2;
     try {
       const activeSession = await storage.getActiveTimerSession();
       if (!activeSession) {
@@ -47789,8 +47761,11 @@ async function registerRoutes(app2) {
           { startTime: startTime.toISOString(), currentTime: now.toISOString() }
         );
       }
+      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const totalSeconds = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
+      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
       if (totalSeconds < 0) {
         throw new TimerValidationError(
           "Invalid duration calculation",
@@ -47807,11 +47782,12 @@ async function registerRoutes(app2) {
           { sessionId: activeSession.id }
         );
       }
-      console.log("Timer paused successfully", {
-        sessionId: activeSession.id,
-        totalSeconds,
-        timestamp: now.toISOString()
-      });
+      const deltaSeconds = elapsedSeconds;
+      try {
+        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
+      } catch (e) {
+        console.error("Failed to increment task logged time on pause", { taskId: activeSession.taskId, deltaSeconds, error: e });
+      }
       res2.json({
         session: updatedSession,
         totalElapsedSeconds: totalSeconds,
@@ -47880,11 +47856,6 @@ async function registerRoutes(app2) {
           { sessionId }
         );
       }
-      console.log("Timer resumed successfully", {
-        sessionId,
-        taskId: session.taskId,
-        timestamp: (/* @__PURE__ */ new Date()).toISOString()
-      });
       res2.json({
         session: updatedSession,
         message: "Timer resumed successfully"
@@ -47894,6 +47865,7 @@ async function registerRoutes(app2) {
     }
   });
   app2.post("/api/timers/stop", async (req2, res2) => {
+    var _a2;
     try {
       const activeSession = await storage.getActiveTimerSession();
       if (!activeSession) {
@@ -47929,8 +47901,11 @@ async function registerRoutes(app2) {
           { startTime: startTime.toISOString(), currentTime: now.toISOString() }
         );
       }
+      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const totalSeconds = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
+      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
+      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
       if (totalSeconds < 0) {
         throw new TimerValidationError(
           "Invalid duration calculation",
@@ -47942,29 +47917,18 @@ async function registerRoutes(app2) {
         durationSeconds: totalSeconds,
         isActive: false
       });
-      try {
-        const previousAccumulated = activeSession.durationSeconds || 0;
-        const deltaSeconds = Math.max(0, totalSeconds - previousAccumulated);
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.warn("Failed to update task time aggregate", {
-          taskId: activeSession.taskId,
-          sessionId: activeSession.id,
-          error: e instanceof Error ? e.message : String(e)
-        });
-      }
       if (!completedSession) {
         throw new TimerPersistenceError(
           "Failed to complete timer session",
           { sessionId: activeSession.id }
         );
       }
-      console.log("Timer stopped successfully", {
-        sessionId: activeSession.id,
-        taskId: activeSession.taskId,
-        totalSeconds,
-        timestamp: now.toISOString()
-      });
+      const deltaSeconds = elapsedSeconds;
+      try {
+        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
+      } catch (e) {
+        console.error("Failed to increment task logged time on stop", { taskId: activeSession.taskId, deltaSeconds, error: e });
+      }
       res2.json({
         session: completedSession,
         message: "Timer stopped successfully"
@@ -47979,6 +47943,35 @@ async function registerRoutes(app2) {
       res2.json({ session: activeSession });
     } catch (error2) {
       res2.status(500).json({ message: "Failed to get active timer" });
+    }
+  });
+  app2.get("/api/tasks/:id/time-logged", async (req2, res2) => {
+    try {
+      const task = await storage.getTask(req2.params.id);
+      if (!task) {
+        return res2.status(404).json({ message: "Task not found" });
+      }
+      res2.json({ taskId: task.id, timeLoggedSeconds: task.timeLoggedSeconds ?? 0 });
+    } catch (error2) {
+      res2.status(500).json({ message: "Failed to get task logged time" });
+    }
+  });
+  app2.post("/api/tasks/:id/time-logged/increment", async (req2, res2) => {
+    try {
+      const taskId = req2.params.id;
+      const { deltaSeconds } = req2.body || {};
+      if (typeof deltaSeconds !== "number" || !isFinite(deltaSeconds)) {
+        return res2.status(400).json({ message: "deltaSeconds must be a number" });
+      }
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res2.status(404).json({ message: "Task not found" });
+      }
+      await storage.incrementTaskLoggedTime(taskId, Math.max(0, Math.floor(deltaSeconds)));
+      const updated = await storage.getTask(taskId);
+      res2.json({ taskId, timeLoggedSeconds: (updated == null ? void 0 : updated.timeLoggedSeconds) ?? 0 });
+    } catch (error2) {
+      res2.status(500).json({ message: "Failed to increment task logged time" });
     }
   });
   app2.get("/api/timers/daily", async (req2, res2) => {
@@ -48000,44 +47993,17 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to get daily summary" });
     }
   });
-  app2.get("/api/timers/daily-range", async (req2, res2) => {
-    try {
-      const { start, end } = req2.query;
-      if (!start || !end) {
-        return res2.status(400).json({ message: "start and end query params are required (YYYY-MM-DD)" });
-      }
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      const summaries = await storage.getDailySummaryByDateRange(startDate, new Date(endDate.getTime() + 24 * 60 * 60 * 1e3));
-      const byDate = /* @__PURE__ */ new Map();
-      for (const s2 of summaries) {
-        byDate.set(s2.date, (byDate.get(s2.date) || 0) + s2.totalSeconds);
-      }
-      const days = Array.from(byDate.entries()).map(([date2, totalSeconds]) => ({ date: date2, totalSeconds })).sort((a, b) => a.date.localeCompare(b.date));
-      res2.json({ days });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to get daily range summary" });
-    }
-  });
   app2.get("/api/timers/task/:id", async (req2, res2) => {
     try {
       const taskId = req2.params.id;
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        return res2.status(404).json({ message: "Task not found" });
-      }
       const sessions = await storage.getTimerSessionsByTask(taskId);
       const estimate = await storage.getTaskEstimate(taskId);
-      const today = /* @__PURE__ */ new Date();
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1e3);
-      const todaySeconds = sessions.filter((s2) => s2.endTime && s2.startTime >= startOfDay && s2.startTime < endOfDay).reduce((sum, s2) => sum + (s2.durationSeconds || 0), 0);
+      const totalSeconds = sessions.filter((session) => session.endTime).reduce((sum, session) => sum + (session.durationSeconds || 0), 0);
       res2.json({
         taskId,
         sessions,
         estimate,
-        allTimeSeconds: task.timeLoggedSeconds || 0,
-        todaySeconds
+        totalSeconds
       });
     } catch (error2) {
       res2.status(500).json({ message: "Failed to get task timer data" });

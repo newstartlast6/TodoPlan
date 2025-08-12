@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, startOfWeek, startOfMonth, startOfYear } from "date-fns";
 import type { GoalType } from "@shared/schema";
 
@@ -27,7 +28,7 @@ function getStorageKey(type: GoalType, anchorDate: Date): string {
 }
 
 export function useGoal(type: GoalType, date: Date) {
-  const [goal, setGoal] = useState<string>("");
+  const queryClient = useQueryClient();
 
   const anchorDate = useMemo(() => {
     switch (type) {
@@ -42,42 +43,47 @@ export function useGoal(type: GoalType, date: Date) {
     }
   }, [type, date]);
 
-  // Load goal from API
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const params = new URLSearchParams({
-          type,
-          anchorDate: anchorDate.toISOString(),
-        });
-        const res = await fetch(`/api/goals?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to load goal");
-        const data = await res.json();
-        if (!cancelled) setGoal(data?.value ?? "");
-      } catch {
-        if (!cancelled) setGoal("");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [type, anchorDate]);
+  const anchorKey = useMemo(() => getStorageKey(type, anchorDate), [type, anchorDate]);
 
-  const updateGoal = useCallback(async (next: string) => {
-    setGoal(next);
-    try {
-      const res = await fetch(`/api/goals`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, anchorDate: anchorDate.toISOString(), value: next }),
+  const { data: goal = "" } = useQuery<string>({
+    queryKey: ["goals", type, anchorKey],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        type,
+        anchorDate: anchorDate.toISOString(),
       });
-      if (!res.ok) throw new Error("Failed to save goal");
-      window.dispatchEvent(new CustomEvent("goals:updated"));
-    } catch {
-      // keep optimistic UI; could show toast if needed
-    }
-  }, [type, anchorDate]);
+      const res = await fetch(`/api/goals?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to load goal");
+      const data = await res.json();
+      return data?.value ?? "";
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    enabled: Boolean(type && anchorKey),
+  });
+
+  const updateGoal = useCallback(
+    async (next: string) => {
+      const queryKey = ["goals", type, anchorKey] as const;
+      // Optimistic update
+      const previous = queryClient.getQueryData<string>(queryKey);
+      queryClient.setQueryData<string>(queryKey, next);
+      try {
+        const res = await fetch(`/api/goals`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type, anchorDate: anchorDate.toISOString(), value: next }),
+        });
+        if (!res.ok) throw new Error("Failed to save goal");
+        // Keep cache; notify any listeners that want to refresh UI outside of React Query
+        try { window.dispatchEvent(new CustomEvent("goals:updated")); } catch {}
+      } catch (e) {
+        // Revert on failure
+        queryClient.setQueryData<string | undefined>(queryKey, previous);
+      }
+    },
+    [queryClient, type, anchorKey, anchorDate]
+  );
 
   return { goal, setGoal: updateGoal } as const;
 }
