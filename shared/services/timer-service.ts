@@ -22,6 +22,12 @@ export class TimerService {
    */
   async startTimer(taskId: string): Promise<TimerOperationResult> {
     try {
+      console.log('[TimerService] startTimer called', {
+        taskId,
+        accumulatedSecondsBeforeStart: this.accumulatedSeconds,
+        hasActiveSession: !!this.activeSession,
+        wasActive: this.activeSession?.isActive ?? false,
+      });
       // Validate task ID
       if (!TimerValidator.validateTaskId(taskId)) {
         throw new TimerValidationError('Invalid task ID', { taskId });
@@ -37,9 +43,15 @@ export class TimerService {
         };
       }
 
-      // If there's a paused session lingering, discard it to avoid carrying over its accumulated seconds
+      // If there's a paused session lingering, discard it but PRESERVE accumulatedSeconds seeded by caller
       if (this.activeSession && !this.activeSession.isActive) {
-        this.reset();
+        console.log('[TimerService] startTimer: discarding paused session but preserving accumulatedSeconds', {
+          previousSessionTaskId: this.activeSession.taskId,
+          preservedAccumulatedSeconds: this.accumulatedSeconds,
+        });
+        this.stopInterval();
+        this.activeSession = null;
+        this.startTime = null;
       }
 
       // Create new timer session (start from seeded accumulatedSeconds)
@@ -60,6 +72,12 @@ export class TimerService {
       this.emit('timer:started', this.activeSession);
       this.onStateChange?.(this.activeSession);
 
+      console.log('[TimerService] startTimer started', {
+        taskId,
+        accumulatedSecondsAfterStart: this.accumulatedSeconds,
+        sessionDurationSeconds: this.activeSession.durationSeconds,
+      });
+
       return {
         success: true,
         session: this.activeSession
@@ -78,6 +96,11 @@ export class TimerService {
    */
   async pauseTimer(): Promise<TimerOperationResult> {
     try {
+      console.log('[TimerService] pauseTimer called', {
+        hasActiveSession: !!this.activeSession,
+        isActive: this.activeSession?.isActive ?? false,
+        accumulatedSecondsBeforePause: this.accumulatedSeconds,
+      });
       if (!this.activeSession || !this.activeSession.isActive) {
         throw new TimerStateError('No active timer to pause', { 
           code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER 
@@ -105,6 +128,12 @@ export class TimerService {
       this.emit('timer:paused', this.activeSession);
       this.onStateChange?.(this.activeSession);
 
+      console.log('[TimerService] pauseTimer updated', {
+        snappedTotal,
+        elapsedSeconds,
+        recomputedTotal,
+      });
+
       return {
         success: true,
         session: this.activeSession
@@ -123,6 +152,12 @@ export class TimerService {
    */
   async resumeTimer(): Promise<TimerOperationResult> {
     try {
+      console.log('[TimerService] resumeTimer called', {
+        hasActiveSession: !!this.activeSession,
+        isActive: this.activeSession?.isActive ?? false,
+        accumulatedSecondsBeforeResume: this.accumulatedSeconds,
+        previousDurationSeconds: this.activeSession?.durationSeconds,
+      });
       if (!this.activeSession || this.activeSession.isActive) {
         return {
           success: false,
@@ -143,6 +178,11 @@ export class TimerService {
       this.emit('timer:resumed', this.activeSession);
       this.onStateChange?.(this.activeSession);
 
+      console.log('[TimerService] resumeTimer resumed', {
+        accumulatedSecondsAfterResume: this.accumulatedSeconds,
+        sessionDurationSeconds: this.activeSession.durationSeconds,
+      });
+
       return {
         success: true,
         session: this.activeSession
@@ -160,6 +200,11 @@ export class TimerService {
    */
   async stopTimer(): Promise<TimerOperationResult> {
     try {
+      console.log('[TimerService] stopTimer called', {
+        hasActiveSession: !!this.activeSession,
+        isActive: this.activeSession?.isActive ?? false,
+        accumulatedSecondsBeforeStop: this.accumulatedSeconds,
+      });
       if (!this.activeSession) {
         return {
           success: false,
@@ -187,6 +232,11 @@ export class TimerService {
 
       this.emit('timer:stopped', completedSession);
       this.onStateChange?.(null);
+
+      console.log('[TimerService] stopTimer completed', {
+        totalSeconds,
+        taskId: completedSession.taskId,
+      });
 
       return {
         success: true,
@@ -268,7 +318,12 @@ export class TimerService {
    * Use this to continue timing from a previously persisted total.
    */
   setAccumulatedSeconds(seconds: number): void {
+    const previous = this.accumulatedSeconds;
     this.accumulatedSeconds = Math.max(0, Math.floor(seconds || 0));
+    console.log('[TimerService] setAccumulatedSeconds', {
+      previous,
+      next: this.accumulatedSeconds,
+    });
   }
 
   /**

@@ -232,8 +232,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const res = await apiRequest('GET', `/api/tasks/${taskId}`);
         const task: any = await res.json();
         const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
+        console.log('[TimerContext] startTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
         timerService.setAccumulatedSeconds(baseSeconds);
       } catch {
+        console.warn('[TimerContext] startTimer: failed to fetch task for seeding, defaulting to 0', { taskId });
         timerService.setAccumulatedSeconds(0);
       }
 
@@ -328,8 +330,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           const res = await apiRequest('GET', `/api/tasks/${taskId}`);
           const task: any = await res.json();
           const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
+          console.log('[TimerContext] resumeTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
           timerService.setAccumulatedSeconds(baseSeconds);
-        } catch {}
+        } catch {
+          console.warn('[TimerContext] resumeTimer: failed to fetch task for seeding');
+        }
       }
 
       const result = await timerService.resumeTimer();
@@ -425,6 +430,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       const stopResult = await timerService.stopTimer();
       if (stopResult.success) {
         try { await apiClient.stopTimer(); } catch (e) { console.error('Failed to stop server session during switch', e); }
+      }
+      // Seed base before starting new task
+      try {
+        const res = await apiRequest('GET', `/api/tasks/${taskId}`);
+        const task: any = await res.json();
+        const baseSeconds = typeof task?.timeLoggedSeconds === 'number' ? task.timeLoggedSeconds : 0;
+        console.log('[TimerContext] switchTimer: seeding accumulatedSeconds from task', { taskId, baseSeconds });
+        timerService.setAccumulatedSeconds(baseSeconds);
+      } catch {
+        console.warn('[TimerContext] switchTimer: failed to fetch task for seeding, defaulting to 0', { taskId });
+        timerService.setAccumulatedSeconds(0);
       }
       const result = await timerService.startTimer(taskId);
       

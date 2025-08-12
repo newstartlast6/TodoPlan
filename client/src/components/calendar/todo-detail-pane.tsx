@@ -8,6 +8,7 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { NotesEditor } from "@/components/calendar/notes-editor";
 import { TimePicker } from "@/components/calendar/time-picker";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
+import { useTimerActions } from "@/hooks/use-timer-state";
 import { TaskEstimation } from "@/components/timer/task-estimation";
 import { useTaskTimer, useTimerState } from "@/hooks/use-timer-state";
 import { Task, UpdateTask } from "@shared/schema";
@@ -29,6 +30,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
   // Timer integration
   const { activeSession, isTimerRunning, currentTaskId } = useTimerState();
+  const { stopTimer } = useTimerActions();
   const taskTimer = useTaskTimer(selectedTodoId || '');
   const isActiveTask = activeSession?.taskId === selectedTodoId;
 
@@ -181,6 +183,34 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     updateTaskMutation.mutate({ endTime });
   };
 
+  const handleResetLoggedTime = async () => {
+    if (!selectedTodoId) return;
+    const confirm = window.confirm("Reset this task's logged time to 0:00? This cannot be undone.");
+    if (!confirm) return;
+
+    try {
+      // If this task has the active timer, stop it first to avoid re-adding time later
+      if (activeSession && activeSession.taskId === selectedTodoId && (isTimerRunning || activeSession.isActive)) {
+        await stopTimer();
+      }
+
+      // Reset persisted seconds to 0
+      await fetch(`/api/tasks/${selectedTodoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeLoggedSeconds: 0 }),
+      });
+
+      // Update caches so UI reflects 0:00 immediately
+      queryClient.setQueryData<Task | null>(['task', selectedTodoId], (old) => old ? { ...old, timeLoggedSeconds: 0 as any } as Task : old as any);
+      queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => Array.isArray(old) ? old.map(t => t.id === selectedTodoId ? ({ ...t, timeLoggedSeconds: 0 as any }) : t) : old);
+
+      toast({ title: 'Time reset', description: 'Logged time has been reset to 0:00.' });
+    } catch (e) {
+      toast({ title: 'Failed to reset time', description: e instanceof Error ? e.message : 'Please try again.', variant: 'destructive' });
+    }
+  };
+
   // Empty state when no task is selected
   if (!selectedTodoId) {
     return (
@@ -289,11 +319,21 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                   <Timer className="w-4 h-4" />
                   Time Tracking
                 </h4>
-                <TaskTimerButton
-                  taskId={selectedTask.id}
-                  taskTitle={selectedTask.title}
-                  variant="default"
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetLoggedTime}
+                    className="h-8"
+                  >
+                    Reset to 0:00
+                  </Button>
+                  <TaskTimerButton
+                    taskId={selectedTask.id}
+                    taskTitle={selectedTask.title}
+                    variant="default"
+                  />
+                </div>
               </div>
 
               {/* Remove separate session display to avoid dual values */}

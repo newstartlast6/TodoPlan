@@ -80,7 +80,7 @@ export function SelectableTodoItem({
   
   // Timer integration
   // Show while running: current session total (seeded base + elapsed)
-  // When paused: hold the last running total until persisted catches up
+  // When paused: show persisted total
   const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(task.id);
   const persistedSeconds = (task as any).timeLoggedSeconds || 0;
   const holdRef = useRef<number>(0);
@@ -90,9 +90,15 @@ export function SelectableTodoItem({
       holdRef.current = Math.max(holdRef.current, currentSessionSeconds || 0);
     }
   }, [isRunningActiveComputed, currentSessionSeconds]);
-  const displaySeconds = isRunningActiveComputed
-    ? (currentSessionSeconds || 0)
-    : persistedSeconds;
+  const displaySeconds = isRunningActiveComputed ? (currentSessionSeconds || 0) : persistedSeconds;
+  if (isRunningActiveComputed) {
+    // eslint-disable-next-line no-console
+    console.log('[SelectableTodoItem] running display', {
+      taskId: task.id,
+      persistedSeconds,
+      currentSessionSeconds,
+    });
+  }
   useEffect(() => {
     holdRef.current = 0;
   }, [isRunningActiveComputed, persistedSeconds]);

@@ -394,6 +394,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prefer client-reported total seconds if provided
       const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      console.log('[Server] timers/pause', {
+        sessionId: activeSession.id,
+        taskId: activeSession.taskId,
+        startTime: startTime.toISOString(),
+        now: now.toISOString(),
+        previousDuration: activeSession.durationSeconds,
+        elapsedSeconds,
+        clientTotal,
+      });
       const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
       // Snap up to at least last reported duration to avoid off-by-one
       const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
@@ -573,6 +582,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prefer client-reported total seconds if provided
       const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
       const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      console.log('[Server] timers/stop', {
+        sessionId: activeSession.id,
+        taskId: activeSession.taskId,
+        startTime: startTime.toISOString(),
+        now: now.toISOString(),
+        previousDuration: activeSession.durationSeconds,
+        elapsedSeconds,
+        clientTotal,
+      });
       const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
       const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
       const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;

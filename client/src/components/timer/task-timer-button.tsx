@@ -29,7 +29,15 @@ export function TaskTimerButton({
   
   const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(taskId);
   const persistedSeconds = Math.max(0, Math.floor(initialLoggedSeconds || 0));
-  const displaySeconds = isActiveTask && isRunning ? persistedSeconds + (currentSessionSeconds || 0) : persistedSeconds;
+  const displaySeconds = isActiveTask && isRunning ? (currentSessionSeconds || 0) : persistedSeconds;
+  if (isActiveTask && isRunning) {
+    // eslint-disable-next-line no-console
+    console.log('[TaskTimerButton] running display', {
+      taskId,
+      persistedSeconds,
+      currentSessionSeconds,
+    });
+  }
   const formattedDisplayTime = TimerCalculator.formatDuration(displaySeconds);
 
   const { startTimer, pauseTimer, resumeTimer } = useTimerActions();
