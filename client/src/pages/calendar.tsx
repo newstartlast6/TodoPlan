@@ -31,11 +31,7 @@ export default function Calendar() {
   const [currentView, setCurrentView] = useState<CalendarView>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(() => {
-    try {
-      return localStorage.getItem('plan-panel-open') === 'true';
-    } catch { return false; }
-  });
+  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(false);
  
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -273,10 +269,7 @@ export default function Calendar() {
         currentView={currentView}
         onViewChange={setCurrentView}
         onTogglePlanPanel={() => {
-          setIsPlanPanelOpen((v) => {
-            try { localStorage.setItem('plan-panel-open', (!v).toString()); } catch {}
-            return !v;
-          });
+          setIsPlanPanelOpen((v) => !v);
         }}
         isPlanPanelOpen={isPlanPanelOpen}
       />
@@ -324,10 +317,7 @@ export default function Calendar() {
             <Button
               variant={isPlanPanelOpen ? 'default' : 'outline'}
               onClick={() => {
-                setIsPlanPanelOpen((v) => {
-                  try { localStorage.setItem('plan-panel-open', (!v).toString()); } catch {}
-                  return !v;
-                });
+                setIsPlanPanelOpen((v) => !v);
               }}
               data-testid="button-toggle-plan"
             >

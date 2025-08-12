@@ -23,9 +23,7 @@ export function Lists() {
   const [state, setState] = useState<ListsState>({
     selectedListId: null,
   });
-  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('plan-panel-open-lists') === 'true'; } catch { return false; }
-  });
+  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState<boolean>(false);
 
   // Use global selected todo context
   const { selectedTodoId, isDetailPaneOpen, selectTodo, closeDetailPane } = useSelectedTodo();
@@ -131,10 +129,7 @@ export function Lists() {
   const renderSidebar = () => (
     <MinimalisticSidebar
       onTogglePlanPanel={() => {
-        setIsPlanPanelOpen((v) => {
-          try { localStorage.setItem('plan-panel-open-lists', (!v).toString()); } catch {}
-          return !v;
-        });
+        setIsPlanPanelOpen((v) => !v);
       }}
       isPlanPanelOpen={isPlanPanelOpen}
     />
