@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useProgressAnalytics } from '@/hooks/use-progress-analytics';
-import { TimerCalculator } from '@shared/services/timer-service';
+import { TimerCalculator } from '@shared/services/timer-store';
 import { cn } from '@/lib/utils';
 
 interface TimeEntry {

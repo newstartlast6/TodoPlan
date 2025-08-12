@@ -1,7 +1,7 @@
 // List-specific error handling utilities
 // This file contains error classes and utilities for list operations
 
-import { LIST_ERROR_CODES, type ListError } from '../list-types';
+import { LIST_ERROR_CODES } from '../list-types';
 
 // Base list error class
 export class ListError extends Error {
@@ -15,11 +15,7 @@ export class ListError extends Error {
   }
 
   toJSON(): ListError {
-    return {
-      code: this.code,
-      message: this.message,
-      details: this.details,
-    };
+    return this as unknown as ListError;
   }
 }
 
@@ -109,7 +105,7 @@ export class ListErrorHandler {
 
   static isRetryableError(error: ListError): boolean {
     // Define which errors are retryable
-    const retryableCodes = [
+    const retryableCodes: string[] = [
       // Add codes for network errors, temporary failures, etc.
     ];
     

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TimerSession } from '@shared/timer-types';
-import { TimerCalculator } from '@shared/services/timer-service';
+import { TimerCalculator } from '@shared/services/timer-store';
 import { cn } from '@/lib/utils';
 
 interface ConflictResolutionModalProps {

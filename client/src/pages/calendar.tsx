@@ -4,7 +4,7 @@ import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { TimerProvider } from "@/contexts/timer-context";
+// TimerProvider removed in sessionless rewrite
 import { Toaster } from '@/components/ui/toaster';
 import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
@@ -363,7 +363,7 @@ export default function Calendar() {
   );
 
   return (
-    <TimerProvider>
+    <>
       <DndProvider backend={HTML5Backend}>
         <ResponsiveLayout
           sidebar={renderSidebar()}
@@ -393,6 +393,6 @@ export default function Calendar() {
       >
         <Plus className="w-6 h-6" />
       </Button>
-    </TimerProvider>
+    </>
   );
 }

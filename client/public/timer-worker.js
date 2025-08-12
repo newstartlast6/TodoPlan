@@ -13,6 +13,7 @@ let timerState = {
 
 let tickInterval = null;
 const TICK_INTERVAL = 1000; // 1 second
+let lastPerfNow = null;
 
 /**
  * Start the background timer
@@ -31,25 +32,24 @@ function startTimer(data) {
     clearInterval(tickInterval);
   }
 
-  // Start ticking
+  // Start ticking using performance.now() for smoother cadence
+  lastPerfNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : null;
   tickInterval = setInterval(() => {
-    if (timerState.isActive) {
-      const currentTime = Date.now();
-      const elapsedSeconds = Math.floor((currentTime - timerState.startTime) / 1000);
-      const totalSeconds = timerState.accumulatedSeconds + elapsedSeconds;
-
-      // Send tick update to main thread
-      self.postMessage({
-        type: 'TIMER_TICK',
-        payload: {
-          sessionId: timerState.sessionId,
-          taskId: timerState.taskId,
-          totalSeconds,
-          elapsedSeconds,
-          timestamp: currentTime,
-        },
-      });
-    }
+    if (!timerState.isActive) return;
+    const currentTime = Date.now();
+    // We still emit a 1Hz tick; store will do +1s accumulation to avoid drift
+    const elapsedSeconds = Math.floor((currentTime - timerState.startTime) / 1000);
+    const totalSeconds = timerState.accumulatedSeconds + elapsedSeconds;
+    self.postMessage({
+      type: 'TIMER_TICK',
+      payload: {
+        sessionId: timerState.sessionId,
+        taskId: timerState.taskId,
+        totalSeconds,
+        elapsedSeconds,
+        timestamp: currentTime,
+      },
+    });
   }, TICK_INTERVAL);
 
   self.postMessage({
@@ -100,24 +100,22 @@ function resumeTimer() {
     if (tickInterval) {
       clearInterval(tickInterval);
     }
-
+    lastPerfNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : null;
     tickInterval = setInterval(() => {
-      if (timerState.isActive) {
-        const currentTime = Date.now();
-        const elapsedSeconds = Math.floor((currentTime - timerState.startTime) / 1000);
-        const totalSeconds = timerState.accumulatedSeconds + elapsedSeconds;
-
-        self.postMessage({
-          type: 'TIMER_TICK',
-          payload: {
-            sessionId: timerState.sessionId,
-            taskId: timerState.taskId,
-            totalSeconds,
-            elapsedSeconds,
-            timestamp: currentTime,
-          },
-        });
-      }
+      if (!timerState.isActive) return;
+      const currentTime = Date.now();
+      const elapsedSeconds = Math.floor((currentTime - timerState.startTime) / 1000);
+      const totalSeconds = timerState.accumulatedSeconds + elapsedSeconds;
+      self.postMessage({
+        type: 'TIMER_TICK',
+        payload: {
+          sessionId: timerState.sessionId,
+          taskId: timerState.taskId,
+          totalSeconds,
+          elapsedSeconds,
+          timestamp: currentTime,
+        },
+      });
     }, TICK_INTERVAL);
 
     self.postMessage({

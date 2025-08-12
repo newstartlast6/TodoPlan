@@ -36,12 +36,20 @@ export function useCreateTaskInList() {
       // Optimistically update tasks (same as calendar)
       queryClient.setQueryData(['/api/tasks'], (old: Task[] | undefined) => {
         if (!old) return old;
-        const optimisticTask: Task = {
+        const optimisticTask = {
           id: `temp-${Date.now()}`,
-          ...newTask,
+          title: newTask.title,
+          description: newTask.description ?? null,
+          notes: newTask.notes ?? null,
+          startTime: newTask.startTime,
+          endTime: newTask.endTime,
+          completed: newTask.completed ?? false as any,
+          priority: (newTask as any).priority ?? 'medium',
+          listId: (newTask as any).listId ?? null,
+          scheduledDate: (newTask as any).scheduledDate ?? null,
           createdAt: new Date(),
-          timeLoggedSeconds: 0 as any,
-        };
+          timeLoggedSeconds: 0,
+        } as unknown as Task;
         return [...old, optimisticTask];
       });
 

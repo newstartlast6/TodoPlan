@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useTaskTimer } from '@/hooks/use-timer-state';
-import { useTimerActions } from '@/hooks/use-timer-state';
+import { useTimerStore } from '@/hooks/use-timer-store';
 
 interface TimerSwitchModalProps {
   isOpen: boolean;
@@ -30,15 +30,15 @@ export function TimerSwitchModal({
   toTaskTitle,
 }: TimerSwitchModalProps) {
   const fromTaskTimer = useTaskTimer(fromTaskId);
-  const { confirmTimerSwitch, cancelTimerSwitch } = useTimerActions();
+  const timer = useTimerStore();
 
   const handleConfirm = async () => {
-    await confirmTimerSwitch(toTaskId);
+    await timer.stop();
+    await timer.start(toTaskId);
     onConfirm();
   };
 
   const handleCancel = () => {
-    cancelTimerSwitch();
     onCancel();
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TimerApiClient } from '@/services/timer-api-client';
+// Legacy TimerApiClient removed; use direct fetches
 import { useToast } from './use-toast';
 
 interface TaskEstimate {
@@ -28,7 +28,7 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const apiClient = new TimerApiClient();
+  
   const { toast } = useToast();
 
   /**
@@ -43,8 +43,10 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
     try {
       const estimatePromises = taskIdsToLoad.map(async (taskId) => {
         try {
-          const estimate = await apiClient.getTaskEstimate(taskId);
-          return { taskId, estimate };
+          const res = await fetch(`/api/tasks/${taskId}/estimate`);
+          if (!res.ok) throw new Error('Failed');
+          const data = await res.json();
+          return { taskId, estimate: data?.estimate as any };
         } catch (error) {
           console.warn(`Failed to load estimate for task ${taskId}:`, error);
           return { taskId, estimate: null };
@@ -72,7 +74,7 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [apiClient]);
+  }, []);
 
   /**
    * Load estimates on mount and when taskIds change
@@ -96,7 +98,9 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
   const setEstimate = useCallback(async (taskId: string, minutes: number): Promise<boolean> => {
     try {
       setError(null);
-      const estimate = await apiClient.setTaskEstimate(taskId, minutes);
+      const res = await fetch(`/api/tasks/${taskId}/estimate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estimatedDurationMinutes: minutes }) });
+      if (!res.ok) throw new Error('Failed to save estimate');
+      const estimate = (await res.json()) as any;
       
       setEstimates(prev => {
         const newEstimates = new Map(prev);
@@ -122,7 +126,7 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
 
       return false;
     }
-  }, [apiClient, toast]);
+  }, [toast]);
 
   /**
    * Remove estimate for a task
@@ -130,7 +134,7 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
   const removeEstimate = useCallback(async (taskId: string): Promise<boolean> => {
     try {
       setError(null);
-      await apiClient.deleteTaskEstimate(taskId);
+      await fetch(`/api/tasks/${taskId}/estimate`, { method: 'DELETE' });
       
       setEstimates(prev => {
         const newEstimates = new Map(prev);
@@ -156,7 +160,7 @@ export function useTaskEstimates(taskIds?: string[]): UseTaskEstimatesReturn {
 
       return false;
     }
-  }, [apiClient, toast]);
+  }, [toast]);
 
   /**
    * Refresh estimate for a specific task
@@ -195,7 +199,7 @@ export function useTaskEstimate(taskId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const apiClient = new TimerApiClient();
+  
   const { toast } = useToast();
 
   /**
@@ -206,7 +210,10 @@ export function useTaskEstimate(taskId: string) {
     setError(null);
 
     try {
-      const estimate = await apiClient.getTaskEstimate(taskId);
+      const res = await fetch(`/api/tasks/${taskId}/estimate`);
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      const estimate = data?.estimate as any;
       setEstimateState(estimate || undefined);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load estimate';
@@ -215,7 +222,7 @@ export function useTaskEstimate(taskId: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [taskId, apiClient]);
+  }, [taskId]);
 
   /**
    * Load estimate on mount and when taskId changes
@@ -232,7 +239,9 @@ export function useTaskEstimate(taskId: string) {
   const setEstimate = useCallback(async (minutes: number): Promise<boolean> => {
     try {
       setError(null);
-      const newEstimate = await apiClient.setTaskEstimate(taskId, minutes);
+      const res = await fetch(`/api/tasks/${taskId}/estimate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estimatedDurationMinutes: minutes }) });
+      if (!res.ok) throw new Error('Failed');
+      const newEstimate = await res.json();
       setEstimateState(newEstimate);
 
       toast({
@@ -253,7 +262,7 @@ export function useTaskEstimate(taskId: string) {
 
       return false;
     }
-  }, [taskId, apiClient, toast]);
+  }, [taskId, toast]);
 
   /**
    * Remove estimate
@@ -261,7 +270,7 @@ export function useTaskEstimate(taskId: string) {
   const removeEstimate = useCallback(async (): Promise<boolean> => {
     try {
       setError(null);
-      await apiClient.deleteTaskEstimate(taskId);
+      await fetch(`/api/tasks/${taskId}/estimate`, { method: 'DELETE' });
       setEstimateState(undefined);
 
       toast({
@@ -282,7 +291,7 @@ export function useTaskEstimate(taskId: string) {
 
       return false;
     }
-  }, [taskId, apiClient, toast]);
+  }, [taskId, toast]);
 
   /**
    * Refresh estimate

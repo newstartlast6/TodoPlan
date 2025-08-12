@@ -13,8 +13,8 @@ import { GoalInline } from "@/components/calendar/goal-inline";
 import { useDrop } from 'react-dnd';
 import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
-import { useTimerState } from '@/hooks/use-timer-state';
-import { TimerCalculator } from '@shared/services/timer-service';
+import { useTimerStore } from '@/hooks/use-timer-store';
+import { TimerCalculator } from '@shared/services/timer-store';
 
 interface WeekViewProps {
   tasks: Task[];
@@ -36,7 +36,10 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const weekProgress = calculateWeekProgress(currentDate);
-  const { isTimerRunning, currentTaskId, currentElapsedSeconds } = useTimerState();
+  const timer = useTimerStore();
+  const isTimerRunning = timer.isRunning;
+  const currentTaskId = timer.activeTaskId;
+  const currentElapsedSeconds = timer.displaySeconds;
   
   const completedTasks = tasks.filter(task => task.completed);
   const totalTasks = tasks.length;

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { DurationPicker } from './duration-picker';
 import { useTimerProgress } from '@/hooks/use-timer-state';
-import { TimerApiClient } from '@/services/timer-api-client';
+// Legacy TimerApiClient removed; use direct fetches
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +26,7 @@ export function TaskEstimation({
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  const apiClient = new TimerApiClient();
+  const apiBase = '';
   const { toast } = useToast();
 
   const {
@@ -43,9 +43,11 @@ export function TaskEstimation({
   useEffect(() => {
     const loadEstimate = async () => {
       try {
-        const existingEstimate = await apiClient.getTaskEstimate(taskId);
-        if (existingEstimate) {
-          setEstimate(existingEstimate.estimatedDurationMinutes);
+        const res = await fetch(`/api/tasks/${taskId}/estimate`);
+        if (res.ok) {
+          const data = await res.json();
+          const existing = data?.estimate;
+          if (existing) setEstimate(existing.estimatedDurationMinutes);
         }
       } catch (error) {
         console.error('Failed to load task estimate:', error);
@@ -60,7 +62,7 @@ export function TaskEstimation({
       // Remove estimate
       try {
         setIsLoading(true);
-        await apiClient.deleteTaskEstimate(taskId);
+        await fetch(`/api/tasks/${taskId}/estimate`, { method: 'DELETE' });
         setEstimate(undefined);
         setIsEditing(false);
         
@@ -81,7 +83,7 @@ export function TaskEstimation({
       // Set/update estimate
       try {
         setIsLoading(true);
-        await apiClient.setTaskEstimate(taskId, minutes);
+        await fetch(`/api/tasks/${taskId}/estimate`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estimatedDurationMinutes: minutes }) });
         setEstimate(minutes);
         setIsEditing(false);
         

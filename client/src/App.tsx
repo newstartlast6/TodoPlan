@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SelectionProvider } from "@/hooks/use-selected-todo";
-import { TimerProvider } from "./contexts/timer-context";
+import { initTimerStore } from "@/hooks/use-timer-store";
 import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 import { Lists } from "@/pages/lists";
@@ -20,14 +20,14 @@ function Router() {
 }
 
 function App() {
+  // Initialize sessionless timer store once
+  try { initTimerStore(); } catch {}
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SelectionProvider>
-          <TimerProvider>
-            <Toaster />
-            <Router />
-          </TimerProvider>
+          <Toaster />
+          <Router />
         </SelectionProvider>
       </TooltipProvider>
     </QueryClientProvider>

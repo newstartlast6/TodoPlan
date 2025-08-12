@@ -8,15 +8,14 @@ import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { NotesEditor } from "@/components/calendar/notes-editor";
 import { TimePicker } from "@/components/calendar/time-picker";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
-import { useTimerActions } from "@/hooks/use-timer-state";
 import { TaskEstimation } from "@/components/timer/task-estimation";
-import { useTaskTimer, useTimerState } from "@/hooks/use-timer-state";
+import { useTimerStore } from "@/hooks/use-timer-store";
 import { Task, UpdateTask } from "@shared/schema";
 import { format, isBefore } from "date-fns";
 import { formatTimeRange } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { listsKeys } from "@/hooks/use-lists";
-import { TimerCalculator } from "@shared/services/timer-service";
+import { TimerCalculator } from "@shared/services/timer-store";
 
 interface TodoDetailPaneProps {
   onClose?: () => void;
@@ -28,11 +27,10 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Timer integration
-  const { activeSession, isTimerRunning, currentTaskId } = useTimerState();
-  const { stopTimer } = useTimerActions();
-  const taskTimer = useTaskTimer(selectedTodoId || '');
-  const isActiveTask = activeSession?.taskId === selectedTodoId;
+  // Timer integration (sessionless)
+  const timer = useTimerStore();
+  const isActiveTask = timer.activeTaskId === selectedTodoId && timer.isRunning;
+  const isTimerRunning = timer.isRunning;
 
   // Fetch the selected task details
   const { data: selectedTask, isLoading, error } = useQuery<Task>({
@@ -190,12 +188,12 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
     try {
       // If this task has the active timer, stop it first to avoid re-adding time later
-      if (activeSession && activeSession.taskId === selectedTodoId && (isTimerRunning || activeSession.isActive)) {
-        await stopTimer();
+      if (timer.activeTaskId === selectedTodoId && timer.isRunning) {
+        await timer.stop();
       }
 
-      // Reset persisted seconds to 0
-      await fetch(`/api/tasks/${selectedTodoId}`, {
+      // Reset persisted seconds to 0 via idempotent time-logged endpoint
+      await fetch(`/api/tasks/${selectedTodoId}/time-logged`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ timeLoggedSeconds: 0 }),
@@ -328,7 +326,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                   >
                     Reset to 0:00
                   </Button>
-                  <TaskTimerButton
+                   <TaskTimerButton
                     taskId={selectedTask.id}
                     taskTitle={selectedTask.title}
                     variant="default"
@@ -344,19 +342,14 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 </div>
                 <div className="text-lg font-mono font-semibold text-foreground">
                   {(() => {
-                    const persisted = (selectedTask as any).timeLoggedSeconds || 0;
-                    // While running show live session total; when paused show persisted value
-                    if (isActiveTask && isTimerRunning) {
-                      return TimerCalculator.formatDuration(activeSession?.durationSeconds || 0);
-                    }
-                    return TimerCalculator.formatDuration(persisted);
+                     const persisted = (selectedTask as any).timeLoggedSeconds || 0;
+                     if (isActiveTask) {
+                       return TimerCalculator.formatDuration(timer.displaySeconds || 0);
+                     }
+                     return TimerCalculator.formatDuration(persisted);
                   })()}
                 </div>
-                {taskTimer.sessionCount > 1 && (
-                  <div className="text-xs text-muted-foreground">
-                    {taskTimer.sessionCount} sessions today
-                  </div>
-                )}
+                {/* Session counts removed in sessionless design */}
               </div>
             </div>
           )}

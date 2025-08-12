@@ -8,6 +8,7 @@ export const listsKeys = {
   all: ['lists'] as const,
   lists: () => [...listsKeys.all, 'list'] as const,
   list: (id: string) => [...listsKeys.lists(), id] as const,
+  listTasks: (id: string) => ['/api/lists', id, 'tasks'] as const,
 };
 
 // Fetch all lists with task counts
@@ -26,11 +27,17 @@ export function useLists() {
         listsData.map(async (list: any) => {
           const tasksResponse = await fetch(`/api/lists/${list.id}/tasks`);
           const tasks = tasksResponse.ok ? await tasksResponse.json() : [];
-          return {
-            ...list,
+          const normalized: ListWithTaskCount = {
+            id: list.id,
+            name: list.name,
+            emoji: list.emoji,
+            color: ((list as any).color ?? null) as string | null,
+            createdAt: (list.createdAt as any) ?? new Date(),
+            updatedAt: (list.updatedAt as any) ?? new Date(),
             taskCount: tasks.length,
             completedTaskCount: tasks.filter((task: Task) => task.completed).length,
           };
+          return normalized;
         })
       );
       
@@ -118,12 +125,14 @@ export function useCreateList() {
         if (!old) return old;
         const optimisticList: ListWithTaskCount = {
           id: `temp-${Date.now()}`,
-          ...newList,
+          name: newList.name,
+          emoji: newList.emoji,
+          color: (newList as any).color ?? null,
           taskCount: 0,
           completedTaskCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any,
+        } as any;
         return [...old, optimisticList];
       });
 

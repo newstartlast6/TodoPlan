@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Filter, SortAsc, CheckSquare, Square } from 'lucide-react';
-import { type List, type ListStatistics } from '@shared/list-types';
+import { type ListWithTaskCount, type ListStatistics } from '@shared/list-types';
 import { type Task } from '@shared/schema';
 import { SelectableTodoItem } from '../calendar/selectable-todo-item';
 import { AddTaskDialog } from './add-task-dialog';
 import { EmptyListState } from './empty-list-state';
 
 interface ListDetailPanelProps {
-  list: List | null;
+  list: ListWithTaskCount | null;
   tasks: Task[];
   selectedTaskId: string | null;
   onTaskSelect: (taskId: string) => void;
@@ -274,7 +274,7 @@ export function ListDetailPanel({
                   onToggleComplete={onTaskToggleComplete}
                   onUpdate={onTaskUpdate}
                   onDelete={onTaskDelete}
-                  variant="list"
+                  variant="default"
                   showTime={true}
                   showDate={false}
                   showTimer={true}

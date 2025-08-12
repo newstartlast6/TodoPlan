@@ -5,7 +5,8 @@ import { Task, List } from './schema';
 import { z } from 'zod';
 
 // Extended List interface with computed properties
-export interface ListWithTaskCount extends List {
+export interface ListWithTaskCount extends Omit<List, 'color'> {
+  color: string | null;
   taskCount: number;
   completedTaskCount: number;
 }

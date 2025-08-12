@@ -2,8 +2,16 @@ import React from 'react';
 import { Play, Pause, Square, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { useTimerState, useTimerActions } from '@/hooks/use-timer-state';
-import { TimerStatus } from '@shared/timer-types';
+import { useTimerStore } from '@/hooks/use-timer-store';
+
+function formatDuration(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+}
 import { cn } from '@/lib/utils';
 
 interface TimerDisplayProps {
@@ -19,41 +27,30 @@ export function TimerDisplay({
   showProgress = true,
   estimatedMinutes 
 }: TimerDisplayProps) {
-  const {
-    activeSession,
-    isTimerRunning,
-    timerStatus,
-    formattedElapsedTime,
-    isLoading,
-    error,
-  } = useTimerState();
-
-  const { pauseTimer, resumeTimer, stopTimer } = useTimerActions();
+  const timer = useTimerStore();
+  const isTimerRunning = timer.isRunning;
+  const formattedElapsedTime = formatDuration(timer.displaySeconds || 0);
 
   const handlePauseResume = async () => {
-    if (isTimerRunning) {
-      await pauseTimer();
-    } else if (activeSession && timerStatus === TimerStatus.PAUSED) {
-      await resumeTimer();
+    if (isTimerRunning && timer.activeTaskId) {
+      await timer.pause();
     }
   };
 
   const handleStop = async () => {
-    await stopTimer();
+    await timer.stop();
   };
 
   // Calculate progress if estimate is provided
-  const progressPercentage = estimatedMinutes && activeSession
-    ? Math.min((activeSession.durationSeconds / (estimatedMinutes * 60)) * 100, 100)
+  const progressPercentage = estimatedMinutes && timer.isRunning
+    ? Math.min(((timer.displaySeconds || 0) / (estimatedMinutes * 60)) * 100, 100)
     : 0;
 
-  const isOverEstimate = estimatedMinutes && activeSession
-    ? activeSession.durationSeconds > (estimatedMinutes * 60)
+  const isOverEstimate = estimatedMinutes && timer.isRunning
+    ? (timer.displaySeconds || 0) > (estimatedMinutes * 60)
     : false;
 
-  if (!activeSession) {
-    return null;
-  }
+  if (!timer.activeTaskId) return null;
 
   if (compact) {
     return (
@@ -71,7 +68,7 @@ export function TimerDisplay({
             size="sm"
             variant="ghost"
             onClick={handlePauseResume}
-            disabled={isLoading}
+             disabled={false}
             className="h-6 w-6 p-0"
           >
             {isTimerRunning ? (
@@ -85,7 +82,7 @@ export function TimerDisplay({
             size="sm"
             variant="ghost"
             onClick={handleStop}
-            disabled={isLoading}
+             disabled={false}
             className="h-6 w-6 p-0"
           >
             <Square className="w-3 h-3" />
@@ -112,9 +109,7 @@ export function TimerDisplay({
           </span>
         </div>
         
-        {error && (
-          <span className="text-xs text-red-600">{error}</span>
-        )}
+        {/* Error state removed in sessionless display */}
       </div>
 
       {/* Timer Display */}
@@ -154,7 +149,7 @@ export function TimerDisplay({
       <div className="flex gap-2">
         <Button
           onClick={handlePauseResume}
-          disabled={isLoading}
+          disabled={false}
           variant={isTimerRunning ? "secondary" : "default"}
           className="flex-1"
         >
@@ -173,7 +168,7 @@ export function TimerDisplay({
         
         <Button
           onClick={handleStop}
-          disabled={isLoading}
+          disabled={false}
           variant="outline"
           className="flex-1"
         >

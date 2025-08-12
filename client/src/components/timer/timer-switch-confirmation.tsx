@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { AlertTriangle, Clock, Play, Pause, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTaskTimer, useTimerActions } from '@/hooks/use-timer-state';
+import { useTaskTimer } from '@/hooks/use-timer-state';
+import { useTimerStore } from '@/hooks/use-timer-store';
 import { cn } from '@/lib/utils';
 
 interface TimerSwitchConfirmationProps {
@@ -25,12 +26,13 @@ export function TimerSwitchConfirmation({
   const [isConfirming, setIsConfirming] = useState(false);
   const fromTaskTimer = useTaskTimer(fromTaskId);
   const toTaskTimer = useTaskTimer(toTaskId);
-  const { confirmTimerSwitch } = useTimerActions();
+  const timer = useTimerStore();
 
   const handleConfirm = async () => {
     setIsConfirming(true);
     try {
-      await confirmTimerSwitch(toTaskId);
+      await timer.stop();
+      await timer.start(toTaskId);
       onConfirm();
     } catch (error) {
       console.error('Failed to switch timer:', error);

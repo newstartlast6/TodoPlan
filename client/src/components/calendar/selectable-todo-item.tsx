@@ -7,12 +7,12 @@ import { Task } from "@shared/schema";
 import { formatTimeRange } from "@/lib/time-utils";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
-import { useTaskTimer } from "@/hooks/use-timer-state";
+import { useTimerStore } from "@/hooks/use-timer-store";
 import { cn } from "@/lib/utils";
 import { EditableText } from "@/components/ui/editable-text";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { TimerCalculator } from "@shared/services/timer-service";
+import { TimerCalculator } from "@shared/services/timer-store";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -81,33 +81,11 @@ export function SelectableTodoItem({
   // Timer integration
   // Show while running: current session total (seeded base + elapsed)
   // When paused: show persisted total
-  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(task.id);
+  const timer = useTimerStore();
+  const isActiveTask = timer.activeTaskId === task.id;
+  const isRunning = timer.isRunning && isActiveTask;
   const persistedSeconds = (task as any).timeLoggedSeconds || 0;
-  const holdRef = useRef<number>(0);
-  const isRunningActiveComputed = isActiveTask && isRunning;
-  // Track latest running session value
-  useEffect(() => {
-    if (isRunningActiveComputed) {
-      holdRef.current = Math.max(holdRef.current, currentSessionSeconds || 0);
-    }
-  }, [isRunningActiveComputed, currentSessionSeconds]);
-
-  // When not running, hold the last running value until persisted catches up
-  const displaySeconds = isRunningActiveComputed
-    ? (currentSessionSeconds || 0)
-    : Math.max(persistedSeconds, holdRef.current || 0);
-
-  // Reset hold once persisted matches or exceeds the held value
-  useEffect(() => {
-    if (!isRunningActiveComputed && persistedSeconds >= (holdRef.current || 0)) {
-      holdRef.current = 0;
-    }
-  }, [isRunningActiveComputed, persistedSeconds]);
-
-  // Debug logging removed
-  useEffect(() => {
-    holdRef.current = 0;
-  }, [isRunningActiveComputed, persistedSeconds]);
+  const displaySeconds = isActiveTask && isRunning ? (timer.displaySeconds || 0) : persistedSeconds;
   const formattedPersistedTime = TimerCalculator.formatDuration(displaySeconds);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -126,7 +104,7 @@ export function SelectableTodoItem({
     onToggleComplete(task.id, task.completed || false);
   };
 
-  const isRunningActive = isRunningActiveComputed;
+  const isRunningActive = isRunning;
 
   const baseClasses = cn(
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",

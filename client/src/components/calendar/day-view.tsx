@@ -8,14 +8,15 @@ import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
 import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
 // import { DailySummary } from "@/components/timer/daily-summary";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { useDailyTimerStats, useTimerState } from "@/hooks/use-timer-state";
+import { useDailyTimerStats } from "@/hooks/use-timer-state";
+import { useTimerStore } from "@/hooks/use-timer-store";
 import { Task } from "@shared/schema";
 import { useDrop } from 'react-dnd';
 import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { formatTimeRange } from "@/lib/time-utils";
-import { TimerCalculator } from "@shared/services/timer-service";
+import { TimerCalculator } from "@shared/services/timer-store";
 
 interface DayViewProps {
   tasks: Task[];
@@ -50,7 +51,10 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
   // Remove daily summary; we will compute total based on tasks and current session only
 
   // Timer-based current task
-  const { currentTaskId, isTimerRunning, currentElapsedSeconds } = useTimerState();
+  const timer = useTimerStore();
+  const currentTaskId = timer.activeTaskId;
+  const isTimerRunning = timer.isRunning;
+  const currentElapsedSeconds = timer.displaySeconds;
 
   const toggleTaskCompletion = (taskId: string, completed: boolean) => {
     onTaskUpdate(taskId, { completed: !completed });

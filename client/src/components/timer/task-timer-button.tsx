@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Play, Pause, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTaskTimer } from '@/hooks/use-timer-state';
-import { useTimerActions } from '@/hooks/use-timer-state';
+import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerSwitchModal } from './timer-switch-modal';
 import { cn } from '@/lib/utils';
-import { TimerCalculator } from '@shared/services/timer-service';
+import { TimerCalculator } from '@shared/services/timer-store';
 
 interface TaskTimerButtonProps {
   taskId: string;
@@ -27,27 +26,27 @@ export function TaskTimerButton({
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [switchFromTask, setSwitchFromTask] = useState<string>('');
   
-  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(taskId);
+  const timer = useTimerStore();
+  const isActiveTask = timer.activeTaskId === taskId;
+  const isRunning = timer.isRunning && isActiveTask;
   const persistedSeconds = Math.max(0, Math.floor(initialLoggedSeconds || 0));
-  const displaySeconds = isActiveTask && isRunning ? (currentSessionSeconds || 0) : persistedSeconds;
+  const displaySeconds = isActiveTask && isRunning ? (timer.displaySeconds || 0) : persistedSeconds;
   // Debug logging removed
   const formattedDisplayTime = TimerCalculator.formatDuration(displaySeconds);
 
-  const { startTimer, pauseTimer, resumeTimer } = useTimerActions();
+  const start = timer.start;
+  const pause = timer.pause;
+  const resume = timer.resume;
 
   const handleTimerAction = async () => {
     if (isActiveTask) {
       if (isRunning) {
-        await pauseTimer();
+        await pause();
       } else {
-        await resumeTimer();
+        await resume(taskId);
       }
     } else {
-      const result = await startTimer(taskId);
-      if (result.requiresConfirmation && result.currentActiveTask) {
-        setSwitchFromTask(result.currentActiveTask);
-        setShowSwitchModal(true);
-      }
+      await start(taskId);
     }
   };
 

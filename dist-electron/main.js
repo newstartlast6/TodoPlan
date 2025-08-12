@@ -24134,7 +24134,7 @@ var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
-var max$2 = Math.max;
+var max$1 = Math.max;
 var min$1 = Math.min;
 var pow$1 = Math.pow;
 var round$1 = Math.round;
@@ -24263,77 +24263,91 @@ function requireObject_getPrototypeOf() {
   Object_getPrototypeOf = $Object2.getPrototypeOf || null;
   return Object_getPrototypeOf;
 }
-var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
-var toStr$1 = Object.prototype.toString;
-var max$1 = Math.max;
-var funcType = "[object Function]";
-var concatty = function concatty2(a, b) {
-  var arr = [];
-  for (var i = 0; i < a.length; i += 1) {
-    arr[i] = a[i];
-  }
-  for (var j = 0; j < b.length; j += 1) {
-    arr[j + a.length] = b[j];
-  }
-  return arr;
-};
-var slicy = function slicy2(arrLike, offset) {
-  var arr = [];
-  for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
-    arr[j] = arrLike[i];
-  }
-  return arr;
-};
-var joiny = function(arr, joiner) {
-  var str = "";
-  for (var i = 0; i < arr.length; i += 1) {
-    str += arr[i];
-    if (i + 1 < arr.length) {
-      str += joiner;
+var implementation;
+var hasRequiredImplementation;
+function requireImplementation() {
+  if (hasRequiredImplementation) return implementation;
+  hasRequiredImplementation = 1;
+  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+  var toStr2 = Object.prototype.toString;
+  var max2 = Math.max;
+  var funcType = "[object Function]";
+  var concatty = function concatty2(a, b) {
+    var arr = [];
+    for (var i = 0; i < a.length; i += 1) {
+      arr[i] = a[i];
     }
-  }
-  return str;
-};
-var implementation$1 = function bind(that) {
-  var target = this;
-  if (typeof target !== "function" || toStr$1.apply(target) !== funcType) {
-    throw new TypeError(ERROR_MESSAGE + target);
-  }
-  var args = slicy(arguments, 1);
-  var bound;
-  var binder = function() {
-    if (this instanceof bound) {
-      var result = target.apply(
-        this,
+    for (var j = 0; j < b.length; j += 1) {
+      arr[j + a.length] = b[j];
+    }
+    return arr;
+  };
+  var slicy = function slicy2(arrLike, offset) {
+    var arr = [];
+    for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
+      arr[j] = arrLike[i];
+    }
+    return arr;
+  };
+  var joiny = function(arr, joiner) {
+    var str = "";
+    for (var i = 0; i < arr.length; i += 1) {
+      str += arr[i];
+      if (i + 1 < arr.length) {
+        str += joiner;
+      }
+    }
+    return str;
+  };
+  implementation = function bind2(that) {
+    var target = this;
+    if (typeof target !== "function" || toStr2.apply(target) !== funcType) {
+      throw new TypeError(ERROR_MESSAGE + target);
+    }
+    var args = slicy(arguments, 1);
+    var bound;
+    var binder = function() {
+      if (this instanceof bound) {
+        var result = target.apply(
+          this,
+          concatty(args, arguments)
+        );
+        if (Object(result) === result) {
+          return result;
+        }
+        return this;
+      }
+      return target.apply(
+        that,
         concatty(args, arguments)
       );
-      if (Object(result) === result) {
-        return result;
-      }
-      return this;
-    }
-    return target.apply(
-      that,
-      concatty(args, arguments)
-    );
-  };
-  var boundLength = max$1(0, target.length - args.length);
-  var boundArgs = [];
-  for (var i = 0; i < boundLength; i++) {
-    boundArgs[i] = "$" + i;
-  }
-  bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
-  if (target.prototype) {
-    var Empty = function Empty2() {
     };
-    Empty.prototype = target.prototype;
-    bound.prototype = new Empty();
-    Empty.prototype = null;
-  }
-  return bound;
-};
-var implementation = implementation$1;
-var functionBind = Function.prototype.bind || implementation;
+    var boundLength = max2(0, target.length - args.length);
+    var boundArgs = [];
+    for (var i = 0; i < boundLength; i++) {
+      boundArgs[i] = "$" + i;
+    }
+    bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
+    if (target.prototype) {
+      var Empty = function Empty2() {
+      };
+      Empty.prototype = target.prototype;
+      bound.prototype = new Empty();
+      Empty.prototype = null;
+    }
+    return bound;
+  };
+  return implementation;
+}
+var functionBind;
+var hasRequiredFunctionBind;
+function requireFunctionBind() {
+  if (hasRequiredFunctionBind) return functionBind;
+  hasRequiredFunctionBind = 1;
+  var implementation2 = requireImplementation();
+  functionBind = Function.prototype.bind || implementation2;
+  return functionBind;
+}
 var functionCall;
 var hasRequiredFunctionCall;
 function requireFunctionCall() {
@@ -24363,11 +24377,11 @@ var hasRequiredActualApply;
 function requireActualApply() {
   if (hasRequiredActualApply) return actualApply;
   hasRequiredActualApply = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $apply2 = requireFunctionApply();
   var $call2 = requireFunctionCall();
   var $reflectApply = requireReflectApply();
-  actualApply = $reflectApply || bind3.call($call2, $apply2);
+  actualApply = $reflectApply || bind2.call($call2, $apply2);
   return actualApply;
 }
 var callBindApplyHelpers;
@@ -24375,7 +24389,7 @@ var hasRequiredCallBindApplyHelpers;
 function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
@@ -24383,7 +24397,7 @@ function requireCallBindApplyHelpers() {
     if (args.length < 1 || typeof args[0] !== "function") {
       throw new $TypeError2("a function is required");
     }
-    return $actualApply(bind3, $call2, args);
+    return $actualApply(bind2, $call2, args);
   };
   return callBindApplyHelpers;
 }
@@ -24445,8 +24459,8 @@ function requireHasown() {
   hasRequiredHasown = 1;
   var call = Function.prototype.call;
   var $hasOwn = Object.prototype.hasOwnProperty;
-  var bind3 = functionBind;
-  hasown = bind3.call(call, $hasOwn);
+  var bind2 = requireFunctionBind();
+  hasown = bind2.call(call, $hasOwn);
   return hasown;
 }
 var undefined$1;
@@ -24460,7 +24474,7 @@ var $TypeError$3 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
-var max = max$2;
+var max = max$1;
 var min = min$1;
 var pow = pow$1;
 var round = round$1;
@@ -24665,13 +24679,13 @@ var LEGACY_ALIASES = {
   "%WeakMapPrototype%": ["WeakMap", "prototype"],
   "%WeakSetPrototype%": ["WeakSet", "prototype"]
 };
-var bind2 = functionBind;
+var bind = requireFunctionBind();
 var hasOwn$1 = requireHasown();
-var $concat$1 = bind2.call($call, Array.prototype.concat);
-var $spliceApply = bind2.call($apply, Array.prototype.splice);
-var $replace$1 = bind2.call($call, String.prototype.replace);
-var $strSlice = bind2.call($call, String.prototype.slice);
-var $exec = bind2.call($call, RegExp.prototype.exec);
+var $concat$1 = bind.call($call, Array.prototype.concat);
+var $spliceApply = bind.call($apply, Array.prototype.splice);
+var $replace$1 = bind.call($call, String.prototype.replace);
+var $strSlice = bind.call($call, String.prototype.slice);
+var $exec = bind.call($call, RegExp.prototype.exec);
 var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
 var reEscapeChar = /\\(\\)?/g;
 var stringToPath = function stringToPath2(string) {
@@ -24876,20 +24890,20 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
   return fn;
 };
 (function(module) {
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var GetIntrinsic3 = getIntrinsic;
   var setFunctionLength$1 = setFunctionLength;
   var $TypeError2 = type;
   var $apply2 = GetIntrinsic3("%Function.prototype.apply%");
   var $call2 = GetIntrinsic3("%Function.prototype.call%");
-  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind3.call($call2, $apply2);
+  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind2.call($call2, $apply2);
   var $defineProperty2 = esDefineProperty;
   var $max = GetIntrinsic3("%Math.max%");
   module.exports = function callBind2(originalFunction) {
     if (typeof originalFunction !== "function") {
       throw new $TypeError2("a function is required");
     }
-    var func = $reflectApply(bind3, $call2, arguments);
+    var func = $reflectApply(bind2, $call2, arguments);
     return setFunctionLength$1(
       func,
       1 + $max(0, originalFunction.length - (arguments.length - 1)),
@@ -24897,7 +24911,7 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
     );
   };
   var applyBind = function applyBind2() {
-    return $reflectApply(bind3, $apply2, arguments);
+    return $reflectApply(bind2, $apply2, arguments);
   };
   if ($defineProperty2) {
     $defineProperty2(module.exports, "apply", { value: applyBind });
@@ -46681,98 +46695,10 @@ class TimerError extends Error {
     this.name = "TimerError";
   }
 }
-class TimerValidationError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_VALIDATION_ERROR", details);
-    this.name = "TimerValidationError";
-  }
-}
-class TimerStateError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_STATE_ERROR", details);
-    this.name = "TimerStateError";
-  }
-}
-class TimerSyncError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_SYNC_ERROR", details);
-    this.name = "TimerSyncError";
-  }
-}
 class TimerPersistenceError extends TimerError {
   constructor(message, details) {
     super(message, "TIMER_PERSISTENCE_ERROR", details);
     this.name = "TimerPersistenceError";
-  }
-}
-const TIMER_ERROR_CODES = {
-  // Validation errors
-  INVALID_TASK_ID: "INVALID_TASK_ID",
-  INVALID_SESSION: "INVALID_SESSION",
-  INVALID_DURATION: "INVALID_DURATION",
-  TIMER_STATE_ERROR: "TIMER_STATE_ERROR",
-  // State errors
-  NO_ACTIVE_TIMER: "NO_ACTIVE_TIMER",
-  TIMER_ALREADY_ACTIVE: "TIMER_ALREADY_ACTIVE",
-  TIMER_NOT_PAUSED: "TIMER_NOT_PAUSED",
-  TIMER_ALREADY_STOPPED: "TIMER_ALREADY_STOPPED",
-  // Sync errors
-  SYNC_CONFLICT: "SYNC_CONFLICT",
-  NETWORK_ERROR: "NETWORK_ERROR",
-  SERVER_ERROR: "SERVER_ERROR",
-  // Persistence errors
-  STORAGE_FULL: "STORAGE_FULL",
-  STORAGE_UNAVAILABLE: "STORAGE_UNAVAILABLE",
-  CORRUPTION_DETECTED: "CORRUPTION_DETECTED",
-  RECOVERY_FAILED: "RECOVERY_FAILED"
-};
-class TimerErrorHandler {
-  static handleError(error2) {
-    if (error2 instanceof TimerError) {
-      return error2;
-    }
-    if (error2 instanceof Error) {
-      return new TimerError(error2.message, "UNKNOWN_ERROR", { originalError: error2 });
-    }
-    return new TimerError("An unknown error occurred", "UNKNOWN_ERROR", { error: error2 });
-  }
-  static isRetryableError(error2) {
-    const retryableCodes = [
-      TIMER_ERROR_CODES.NETWORK_ERROR,
-      TIMER_ERROR_CODES.SERVER_ERROR,
-      TIMER_ERROR_CODES.STORAGE_UNAVAILABLE
-    ];
-    return retryableCodes.includes(error2.code);
-  }
-  static getErrorMessage(error2) {
-    const errorMessages = {
-      [TIMER_ERROR_CODES.INVALID_TASK_ID]: "Invalid task ID provided",
-      [TIMER_ERROR_CODES.INVALID_SESSION]: "Invalid timer session data",
-      [TIMER_ERROR_CODES.INVALID_DURATION]: "Invalid duration value",
-      [TIMER_ERROR_CODES.NO_ACTIVE_TIMER]: "No active timer found",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE]: "A timer is already running",
-      [TIMER_ERROR_CODES.TIMER_NOT_PAUSED]: "Timer is not in paused state",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED]: "Timer has already been stopped",
-      [TIMER_ERROR_CODES.SYNC_CONFLICT]: "Timer state conflict detected",
-      [TIMER_ERROR_CODES.NETWORK_ERROR]: "Network connection error",
-      [TIMER_ERROR_CODES.SERVER_ERROR]: "Server error occurred",
-      [TIMER_ERROR_CODES.STORAGE_FULL]: "Local storage is full",
-      [TIMER_ERROR_CODES.STORAGE_UNAVAILABLE]: "Local storage is unavailable",
-      [TIMER_ERROR_CODES.CORRUPTION_DETECTED]: "Timer data corruption detected"
-    };
-    return errorMessages[error2.code] || error2.message || "An unknown error occurred";
-  }
-  static createUserFriendlyMessage(error2) {
-    const userMessages = {
-      [TIMER_ERROR_CODES.INVALID_TASK_ID]: "Please select a valid task to start the timer.",
-      [TIMER_ERROR_CODES.NO_ACTIVE_TIMER]: "No timer is currently running.",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE]: "Another timer is already running. Please stop it first or switch timers.",
-      [TIMER_ERROR_CODES.NETWORK_ERROR]: "Connection lost. Your timer will continue running and sync when connection is restored.",
-      [TIMER_ERROR_CODES.SERVER_ERROR]: "Server temporarily unavailable. Your timer data will be saved locally.",
-      [TIMER_ERROR_CODES.STORAGE_FULL]: "Local storage is full. Please clear some data or contact support.",
-      [TIMER_ERROR_CODES.CORRUPTION_DETECTED]: "Timer data appears corrupted. Please restart the timer."
-    };
-    return userMessages[error2.code] || "Something went wrong with the timer. Please try again.";
   }
 }
 class MemStorage {
@@ -47464,63 +47390,6 @@ function createStorage() {
   return new MemStorage();
 }
 const storage = createStorage();
-function handleTimerError(error2, req2, res2, operation) {
-  console.error(`Timer operation failed: ${operation}`, {
-    error: error2,
-    url: req2.url,
-    method: req2.method,
-    body: req2.body,
-    timestamp: (/* @__PURE__ */ new Date()).toISOString()
-  });
-  if (error2 instanceof TimerValidationError) {
-    return res2.status(400).json({
-      error: "VALIDATION_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details
-    });
-  }
-  if (error2 instanceof TimerStateError) {
-    return res2.status(409).json({
-      error: "STATE_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details
-    });
-  }
-  if (error2 instanceof TimerSyncError) {
-    return res2.status(409).json({
-      error: "SYNC_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details,
-      retryable: true
-    });
-  }
-  if (error2 instanceof TimerPersistenceError) {
-    return res2.status(503).json({
-      error: "PERSISTENCE_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details,
-      retryable: true
-    });
-  }
-  if (error2 instanceof z.ZodError) {
-    return res2.status(400).json({
-      error: "VALIDATION_ERROR",
-      message: "Invalid request data",
-      code: "INVALID_REQUEST_DATA",
-      details: error2.errors
-    });
-  }
-  return res2.status(500).json({
-    error: "INTERNAL_SERVER_ERROR",
-    message: "An unexpected error occurred",
-    code: "UNKNOWN_ERROR",
-    retryable: true
-  });
-}
 async function registerRoutes(app2) {
   app2.get("/api/lists", async (req2, res2) => {
     try {
@@ -47653,6 +47522,27 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to fetch task" });
     }
   });
+  app2.put("/api/tasks/:id/time-logged", async (req2, res2) => {
+    try {
+      const taskId = req2.params.id;
+      const { timeLoggedSeconds } = req2.body || {};
+      if (typeof timeLoggedSeconds !== "number" || !isFinite(timeLoggedSeconds)) {
+        return res2.status(400).json({ message: "timeLoggedSeconds must be a non-negative number" });
+      }
+      const seconds = Math.max(0, Math.floor(timeLoggedSeconds));
+      const existing = await storage.getTask(taskId);
+      if (!existing) {
+        return res2.status(404).json({ message: "Task not found" });
+      }
+      const updated = await storage.updateTask(taskId, { timeLoggedSeconds: seconds });
+      if (!updated) {
+        return res2.status(500).json({ message: "Failed to update task time" });
+      }
+      res2.json(updated);
+    } catch (error2) {
+      res2.status(500).json({ message: "Failed to set time logged" });
+    }
+  });
   app2.post("/api/tasks", async (req2, res2) => {
     try {
       const validatedData = insertTaskSchema.parse(req2.body);
@@ -47691,260 +47581,6 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to delete task" });
     }
   });
-  app2.post("/api/timers/start", async (req2, res2) => {
-    try {
-      const { taskId } = req2.body;
-      if (!taskId || typeof taskId !== "string") {
-        throw new TimerValidationError(
-          "Task ID is required and must be a valid string",
-          { taskId }
-        );
-      }
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        throw new TimerValidationError(
-          "Task not found",
-          { taskId, code: TIMER_ERROR_CODES.INVALID_TASK_ID }
-        );
-      }
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          {
-            activeTaskId: activeSession.taskId,
-            requestedTaskId: taskId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      const sessionData = insertTimerSessionSchema.parse({
-        taskId,
-        startTime: /* @__PURE__ */ new Date(),
-        durationSeconds: 0,
-        isActive: true
-      });
-      const session = await storage.createTimerSession(sessionData);
-      res2.status(201).json({
-        session,
-        message: "Timer started successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "start_timer");
-    }
-  });
-  app2.post("/api/timers/pause", async (req2, res2) => {
-    var _a2;
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to pause",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          {
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_NOT_PAUSED
-          }
-        );
-      }
-      const now = /* @__PURE__ */ new Date();
-      const startTime = new Date(activeSession.startTime);
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-      const updatedSession = await storage.updateTimerSession(activeSession.id, {
-        durationSeconds: totalSeconds,
-        isActive: false
-      });
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to update timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error("Failed to increment task logged time on pause", { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-      res2.json({
-        session: updatedSession,
-        totalElapsedSeconds: totalSeconds,
-        message: "Timer paused successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "pause_timer");
-    }
-  });
-  app2.post("/api/timers/resume", async (req2, res2) => {
-    try {
-      const { sessionId } = req2.body;
-      if (!sessionId || typeof sessionId !== "string") {
-        throw new TimerValidationError(
-          "Session ID is required and must be a valid string",
-          { sessionId }
-        );
-      }
-      const session = await storage.getTimerSession(sessionId);
-      if (!session) {
-        throw new TimerValidationError(
-          "Timer session not found",
-          { sessionId, code: TIMER_ERROR_CODES.INVALID_SESSION }
-        );
-      }
-      if (session.isActive) {
-        throw new TimerStateError(
-          "Timer is already active",
-          {
-            sessionId,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      if (session.endTime) {
-        throw new TimerStateError(
-          "Cannot resume a completed timer session",
-          {
-            sessionId,
-            endTime: session.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession && activeSession.id !== sessionId) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          {
-            activeSessionId: activeSession.id,
-            activeTaskId: activeSession.taskId,
-            requestedSessionId: sessionId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      const updatedSession = await storage.updateTimerSession(sessionId, {
-        isActive: true,
-        startTime: /* @__PURE__ */ new Date()
-        // Reset start time for new segment
-      });
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to resume timer session",
-          { sessionId }
-        );
-      }
-      res2.json({
-        session: updatedSession,
-        message: "Timer resumed successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "resume_timer");
-    }
-  });
-  app2.post("/api/timers/stop", async (req2, res2) => {
-    var _a2;
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to stop",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          {
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      if (activeSession.endTime) {
-        throw new TimerStateError(
-          "Timer session is already completed",
-          {
-            sessionId: activeSession.id,
-            endTime: activeSession.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      const now = /* @__PURE__ */ new Date();
-      const startTime = new Date(activeSession.startTime);
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-      const completedSession = await storage.updateTimerSession(activeSession.id, {
-        endTime: now,
-        durationSeconds: totalSeconds,
-        isActive: false
-      });
-      if (!completedSession) {
-        throw new TimerPersistenceError(
-          "Failed to complete timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error("Failed to increment task logged time on stop", { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-      res2.json({
-        session: completedSession,
-        message: "Timer stopped successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "stop_timer");
-    }
-  });
-  app2.get("/api/timers/active", async (req2, res2) => {
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      res2.json({ session: activeSession });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to get active timer" });
-    }
-  });
   app2.get("/api/tasks/:id/time-logged", async (req2, res2) => {
     try {
       const task = await storage.getTask(req2.params.id);
@@ -47954,24 +47590,6 @@ async function registerRoutes(app2) {
       res2.json({ taskId: task.id, timeLoggedSeconds: task.timeLoggedSeconds ?? 0 });
     } catch (error2) {
       res2.status(500).json({ message: "Failed to get task logged time" });
-    }
-  });
-  app2.post("/api/tasks/:id/time-logged/increment", async (req2, res2) => {
-    try {
-      const taskId = req2.params.id;
-      const { deltaSeconds } = req2.body || {};
-      if (typeof deltaSeconds !== "number" || !isFinite(deltaSeconds)) {
-        return res2.status(400).json({ message: "deltaSeconds must be a number" });
-      }
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        return res2.status(404).json({ message: "Task not found" });
-      }
-      await storage.incrementTaskLoggedTime(taskId, Math.max(0, Math.floor(deltaSeconds)));
-      const updated = await storage.getTask(taskId);
-      res2.json({ taskId, timeLoggedSeconds: (updated == null ? void 0 : updated.timeLoggedSeconds) ?? 0 });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to increment task logged time" });
     }
   });
   app2.get("/api/timers/daily", async (req2, res2) => {
@@ -47991,141 +47609,6 @@ async function registerRoutes(app2) {
       });
     } catch (error2) {
       res2.status(500).json({ message: "Failed to get daily summary" });
-    }
-  });
-  app2.get("/api/timers/task/:id", async (req2, res2) => {
-    try {
-      const taskId = req2.params.id;
-      const sessions = await storage.getTimerSessionsByTask(taskId);
-      const estimate = await storage.getTaskEstimate(taskId);
-      const totalSeconds = sessions.filter((session) => session.endTime).reduce((sum, session) => sum + (session.durationSeconds || 0), 0);
-      res2.json({
-        taskId,
-        sessions,
-        estimate,
-        totalSeconds
-      });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to get task timer data" });
-    }
-  });
-  app2.post("/api/timers/sync", async (req2, res2) => {
-    try {
-      const { events, clientTimestamp } = req2.body;
-      if (!Array.isArray(events)) {
-        throw new TimerValidationError(
-          "Events array is required for sync operation",
-          { eventsType: typeof events }
-        );
-      }
-      if (events.length === 0) {
-        return res2.json({
-          syncedEventIds: [],
-          conflicts: [],
-          message: "No events to sync"
-        });
-      }
-      const serverTime = /* @__PURE__ */ new Date();
-      const clientTime = clientTimestamp ? new Date(clientTimestamp) : null;
-      if (clientTime && Math.abs(serverTime.getTime() - clientTime.getTime()) > 3e5) {
-        console.warn("Large time difference detected in sync request", {
-          serverTime: serverTime.toISOString(),
-          clientTime: clientTime.toISOString(),
-          difference: Math.abs(serverTime.getTime() - clientTime.getTime())
-        });
-      }
-      const syncedEventIds = [];
-      const failedEvents = [];
-      const conflicts = [];
-      for (const event of events) {
-        try {
-          if (!event.id || !event.type || !event.timestamp) {
-            throw new TimerValidationError(
-              "Invalid event structure",
-              { event }
-            );
-          }
-          const activeSession = await storage.getActiveTimerSession();
-          switch (event.type) {
-            case "start":
-              if (activeSession && activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "Another timer is active on server",
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id
-                  }
-                });
-                continue;
-              }
-              break;
-            case "pause":
-            case "stop":
-              if (!activeSession || activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "No matching active timer on server",
-                  serverState: {
-                    activeSession: activeSession ? {
-                      taskId: activeSession.taskId,
-                      sessionId: activeSession.id
-                    } : null
-                  }
-                });
-                continue;
-              }
-              break;
-            case "resume":
-              if (activeSession) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "Another timer is already active",
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id
-                  }
-                });
-                continue;
-              }
-              break;
-            default:
-              throw new TimerValidationError(
-                `Unknown event type: ${event.type}`,
-                { event }
-              );
-          }
-          syncedEventIds.push(event.id);
-        } catch (eventError) {
-          const timerError = TimerErrorHandler.handleError(eventError);
-          failedEvents.push({
-            eventId: event.id || "unknown",
-            error: timerError.message
-          });
-          console.error("Failed to process sync event:", {
-            event,
-            error: timerError,
-            timestamp: (/* @__PURE__ */ new Date()).toISOString()
-          });
-        }
-      }
-      const response2 = {
-        syncedEventIds,
-        failedEvents,
-        conflicts,
-        serverTimestamp: serverTime.toISOString(),
-        message: `Processed ${events.length} events: ${syncedEventIds.length} synced, ${failedEvents.length} failed, ${conflicts.length} conflicts`
-      };
-      console.log("Timer sync completed", {
-        totalEvents: events.length,
-        syncedCount: syncedEventIds.length,
-        failedCount: failedEvents.length,
-        conflictCount: conflicts.length,
-        timestamp: serverTime.toISOString()
-      });
-      res2.json(response2);
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "sync_timer_events");
     }
   });
   app2.get("/api/tasks/:id/estimate", async (req2, res2) => {
