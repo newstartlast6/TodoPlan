@@ -9,7 +9,7 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
-import { eq, and, gte, lte, desc, lt, inArray, isNotNull } from "drizzle-orm";
+import { eq, and, gte, lte, desc, lt, inArray, isNotNull, or, isNull } from "drizzle-orm";
 import { TimerPersistenceError } from "@shared/services/timer-errors";
 
 export interface IStorage {
@@ -26,7 +26,7 @@ export interface IStorage {
   getTasksByList(listId: string): Promise<Task[]>;
   
   // Task operations
-  getTasks(startDate?: Date, endDate?: Date): Promise<Task[]>;
+  getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]>;
   getTask(id: string): Promise<Task | undefined>;
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: string, task: UpdateTask): Promise<Task | undefined>;
@@ -91,6 +91,8 @@ export class MemStorage implements IStorage {
         completed: true,
         priority: "medium",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       {
         id: randomUUID(),
@@ -102,6 +104,8 @@ export class MemStorage implements IStorage {
         completed: true,
         priority: "high",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       // Tuesday - completed
       {
@@ -114,6 +118,8 @@ export class MemStorage implements IStorage {
         completed: true,
         priority: "high",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       // Today - mixed
       {
@@ -126,6 +132,8 @@ export class MemStorage implements IStorage {
         completed: true,
         priority: "low",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       {
         id: randomUUID(),
@@ -137,6 +145,8 @@ export class MemStorage implements IStorage {
         completed: true,
         priority: "medium",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       {
         id: randomUUID(),
@@ -148,6 +158,8 @@ export class MemStorage implements IStorage {
         completed: false,
         priority: "high",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       {
         id: randomUUID(),
@@ -159,6 +171,8 @@ export class MemStorage implements IStorage {
         completed: false,
         priority: "medium",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
       // Tomorrow
       {
@@ -171,6 +185,8 @@ export class MemStorage implements IStorage {
         completed: false,
         priority: "high",
         createdAt: new Date(),
+        listId: null,
+        scheduledDate: null,
       },
     ];
     
@@ -196,7 +212,11 @@ export class MemStorage implements IStorage {
 
   // List operations
   async getLists(): Promise<List[]> {
-    return Array.from(this.lists.values()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return Array.from(this.lists.values()).sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aTime - bTime;
+    });
   }
 
   async getList(id: string): Promise<List | undefined> {
@@ -208,6 +228,8 @@ export class MemStorage implements IStorage {
     const list: List = {
       ...insertList,
       id,
+      emoji: insertList.emoji ?? '📋',
+      color: insertList.color ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -246,13 +268,26 @@ export class MemStorage implements IStorage {
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
-  async getTasks(startDate?: Date, endDate?: Date): Promise<Task[]> {
+  async getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
     let tasks = Array.from(this.tasks.values());
     
     if (startDate && endDate) {
-      tasks = tasks.filter(task => 
-        task.startTime >= startDate && task.startTime <= endDate
-      );
+      tasks = tasks.filter(task => {
+        const inStartRange = task.startTime >= startDate && task.startTime <= endDate;
+        const scheduled = task.scheduledDate ? (task.scheduledDate >= startDate && task.scheduledDate <= endDate) : false;
+        return inStartRange || scheduled;
+      });
+      if (includeUnscheduled) {
+        // Also include explicitly unscheduled tasks
+        const unscheduled = Array.from(this.tasks.values()).filter(t => !t.scheduledDate);
+        const byId = new Map(tasks.map(t => [t.id, t] as const));
+        for (const t of unscheduled) {
+          if (!byId.has(t.id)) {
+            byId.set(t.id, t);
+          }
+        }
+        tasks = Array.from(byId.values());
+      }
     }
     
     return tasks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
@@ -272,6 +307,8 @@ export class MemStorage implements IStorage {
       notes: insertTask.notes || null,
       completed: insertTask.completed || false,
       priority: insertTask.priority || "medium",
+      listId: insertTask.listId ?? null,
+      scheduledDate: (insertTask as any).scheduledDate ?? null,
     };
     this.tasks.set(id, task);
     return task;
@@ -577,18 +614,27 @@ class DbStorage implements IStorage {
     });
   }
 
-  async getTasks(startDate?: Date, endDate?: Date): Promise<Task[]> {
+  async getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
     return this.withPersistence("get_tasks", {
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
+      includeUnscheduled: !!includeUnscheduled,
     }, async () => {
       if (startDate && endDate) {
+        const baseWhere = or(
+          and(gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)),
+          and(gte(tasks.scheduledDate as any, startDate as any), lte(tasks.scheduledDate as any, endDate as any))
+        );
+        const whereClause = includeUnscheduled
+          ? or(baseWhere, isNull(tasks.scheduledDate as any))
+          : baseWhere;
         return await this.db
           .select()
           .from(tasks)
-          .where(and(gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)))
+          .where(whereClause)
           .orderBy(tasks.startTime);
       }
+      // No date filter
       return await this.db.select().from(tasks).orderBy(tasks.startTime);
     });
   }

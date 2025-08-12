@@ -10,6 +10,9 @@ import { Task } from "@shared/schema";
 import { calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
+import { useDrop } from 'react-dnd';
+import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
+import { useToast } from '@/hooks/use-toast';
 
 interface WeekViewProps {
   tasks: Task[];
@@ -20,6 +23,7 @@ interface WeekViewProps {
 
 export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: WeekViewProps) {
   const [goalsRefresh, setGoalsRefresh] = useState(0);
+  const { toast } = useToast();
   useEffect(() => {
     const handler = () => setGoalsRefresh((n) => n + 1);
     window.addEventListener('goals:updated', handler);
@@ -36,7 +40,11 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
   
   const getTasksForDay = (day: Date) => {
     return tasks
-      .filter(task => isSameDay(new Date(task.startTime), day))
+      .filter(task => {
+        const st = new Date(task.startTime);
+        const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
+        return isSameDay(st, day) || (sd ? isSameDay(sd, day) : false);
+      })
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   };
 
@@ -137,6 +145,26 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                 </div>
               </CardHeader>
               
+              <DroppableDay onDropTask={(taskId) => {
+                const previous = tasks.find(t => t.id === taskId);
+                onTaskUpdate(taskId, { scheduledDate: day });
+                const undo = toast({
+                  title: 'Task scheduled',
+                  description: `Moved to ${format(day, 'EEE, MMM d')}. Undo?`,
+                  action: (
+                    <button
+                      aria-label="Undo schedule"
+                      className="px-2 py-1 text-xs rounded border"
+                      onClick={() => {
+                        onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null });
+                        undo.dismiss();
+                      }}
+                    >
+                      Undo
+                    </button>
+                  ),
+                });
+              }}>
               <CardContent className="p-6">
                 {dayTasks.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground" data-testid={`no-tasks-${dayIndex}`}>
@@ -162,6 +190,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                   </div>
                 )}
               </CardContent>
+              </DroppableDay>
             </Card>
           );
         })}
@@ -193,6 +222,27 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DroppableDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
+  const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
+    accept: DND_TYPES.TASK,
+    drop: (item) => {
+      onDropTask(item.taskId);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+  return (
+    <div ref={drop} className={cn(
+      'rounded-md transition-colors',
+      isOver && canDrop ? 'ring-2 ring-primary/40' : ''
+    )}>
+      {children}
     </div>
   );
 }

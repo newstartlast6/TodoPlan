@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { Task } from "@shared/schema";
+import { useDrop } from 'react-dnd';
+import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
+import { useToast } from '@/hooks/use-toast';
 import { calculateMonthProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
@@ -12,10 +15,12 @@ interface MonthViewProps {
   tasks: Task[];
   currentDate: Date;
   onDateClick: (date: Date) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
 }
 
-export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
+export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: MonthViewProps) {
   const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { toast } = useToast();
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const monthProgress = calculateMonthProgress(currentDate);
@@ -26,7 +31,11 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
   );
 
   const getTasksForDay = (day: Date) => {
-    return tasks.filter(task => isSameDay(new Date(task.startTime), day));
+    return tasks.filter(task => {
+      const st = new Date(task.startTime);
+      const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
+      return isSameDay(st, day) || (sd ? isSameDay(sd, day) : false);
+    });
   };
 
   const getDayStatus = (day: Date) => {
@@ -97,6 +106,16 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
                     const isOutsideMonth = dayStatus === 'outside';
 
                     return (
+                      <DroppableMonthDay onDropTask={(taskId) => {
+                        if (!onTaskUpdate) return;
+                        onTaskUpdate(taskId, { scheduledDate: day });
+                        const undo = toast({
+                          title: 'Task scheduled',
+                          description: `Moved to ${format(day, 'EEE, MMM d')}. Undo?`,
+                        });
+                        // Consumers (calendar) add undo if needed at higher level
+                        undo.dismiss();
+                      }}>
                       <button
                         key={dayIndex}
                         onClick={() => onDateClick(day)}
@@ -156,6 +175,7 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
                           )}
                         </div>
                       </button>
+                      </DroppableMonthDay>
                     );
                   })}
                 </div>
@@ -197,6 +217,22 @@ export function MonthView({ tasks, currentDate, onDateClick }: MonthViewProps) {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DroppableMonthDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
+  const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
+    accept: DND_TYPES.TASK,
+    drop: (item) => onDropTask(item.taskId),
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+  return (
+    <div ref={drop} className={cn(isOver && canDrop ? 'ring-2 ring-primary/40 rounded-lg' : '')}>
+      {children}
     </div>
   );
 }

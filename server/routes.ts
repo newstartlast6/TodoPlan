@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get tasks with optional date filtering
   app.get("/api/tasks", async (req, res) => {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, includeUnscheduled } = req.query;
       
       let start: Date | undefined;
       let end: Date | undefined;
@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         end = new Date(endDate as string);
       }
       
-      const tasks = await storage.getTasks(start, end);
+      const tasks = await storage.getTasks(start, end, includeUnscheduled === 'true');
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tasks" });

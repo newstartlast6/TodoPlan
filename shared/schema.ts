@@ -22,6 +22,7 @@ export const tasks = pgTable("tasks", {
   completed: boolean("completed").default(false),
   priority: varchar("priority").notNull().default("medium"), // low, medium, high
   listId: varchar("list_id").references(() => lists.id, { onDelete: "set null" }),
+  scheduledDate: timestamp("scheduled_date"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -31,7 +32,7 @@ const baseInsertTaskSchema = createInsertSchema(tasks).omit({
   createdAt: true,
 });
 
-// Extend to accept ISO strings or Date for startTime/endTime by transforming to Date
+// Extend to accept ISO strings or Date for startTime/endTime/scheduledDate by transforming to Date
 export const insertTaskSchema = baseInsertTaskSchema.extend({
   startTime: z.preprocess((val) => {
     if (val instanceof Date) return val;
@@ -49,6 +50,15 @@ export const insertTaskSchema = baseInsertTaskSchema.extend({
     }
     return val;
   }, z.date()),
+  scheduledDate: z.preprocess((val) => {
+    if (val === null || val === undefined) return val;
+    if (val instanceof Date) return val;
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val : d;
+    }
+    return val;
+  }, z.date().nullable()).optional(),
 });
 
 export const updateTaskSchema = insertTaskSchema.partial();

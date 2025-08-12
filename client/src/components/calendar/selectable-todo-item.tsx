@@ -10,6 +10,8 @@ import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
 import { useTaskTimer } from "@/hooks/use-timer-state";
 import { cn } from "@/lib/utils";
 import { EditableText } from "@/components/ui/editable-text";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -39,6 +41,10 @@ interface SelectableTodoItemProps {
   className?: string;
   // When true, programmatically start editing the title
   startEditing?: boolean;
+  // Optional keyboard fallback: move menu to schedule quickly
+  enableMoveMenu?: boolean;
+  // Show an "Unscheduled" badge when task has no scheduledDate
+  showUnscheduledBadge?: boolean;
 }
 
 export function SelectableTodoItem({
@@ -56,6 +62,8 @@ export function SelectableTodoItem({
   showEstimate = true,
   className,
   startEditing = false,
+  enableMoveMenu = false,
+  showUnscheduledBadge = false,
 }: SelectableTodoItemProps) {
   const isTaskCompleted = task.completed;
   const taskStartTime = new Date(task.startTime);
@@ -188,6 +196,9 @@ export function SelectableTodoItem({
               editTrigger={titleEditTrigger}
               autoFocusOnEmpty
             />
+            {showUnscheduledBadge && !task.scheduledDate && (
+              <Badge variant="outline" className="ml-2 text-[10px] align-middle">Unscheduled</Badge>
+            )}
           </div>
           
           {/* Priority removed from UI */}
@@ -239,6 +250,23 @@ export function SelectableTodoItem({
           </div>
         )}
         
+        {/* Keyboard fallback: Move menu */}
+        {enableMoveMenu && onUpdate && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Move task" title="Move task">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onUpdate(task.id, { scheduledDate: new Date() }); }}>Move to Today</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); const d = new Date(); d.setDate(d.getDate()+1); onUpdate(task.id, { scheduledDate: d }); }}>Move to Tomorrow</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); const d = new Date(); const day = d.getDay(); const offset = (8 - (day || 7)); d.setDate(d.getDate()+offset); onUpdate(task.id, { scheduledDate: d }); }}>Move to Next Week</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onUpdate(task.id, { scheduledDate: null }); }}>Unscheduled</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         {/* Time and Date Info */}
         {(showTime || showDate) && (
           <div className="text-right">

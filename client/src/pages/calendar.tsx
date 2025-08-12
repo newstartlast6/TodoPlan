@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { TimerProvider } from "@/contexts/timer-context";
+import { Toaster } from '@/components/ui/toaster';
 import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
 import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
@@ -18,6 +19,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
 import { Task, InsertTask } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { PlanPanel } from "../components/planning/plan-panel";
+import { X } from "lucide-react";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
  
 
 type CalendarView = 'day' | 'week' | 'month' | 'year';
@@ -26,6 +31,11 @@ export default function Calendar() {
   const [currentView, setCurrentView] = useState<CalendarView>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(() => {
+    try {
+      return localStorage.getItem('plan-panel-open') === 'true';
+    } catch { return false; }
+  });
  
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -231,6 +241,7 @@ export default function Calendar() {
             tasks={tasks}
             currentDate={currentDate}
             onDateClick={handleDateClick}
+            onTaskUpdate={handleUpdateTask}
           />
         );
       case 'year':
@@ -252,6 +263,13 @@ export default function Calendar() {
       <MinimalisticSidebar
         currentView={currentView}
         onViewChange={setCurrentView}
+        onTogglePlanPanel={() => {
+          setIsPlanPanelOpen((v) => {
+            try { localStorage.setItem('plan-panel-open', (!v).toString()); } catch {}
+            return !v;
+          });
+        }}
+        isPlanPanelOpen={isPlanPanelOpen}
       />
     </div>
   );
@@ -294,6 +312,18 @@ export default function Calendar() {
               <Plus className="w-4 h-4" />
               <span>Add Task</span>
             </Button>
+            <Button
+              variant={isPlanPanelOpen ? 'default' : 'outline'}
+              onClick={() => {
+                setIsPlanPanelOpen((v) => {
+                  try { localStorage.setItem('plan-panel-open', (!v).toString()); } catch {}
+                  return !v;
+                });
+              }}
+              data-testid="button-toggle-plan"
+            >
+              {isPlanPanelOpen ? 'Hide Plan' : 'Show Plan'}
+            </Button>
             <Button variant="ghost" size="icon" data-testid="button-settings">
               <Settings className="w-4 h-4" />
             </Button>
@@ -302,8 +332,33 @@ export default function Calendar() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-8" data-testid="calendar-main">
-        {renderCurrentView()}
+      <main className="flex-1 p-8 relative" data-testid="calendar-main">
+        {/* Floating Plan Panel (no overlay; keeps background fully interactive) */}
+        {isPlanPanelOpen && (
+          <div className="hidden md:block absolute top-6 right-6 z-30 max-h-[calc(100vh-160px)]">
+            <div className="bg-white rounded-xl border border-border shadow-2xl flex flex-col h-full max-h-[calc(100vh-160px)]">
+              {/* Header with close */}
+              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-white">
+                <div className="text-sm font-semibold text-muted-foreground">Plan</div>
+                <button
+                  aria-label="Close plan"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted"
+                  onClick={() => setIsPlanPanelOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              {/* Scrollable content */}
+              <div className="h-full overflow-y-auto p-4">
+                <PlanPanel variant="floating" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          {renderCurrentView()}
+        </div>
       </main>
     </div>
   );
@@ -315,18 +370,22 @@ export default function Calendar() {
 
   return (
     <TimerProvider>
-      <ResponsiveLayout
-        sidebar={renderSidebar()}
-        main={renderMainContent()}
-        detail={renderDetailPane()}
-        isDetailOpen={isDetailPaneOpen}
-        onDetailClose={closeDetailPane}
-      />
+      <DndProvider backend={HTML5Backend}>
+        <ResponsiveLayout
+          sidebar={renderSidebar()}
+          main={renderMainContent()}
+          detail={renderDetailPane()}
+          isDetailOpen={isDetailPaneOpen}
+          onDetailClose={closeDetailPane}
+        />
+      </DndProvider>
 
       {/* Global Timer Display */}
       <div className="fixed top-4 right-4 z-50">
         <TimerDisplay compact />
       </div>
+
+      <Toaster />
 
       {/* Task Form Dialog */}
       {/* Form kept for future use; not used for inline quick-add */}

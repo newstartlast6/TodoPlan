@@ -9,6 +9,9 @@ import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { useDailyTimerStats, useTimerState } from "@/hooks/use-timer-state";
 import { Task } from "@shared/schema";
+import { useDrop } from 'react-dnd';
+import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
+import { useToast } from '@/hooks/use-toast';
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { formatTimeRange } from "@/lib/time-utils";
 
@@ -22,8 +25,13 @@ interface DayViewProps {
 
 export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDelete }: DayViewProps) {
   const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { toast } = useToast();
   const dayTasks = tasks
-    .filter(task => isSameDay(new Date(task.startTime), currentDate))
+    .filter(task => {
+      const st = new Date(task.startTime);
+      const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
+      return isSameDay(st, currentDate) || (sd ? isSameDay(sd, currentDate) : false);
+    })
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
   const completedTasks = dayTasks.filter(task => task.completed);
@@ -116,6 +124,26 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
       )}
 
       {/* Tasks List */}
+      <DroppableDay onDropTask={(taskId) => {
+        const previous = tasks.find(t => t.id === taskId);
+        onTaskUpdate(taskId, { scheduledDate: currentDate });
+        const undo = toast({
+          title: 'Task scheduled',
+          description: `Moved to ${format(currentDate, 'EEE, MMM d')}. Undo?`,
+          action: (
+            <button
+              aria-label="Undo schedule"
+              className="px-2 py-1 text-xs rounded border"
+              onClick={() => {
+                onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null });
+                undo.dismiss();
+              }}
+            >
+              Undo
+            </button>
+          ),
+        });
+      }}>
       <Card data-testid="tasks-list-card">
         <CardHeader>
           <div className="flex flex-col gap-1">
@@ -165,8 +193,27 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
           )}
         </CardContent>
       </Card>
+      </DroppableDay>
 
 
+    </div>
+  );
+}
+
+function DroppableDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
+  const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
+    accept: DND_TYPES.TASK,
+    drop: (item) => {
+      onDropTask(item.taskId);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+  return (
+    <div ref={drop} className={isOver && canDrop ? 'ring-2 ring-primary/40 rounded-md' : ''}>
+      {children}
     </div>
   );
 }

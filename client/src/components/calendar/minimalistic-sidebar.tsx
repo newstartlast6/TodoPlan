@@ -1,4 +1,4 @@
-import { CalendarIcon, Calendar, CalendarDays, CalendarRange, CalendarCheck, List } from "lucide-react";
+import { CalendarIcon, Calendar, CalendarDays, CalendarRange, CalendarCheck, List, Kanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
@@ -9,6 +9,8 @@ type CalendarView = 'day' | 'week' | 'month' | 'year';
 interface MinimalisticSidebarProps {
   currentView?: CalendarView;
   onViewChange?: (view: CalendarView) => void;
+  onTogglePlanPanel?: () => void;
+  isPlanPanelOpen?: boolean;
 }
 
 const viewConfig = {
@@ -34,7 +36,7 @@ const viewConfig = {
   },
 } as const;
 
-export function MinimalisticSidebar({ currentView, onViewChange }: MinimalisticSidebarProps) {
+export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPanel, isPlanPanelOpen }: MinimalisticSidebarProps) {
   const [location, setLocation] = useLocation();
   
   const isCalendarPage = location === '/';
@@ -143,6 +145,37 @@ export function MinimalisticSidebar({ currentView, onViewChange }: MinimalisticS
             );
           })}
         </nav>
+      )}
+
+      {/* Plan Panel Toggle (shown when handler provided) */}
+      {onTogglePlanPanel && (
+        <div className="mt-auto pt-6">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={isPlanPanelOpen ? "default" : "ghost"}
+                size="icon"
+                onClick={onTogglePlanPanel}
+                className={cn(
+                  "w-10 h-10 transition-colors",
+                  isPlanPanelOpen
+                    ? "bg-orange-500 text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}
+                data-testid="toggle-plan-panel"
+                aria-label="Toggle Plan Panel"
+              >
+                <Kanban className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="ml-2">
+              <div>
+                <div className="font-medium">Plan</div>
+                <div className="text-xs text-muted-foreground">Show lists to plan your week</div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       )}
     </div>
   );

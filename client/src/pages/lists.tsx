@@ -10,6 +10,10 @@ import { useLists, useCreateList, useUpdateList, useDeleteList, useListTasks } f
 import { useCreateTaskInList, useUpdateTask, useDeleteTask } from '../hooks/use-list-tasks';
 import { type CreateListRequest, type UpdateListRequest } from '@shared/list-types';
 import { type UpdateTask } from '@shared/schema';
+import { PlanPanel } from '../components/planning/plan-panel';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Toaster } from '@/components/ui/toaster';
 
 interface ListsState {
   selectedListId: string | null;
@@ -18,6 +22,9 @@ interface ListsState {
 export function Lists() {
   const [state, setState] = useState<ListsState>({
     selectedListId: null,
+  });
+  const [isPlanPanelOpen, setIsPlanPanelOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem('plan-panel-open-lists') === 'true'; } catch { return false; }
   });
 
   // Use global selected todo context
@@ -122,12 +129,40 @@ export function Lists() {
 
   // Render sidebar
   const renderSidebar = () => (
-    <MinimalisticSidebar />
+    <MinimalisticSidebar
+      onTogglePlanPanel={() => {
+        setIsPlanPanelOpen((v) => {
+          try { localStorage.setItem('plan-panel-open-lists', (!v).toString()); } catch {}
+          return !v;
+        });
+      }}
+      isPlanPanelOpen={isPlanPanelOpen}
+    />
   );
 
   // Render main content
   const renderMainContent = () => (
-    <div className="h-full bg-gray-50 flex">
+    <div className="h-full bg-gray-50 flex relative">
+      {/* Floating panel on Lists page too (no overlay) */}
+      {isPlanPanelOpen && (
+        <div className="hidden md:block absolute top-6 right-6 z-30 max-h-[calc(100vh-160px)]">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-2xl flex flex-col h-full max-h-[calc(100vh-160px)]">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+              <div className="text-sm font-semibold text-gray-500">Plan</div>
+              <button
+                aria-label="Close plan"
+                className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100"
+                onClick={() => setIsPlanPanelOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="h-full overflow-y-auto p-4">
+              <PlanPanel variant="floating" />
+            </div>
+          </div>
+        </div>
+      )}
       {/* Panel 1: Lists Sidebar */}
       <div className="w-80 flex-shrink-0">
         <ListsPanel
@@ -176,18 +211,22 @@ export function Lists() {
 
   return (
     <>
-      <ResponsiveLayout
-        sidebar={renderSidebar()}
-        main={renderMainContent()}
-        detail={renderDetailPane()}
-        isDetailOpen={isDetailPaneOpen}
-        onDetailClose={closeDetailPane}
-      />
+      <DndProvider backend={HTML5Backend}>
+        <ResponsiveLayout
+          sidebar={renderSidebar()}
+          main={renderMainContent()}
+          detail={renderDetailPane()}
+          isDetailOpen={isDetailPaneOpen}
+          onDetailClose={closeDetailPane}
+        />
+      </DndProvider>
 
       {/* Global Timer Display */}
       <div className="fixed top-4 right-4 z-50">
         <TimerDisplay compact />
       </div>
+
+      <Toaster />
     </>
   );
 }
