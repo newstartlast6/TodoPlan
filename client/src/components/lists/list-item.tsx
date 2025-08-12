@@ -66,10 +66,6 @@ export function ListItem({
     setShowEmojiPicker(false);
   };
 
-  const completionRate = list.taskCount > 0 
-    ? Math.round((list.completedTaskCount / list.taskCount) * 100)
-    : 0;
-
   if (isEditing) {
     return (
       <div ref={itemRef} className="relative">
@@ -144,28 +140,7 @@ export function ListItem({
         <div className="font-medium text-gray-900 truncate">
           {list.name}
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span>{list.taskCount} task{list.taskCount !== 1 ? 's' : ''}</span>
-          {list.taskCount > 0 && (
-            <>
-              <span>•</span>
-              <span>{completionRate}% complete</span>
-            </>
-          )}
-        </div>
       </div>
-
-      {/* Progress Bar */}
-      {list.taskCount > 0 && (
-        <div className="w-12 flex-shrink-0">
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className="bg-orange-500 h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${completionRate}%` }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Context Menu Button */}
       <button

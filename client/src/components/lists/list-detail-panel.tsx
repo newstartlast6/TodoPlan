@@ -274,7 +274,7 @@ export function ListDetailPanel({
                   onToggleComplete={onTaskToggleComplete}
                   onUpdate={onTaskUpdate}
                   onDelete={onTaskDelete}
-                  variant="compact"
+                  variant="list"
                   showTime={true}
                   showDate={false}
                   showTimer={true}
