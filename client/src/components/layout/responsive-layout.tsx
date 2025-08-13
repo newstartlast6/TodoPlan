@@ -2,6 +2,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 interface ResponsiveLayoutProps {
   sidebar: ReactNode;
@@ -130,35 +131,40 @@ export function ResponsiveLayout({
     );
   }
 
-  // Desktop Layout (>= 1024px) - Three pane system
+  // Desktop Layout (>= 1024px) - Three pane system with resizable right detail when open
   return (
     <div className={cn("h-screen flex bg-background-page", className)} data-testid="responsive-layout-desktop">
       {/* Sidebar - Always visible on desktop */}
       {sidebar}
-      
-      {/* Main Content - Flexible width with independent scroll */}
-      <div className={cn(
-        "flex-1 flex flex-col transition-all duration-300 min-w-0 h-full",
-        isDetailOpen ? "mr-0" : "mr-0"
-      )}>
-        <div className="flex-1 overflow-y-auto">
-          {main}
-        </div>
-      </div>
-      
-      {/* Detail Pane - Collapsible on desktop with increased width and independent scroll */}
-      <div className={cn(
-        "transition-all duration-300 ease-in-out border-l border-border bg-surface h-full",
-        isDetailOpen 
-          ? `${detailWidthClass ?? 'w-[480px]'} opacity-100 translate-x-0` 
-          : "w-0 opacity-0 translate-x-full overflow-hidden"
-      )}>
-        {isDetailOpen && (
-          <div className={`${detailWidthClass ?? 'w-[480px]'} h-full overflow-y-auto`}>
-            {detail}
+
+      {/* Main + Detail area */}
+      {!isDetailOpen ? (
+        // No detail: main takes all available space
+        <div className={cn("flex-1 flex flex-col min-w-0 h-full")}> 
+          <div className="flex-1 overflow-y-auto">
+            {main}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        // Detail open: use resizable panels
+        <div className="flex-1 min-w-0 h-full">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={65} minSize={40} className="min-w-0">
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto">
+                  {main}
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={20} className="min-w-[320px] max-w-[70vw]">
+              <div className="h-full overflow-y-auto border-l border-border bg-surface">
+                {detail}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      )}
     </div>
   );
 }

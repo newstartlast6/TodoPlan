@@ -255,7 +255,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
           const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalSeconds);
           
             return (
-              <DroppableDay onDropTask={(dragItem, opts) => {
+              <DroppableDay key={dayKey} onDropTask={(dragItem, opts) => {
                 const taskId = dragItem.taskId;
                 const previous = tasks.find(t => t.id === taskId);
                 // Skip update if dropping onto the same day
