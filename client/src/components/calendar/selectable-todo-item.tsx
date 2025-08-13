@@ -290,15 +290,13 @@ export function SelectableTodoItem({
                 </div>
               )}
               {showUnscheduledBadge && !task.scheduledDate ? (
-                <Badge
-                  variant="outline"
-                  className="inline-flex align-middle text-[10px] tracking-wide bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 text-slate-700 shadow-sm hover:from-slate-100 hover:to-white hover:shadow transition-colors duration-200 rounded-full px-2.5 py-0.5"
-                >
-                  <span className="inline-flex items-center gap-1">
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-                    Unscheduled
-                  </span>
-                </Badge>
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10l6 6M15 10l-6 6" />
+                  </svg>
+                  <span>Unscheduled</span>
+                </span>
               ) : (
                 <div className="flex items-center space-x-1">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

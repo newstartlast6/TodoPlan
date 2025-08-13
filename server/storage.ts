@@ -118,6 +118,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       {
         id: randomUUID(),
@@ -132,6 +133,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       // Tuesday - completed
       {
@@ -147,6 +149,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       // Today - mixed
       {
@@ -162,6 +165,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       {
         id: randomUUID(),
@@ -176,6 +180,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       {
         id: randomUUID(),
@@ -190,6 +195,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       {
         id: randomUUID(),
@@ -204,6 +210,7 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
       // Tomorrow
       {
@@ -219,10 +226,11 @@ export class MemStorage implements IStorage {
         listId: null,
         scheduledDate: null,
         timeLoggedSeconds: 0,
+        dayOrder: null,
       },
     ];
     // Ensure default timeLoggedSeconds
-    sampleTasks.forEach(task => this.tasks.set(task.id, { ...task, timeLoggedSeconds: (task as any).timeLoggedSeconds ?? 0 } as Task));
+    sampleTasks.forEach(task => this.tasks.set(task.id, { ...task, timeLoggedSeconds: (task as any).timeLoggedSeconds ?? 0, dayOrder: (task as any).dayOrder ?? null } as Task));
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -322,7 +330,27 @@ export class MemStorage implements IStorage {
       }
     }
     
-    return tasks.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    // Sort primarily by scheduledDate date-only + dayOrder when available, then fallback to startTime
+    return tasks.sort((a, b) => {
+      const aHasSched = Boolean(a.scheduledDate);
+      const bHasSched = Boolean(b.scheduledDate);
+      if (aHasSched && bHasSched) {
+        const aKey = new Date(a.scheduledDate!.getFullYear(), a.scheduledDate!.getMonth(), a.scheduledDate!.getDate()).getTime();
+        const bKey = new Date(b.scheduledDate!.getFullYear(), b.scheduledDate!.getMonth(), b.scheduledDate!.getDate()).getTime();
+        if (aKey !== bKey) return aKey - bKey;
+        const aOrder = (a as any).dayOrder;
+        const bOrder = (b as any).dayOrder;
+        const aHasOrder = typeof aOrder === 'number';
+        const bHasOrder = typeof bOrder === 'number';
+        if (aHasOrder && bHasOrder) return aOrder - bOrder;
+        if (aHasOrder) return -1;
+        if (bHasOrder) return 1;
+      } else if (aHasSched !== bHasSched) {
+        // Keep unscheduled after scheduled when within a date range
+        return aHasSched ? -1 : 1;
+      }
+      return a.startTime.getTime() - b.startTime.getTime();
+    });
   }
 
   async getTask(id: string): Promise<Task | undefined> {

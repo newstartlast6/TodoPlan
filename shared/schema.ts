@@ -25,6 +25,8 @@ export const tasks = pgTable("tasks", {
   scheduledDate: timestamp("scheduled_date"),
   // Persisted aggregate of all-time seconds logged across all sessions for this task
   timeLoggedSeconds: integer("time_logged_seconds").notNull().default(0),
+  // Order of the task within a given day's list. When set, UI sorts by this ascending within that date.
+  dayOrder: integer("day_order"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -61,6 +63,7 @@ export const insertTaskSchema = baseInsertTaskSchema.extend({
     }
     return val;
   }, z.date().nullable()).optional(),
+  dayOrder: z.number().int().optional().nullable(),
 });
 
 export const updateTaskSchema = insertTaskSchema.partial();

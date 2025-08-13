@@ -1,5 +1,5 @@
 import { format, isToday, isSameDay, isPast, addDays } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CheckCircle, Clock, Circle, XCircle, PartyPopper, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/use-notes";
 import { StickyNote } from "lucide-react";
+import { DraggableCalendarTask } from "@/components/planning/draggable-calendar-task";
  
 
 interface DayViewProps {
@@ -39,6 +40,13 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
       return isSameDay(st, currentDate) || (sd ? isSameDay(sd, currentDate) : false);
     })
     .sort((a, b) => {
+      const aOrder = (a as any).dayOrder;
+      const bOrder = (b as any).dayOrder;
+      const aHas = typeof aOrder === 'number';
+      const bHas = typeof bOrder === 'number';
+      if (aHas && bHas) return aOrder - bOrder;
+      if (aHas) return -1;
+      if (bHas) return 1;
       const aKey = (a.createdAt ?? a.startTime) as unknown as string;
       const bKey = (b.createdAt ?? b.startTime) as unknown as string;
       return new Date(aKey).getTime() - new Date(bKey).getTime();
@@ -102,6 +110,25 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
       case 'current': return <Badge className="bg-primary text-primary-foreground">Today</Badge>;
       default: return <Badge variant="outline">Planned</Badge>;
     }
+  };
+
+  const handleReorder = (dragTaskId: string, insertIndex: number) => {
+    const baseList = [...dayTasks];
+    const clampedIndex = Math.max(0, Math.min(insertIndex, baseList.length));
+    const dragged = tasks.find(t => t.id === dragTaskId);
+    const withoutDragged = baseList.filter(t => t.id !== dragTaskId);
+    const newOrder = [
+      ...withoutDragged.slice(0, clampedIndex),
+      dragged!,
+      ...withoutDragged.slice(clampedIndex),
+    ].filter(Boolean);
+    newOrder.forEach((t, idx) => {
+      const updates: Partial<Task> = { dayOrder: idx } as any;
+      if (t.id === dragTaskId) {
+        updates.scheduledDate = currentDate as any;
+      }
+      onTaskUpdate(t.id, updates);
+    });
   };
 
   return (
@@ -181,9 +208,10 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
           </div>
         </CardHeader>
 
-        <DroppableDay onDropTask={(taskId) => {
+        <DroppableDay currentDate={currentDate} onDropTask={(taskId) => {
           const previous = tasks.find(t => t.id === taskId);
-          onTaskUpdate(taskId, { scheduledDate: currentDate });
+          // Schedule to end of day when dropping on the card itself
+          onTaskUpdate(taskId, { scheduledDate: currentDate as any, dayOrder: dayTasks.length } as any);
           const undo = toast({
             title: 'Task scheduled',
             description: `Moved to ${format(currentDate, 'EEE, MMM d')}. Undo?`,
@@ -192,7 +220,7 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
                 aria-label="Undo schedule"
                 className="px-2 py-1 text-xs rounded border"
                 onClick={() => {
-                  onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null });
+                  onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null } as any);
                   undo.dismiss();
                 }}
               >
@@ -208,20 +236,28 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
               </div>
             ) : (
               <div className="space-y-2">
-                {dayTasks.map((task) => (
-                  <SelectableTodoItem
+                {dayTasks.map((task, idx) => (
+                  <ReorderTarget
                     key={task.id}
-                    task={task}
-                    isSelected={selectedTodoId === task.id}
-                    onSelect={selectTodo}
-                    onToggleComplete={toggleTaskCompletion}
-                    onUpdate={(id, updates) => onTaskUpdate(id, updates)}
-                    onDelete={onTaskDelete}
-                    variant="compact"
-                    showTime={false}
-                    showLoggedTime={true}
-                    startEditing={task.title === ""}
-                  />
+                    index={idx}
+                    totalCount={dayTasks.length}
+                    onReorder={(dragTaskId, insertIndex) => handleReorder(dragTaskId, insertIndex)}
+                  >
+                    <DraggableCalendarTask task={task}>
+                      <SelectableTodoItem
+                        task={task}
+                        isSelected={selectedTodoId === task.id}
+                        onSelect={selectTodo}
+                        onToggleComplete={toggleTaskCompletion}
+                        onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                        onDelete={onTaskDelete}
+                        variant="compact"
+                        showTime={false}
+                        showLoggedTime={true}
+                        startEditing={task.title === ""}
+                      />
+                    </DraggableCalendarTask>
+                  </ReorderTarget>
                 ))}
               </div>
             )}
@@ -246,10 +282,21 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
   );
 }
 
-function DroppableDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
+function DroppableDay({ currentDate, onDropTask, children }: { currentDate: Date; onDropTask: (taskId: string) => void; children: React.ReactNode }) {
   const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
     accept: DND_TYPES.TASK,
-    drop: (item) => {
+    drop: (item, monitor) => {
+      if (typeof monitor.didDrop === 'function' && monitor.didDrop()) return;
+      // If dropping from calendar and same date, ignore here (reordering should be handled by inner targets)
+      if (item.source === 'calendar' && item.fromDate) {
+        const yyyy = currentDate.getFullYear();
+        const mm = currentDate.getMonth();
+        const dd = currentDate.getDate();
+        const currentKey = new Date(yyyy, mm, dd, 0, 0, 0, 0).toISOString();
+        if (currentKey.slice(0, 10) === new Date(item.fromDate).toISOString().slice(0, 10)) {
+          return;
+        }
+      }
       onDropTask(item.taskId);
     },
     collect: (monitor) => ({
@@ -279,5 +326,53 @@ function DayNotesInline({ date, onOpenDetail }: { date: Date; onOpenDetail?: () 
     >
       <StickyNote className="h-3.5 w-3.5" />
     </button>
+  );
+}
+
+function ReorderTarget({
+  index,
+  totalCount,
+  onReorder,
+  children,
+}: {
+  index: number;
+  totalCount: number;
+  onReorder: (dragTaskId: string, insertIndex: number) => void;
+  children: React.ReactNode;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isAfter, setIsAfter] = useState(false);
+  const [{ isOver }, drop] = useDrop<DragTaskItem, { handled: true }, { isOver: boolean }>(() => ({
+    accept: DND_TYPES.TASK,
+    hover: (_item, monitor) => {
+      const el = containerRef.current;
+      const client = monitor.getClientOffset();
+      if (!el || !client) return;
+      const rect = el.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      setIsAfter(client.y > midY);
+    },
+    drop: (item) => {
+      const insertIndex = Math.max(0, Math.min(index + (isAfter ? 1 : 0), totalCount));
+      onReorder(item.taskId, insertIndex);
+      return { handled: true };
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
+  }), [index, totalCount, isAfter, onReorder]);
+
+  return (
+    <div ref={drop} className="relative">
+      <div ref={containerRef} className="relative">
+        {children}
+        {isOver && (
+          <div className={cn(
+            "pointer-events-none absolute left-0 right-0",
+            isAfter ? "bottom-0" : "top-0"
+          )}>
+            <div className="h-0.5 bg-orange-500 shadow-[0_0_0_2px_rgba(251,146,60,0.25)]" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

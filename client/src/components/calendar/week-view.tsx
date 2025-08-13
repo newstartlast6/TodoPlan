@@ -63,10 +63,17 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(t);
     }
-    // Always sort by priority (high → low), then by title
+    // Sort by dayOrder if present; fallback to priority (high → low), then by title
     for (const [, list] of map) {
       const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
       list.sort((a, b) => {
+        const aOrder = (a as any).dayOrder;
+        const bOrder = (b as any).dayOrder;
+        const aHas = typeof aOrder === 'number';
+        const bHas = typeof bOrder === 'number';
+        if (aHas && bHas) return aOrder - bOrder;
+        if (aHas) return -1;
+        if (bHas) return 1;
         const aPrio = priorityOrder[a.priority as string] ?? 0;
         const bPrio = priorityOrder[b.priority as string] ?? 0;
         if (aPrio !== bPrio) return bPrio - aPrio;
@@ -152,6 +159,40 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
     }
   };
 
+  const handleReorder = (dragTaskId: string, targetDay: Date, insertIndex: number) => {
+    const targetKey = format(targetDay, 'yyyy-MM-dd');
+    const baseList = [...(getTasksForDay(targetDay) || [])];
+    const clampedIndex = Math.max(0, Math.min(insertIndex, baseList.length));
+    const dragged = tasks.find(t => t.id === dragTaskId);
+    const prevKey = dragged?.scheduledDate ? format(new Date(dragged.scheduledDate), 'yyyy-MM-dd') : undefined;
+
+    // Build new order for target day
+    const withoutDragged = baseList.filter(t => t.id !== dragTaskId);
+    const newOrder = [
+      ...withoutDragged.slice(0, clampedIndex),
+      dragged!,
+      ...withoutDragged.slice(clampedIndex),
+    ].filter(Boolean) as Task[];
+
+    // Persist new orders
+    newOrder.forEach((t, idx) => {
+      const updates: Partial<Task> = { dayOrder: idx } as any;
+      if (t.id === dragTaskId) {
+        updates.scheduledDate = targetDay as any;
+      }
+      onTaskUpdate(t.id, updates);
+    });
+
+    // If moved across days, reindex previous day to avoid large gaps
+    if (prevKey && prevKey !== targetKey) {
+      const prevDay = new Date(dragged!.scheduledDate as any);
+      const prevList = (getTasksForDay(prevDay) || []).filter(t => t.id !== dragTaskId);
+      prevList.forEach((t, idx) => {
+        onTaskUpdate(t.id, { dayOrder: idx } as any);
+      });
+    }
+  };
+
   return (
     <div className="space-y-8" data-testid="week-view" data-goals-refresh={goalsRefresh}>
       {/* Week Header */}
@@ -214,7 +255,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
           const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalSeconds);
           
             return (
-              <DroppableDay onDropTask={(dragItem) => {
+              <DroppableDay onDropTask={(dragItem, opts) => {
                 const taskId = dragItem.taskId;
                 const previous = tasks.find(t => t.id === taskId);
                 // Skip update if dropping onto the same day
@@ -228,7 +269,12 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                   return;
                 }
 
-                onTaskUpdate(taskId, { scheduledDate: day });
+                // If a child reorder target handled the drop, ignore here
+                if (opts?.handledByChild) return;
+
+                // Schedule at end with appropriate dayOrder
+                const lastIndex = getTasksForDay(day).length;
+                onTaskUpdate(taskId, { scheduledDate: day, dayOrder: lastIndex } as any);
                 const undo = toast({
                   title: 'Task scheduled',
                   description: `Moved to ${format(day, 'EEE, MMM d')}. Undo?`,
@@ -237,7 +283,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                       aria-label="Undo schedule"
                       className="px-2 py-1 text-xs rounded border"
                       onClick={() => {
-                        onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null });
+                        onTaskUpdate(taskId, { scheduledDate: previous?.scheduledDate ?? null } as any);
                         undo.dismiss();
                       }}
                     >
@@ -289,21 +335,29 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                       <CardContent className="p-6 space-y-4">
                         {dayTasks.length > 0 && (
                           <div className="space-y-3">
-                            {dayTasks.map((task) => (
-                              <DraggableCalendarTask key={task.id} task={task}>
-                                <SelectableTodoItem
-                                  task={task}
-                                  isSelected={selectedTodoId === task.id}
-                                  onSelect={selectTodo}
-                                  onToggleComplete={toggleTaskCompletion}
-                                  onUpdate={(id, updates) => onTaskUpdate(id, updates)}
-                                  onDelete={onTaskDelete}
-                                  variant="list"
-                                  showTime={false}
-                                  showLoggedTime={true}
-                                  startEditing={task.title === ""}
-                                />
-                              </DraggableCalendarTask>
+                            {dayTasks.map((task, idx) => (
+                              <ReorderTarget
+                                key={task.id}
+                                targetDay={day}
+                                index={idx}
+                                totalCount={dayTasks.length}
+                                onReorder={(dragTaskId, insertIndex) => handleReorder(dragTaskId, day, insertIndex)}
+                              >
+                                <DraggableCalendarTask task={task}>
+                                  <SelectableTodoItem
+                                    task={task}
+                                    isSelected={selectedTodoId === task.id}
+                                    onSelect={selectTodo}
+                                    onToggleComplete={toggleTaskCompletion}
+                                    onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                                    onDelete={onTaskDelete}
+                                    variant="list"
+                                    showTime={false}
+                                    showLoggedTime={true}
+                                    startEditing={task.title === ""}
+                                  />
+                                </DraggableCalendarTask>
+                              </ReorderTarget>
                             ))}
                           </div>
                         )}
@@ -339,6 +393,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                                     completed: false,
                                     priority: 'medium',
                                     scheduledDate: day,
+                                    dayOrder: dayTasks.length,
                                   };
                                   onTaskCreate(payload);
                                   setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
@@ -415,10 +470,12 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   );
 }
 
-function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskItem) => void; children: React.ReactNode | ((state: { isOver: boolean; canDrop: boolean; isDragging: boolean }) => React.ReactNode) }) {
+function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskItem, opts?: { handledByChild?: boolean }) => void; children: React.ReactNode | ((state: { isOver: boolean; canDrop: boolean; isDragging: boolean }) => React.ReactNode) }) {
   const [{ isOver, canDrop, isDragging }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean; isDragging: boolean }>({
     accept: DND_TYPES.TASK,
-    drop: (item) => {
+    drop: (item, monitor) => {
+      // If a nested drop already handled this, skip
+      if (typeof monitor.didDrop === 'function' && monitor.didDrop()) return;
       onDropTask(item);
     },
     collect: (monitor) => ({
@@ -487,5 +544,56 @@ function DayNotesFor({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => 
     >
       <StickyNote className="h-3.5 w-3.5" />
     </button>
+  );
+}
+
+function ReorderTarget({
+  targetDay,
+  index,
+  totalCount,
+  onReorder,
+  children,
+}: {
+  targetDay: Date;
+  index: number;
+  totalCount: number;
+  onReorder: (dragTaskId: string, insertIndex: number) => void;
+  children: React.ReactNode;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isAfter, setIsAfter] = useState(false);
+  const [{ isOver }, drop] = useDrop<DragTaskItem, { handled: true }, { isOver: boolean }>(() => ({
+    accept: DND_TYPES.TASK,
+    hover: (_item, monitor) => {
+      const el = containerRef.current;
+      const client = monitor.getClientOffset();
+      if (!el || !client) return;
+      const rect = el.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      setIsAfter(client.y > midY);
+    },
+    drop: (item, monitor) => {
+      // Mark as handled; parent will see didDrop()
+      const insertIndex = Math.max(0, Math.min(index + (isAfter ? 1 : 0), totalCount));
+      onReorder(item.taskId, insertIndex);
+      return { handled: true };
+    },
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
+  }), [index, totalCount, isAfter, onReorder]);
+
+  return (
+    <div ref={drop} className="relative">
+      <div ref={containerRef} className="relative">
+        {children}
+        {isOver && (
+          <div className={cn(
+            "pointer-events-none absolute left-0 right-0",
+            isAfter ? "bottom-0" : "top-0"
+          )}>
+            <div className="h-0.5 bg-orange-500 shadow-[0_0_0_2px_rgba(251,146,60,0.25)]" />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
