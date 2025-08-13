@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth, eachWeekOfInterval, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday, isPast } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachWeekOfInterval, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday, isPast, addMonths } from "date-fns";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
@@ -10,15 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateMonthProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MonthViewProps {
   tasks: Task[];
   currentDate: Date;
   onDateClick: (date: Date) => void;
   onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
+  onChangeDate?: (date: Date) => void;
 }
 
-export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: MonthViewProps) {
+export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onChangeDate }: MonthViewProps) {
   const { selectedTodoId, selectTodo } = useSelectedTodo();
   const { toast } = useToast();
   const monthStart = startOfMonth(currentDate);
@@ -59,9 +62,27 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: Mon
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-foreground" data-testid="month-title">
-              {format(currentDate, "MMMM yyyy")}
-            </h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Previous month"
+                onClick={() => onChangeDate?.(addMonths(currentDate, -1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-2xl font-bold text-foreground" data-testid="month-title">
+                {format(currentDate, "MMMM yyyy")}
+              </h2>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Next month"
+                onClick={() => onChangeDate?.(addMonths(currentDate, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             <GoalInline type="monthly" date={currentDate} label="MONTHLY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
@@ -106,16 +127,6 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: Mon
                     const isOutsideMonth = dayStatus === 'outside';
 
                     return (
-                      <DroppableMonthDay onDropTask={(taskId) => {
-                        if (!onTaskUpdate) return;
-                        onTaskUpdate(taskId, { scheduledDate: day });
-                        const undo = toast({
-                          title: 'Task scheduled',
-                          description: `Moved to ${format(day, 'EEE, MMM d')}. Undo?`,
-                        });
-                        // Consumers (calendar) add undo if needed at higher level
-                        undo.dismiss();
-                      }}>
                       <button
                         key={dayIndex}
                         onClick={() => onDateClick(day)}
@@ -175,7 +186,6 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: Mon
                           )}
                         </div>
                       </button>
-                      </DroppableMonthDay>
                     );
                   })}
                 </div>
@@ -221,18 +231,3 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate }: Mon
   );
 }
 
-function DroppableMonthDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
-  const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
-    accept: DND_TYPES.TASK,
-    drop: (item) => onDropTask(item.taskId),
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
-    }),
-  });
-  return (
-    <div ref={drop} className={cn(isOver && canDrop ? 'ring-2 ring-primary/40 rounded-lg' : '')}>
-      {children}
-    </div>
-  );
-}

@@ -1,6 +1,6 @@
-import { format, isToday, isSameDay, isPast } from "date-fns";
+import { format, isToday, isSameDay, isPast, addDays } from "date-fns";
 import { useMemo } from "react";
-import { CheckCircle, Clock, Circle, XCircle, PartyPopper } from "lucide-react";
+import { CheckCircle, Clock, Circle, XCircle, PartyPopper, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { TimerCalculator } from "@shared/services/timer-store";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface DayViewProps {
   tasks: Task[];
@@ -22,9 +23,10 @@ interface DayViewProps {
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onAddTask: () => void;
   onTaskDelete?: (taskId: string) => void;
+  onChangeDate?: (date: Date) => void;
 }
 
-export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTask, onTaskDelete }: DayViewProps) {
+export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTask, onTaskDelete, onChangeDate }: DayViewProps) {
   const { selectedTodoId, selectTodo, selectReview } = useSelectedTodo();
   const { toast } = useToast();
   const dayTasks = tasks
@@ -105,9 +107,27 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
           <div className="space-y-1">
-            <h2 className="text-3xl font-bold text-foreground" data-testid="day-title">
-              {format(currentDate, "EEEE, MMMM d, yyyy")}
-            </h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Previous day"
+                onClick={() => onChangeDate?.(addDays(currentDate, -1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-3xl font-bold text-foreground" data-testid="day-title">
+                {format(currentDate, "EEEE, MMMM d, yyyy")}
+              </h2>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Next day"
+                onClick={() => onChangeDate?.(addDays(currentDate, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             <GoalInline type="daily" date={currentDate} label="DAILY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">

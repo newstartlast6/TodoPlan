@@ -271,6 +271,7 @@ export default function Calendar() {
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
             onAddTask={handleAddEmptyTaskInline}
+            onChangeDate={(date) => setCurrentDate(date)}
           />
         );
       case 'week':
@@ -281,6 +282,7 @@ export default function Calendar() {
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
             onTaskCreate={handleCreateTask}
+            onChangeDate={(date) => setCurrentDate(date)}
           />
         );
       case 'month':
@@ -290,6 +292,7 @@ export default function Calendar() {
             currentDate={currentDate}
             onDateClick={handleDateClick}
             onTaskUpdate={handleUpdateTask}
+            onChangeDate={(date) => setCurrentDate(date)}
           />
         );
       case 'year':
@@ -313,6 +316,15 @@ export default function Calendar() {
   );
 
   // Render main content
+  // Auto-close and prevent detail pane in Month/Year views and when Plan panel is open
+  useEffect(() => {
+    if (isPlanPanelOpen || currentView === 'month' || currentView === 'year') {
+      if (isDetailPaneOpen) {
+        closeDetailPane();
+      }
+    }
+  }, [isPlanPanelOpen, currentView, isDetailPaneOpen, closeDetailPane]);
+
   const renderMainContent = () => (
     <div className="flex-1 flex flex-col">
       {/* Header */}
@@ -324,7 +336,12 @@ export default function Calendar() {
               return (
                 <button
                   key={view}
-                  onClick={() => setCurrentView(view)}
+                  onClick={() => {
+                    setCurrentView(view);
+                    if (view === 'month' || view === 'year') {
+                      closeDetailPane();
+                    }
+                  }}
                   className={cn(
                     "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
                     currentView === view
@@ -353,7 +370,13 @@ export default function Calendar() {
             <Button
               variant={isPlanPanelOpen ? 'default' : 'outline'}
               onClick={() => {
-                setIsPlanPanelOpen((v) => !v);
+                setIsPlanPanelOpen((v) => {
+                  const next = !v;
+                  if (next) {
+                    closeDetailPane();
+                  }
+                  return next;
+                });
               }}
               data-testid="button-toggle-plan"
             >
@@ -414,7 +437,7 @@ export default function Calendar() {
           sidebar={renderSidebar()}
           main={renderMainContent()}
           detail={renderDetailPane()}
-          isDetailOpen={isDetailPaneOpen}
+          isDetailOpen={isDetailPaneOpen && currentView !== 'month' && currentView !== 'year' && !isPlanPanelOpen}
           onDetailClose={closeDetailPane}
           detailWidthClass={selectedReviewType ? 'w-[500px]' : undefined}
         />

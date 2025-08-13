@@ -1,6 +1,6 @@
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, Clock, Circle, XCircle, PartyPopper } from "lucide-react";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast, addWeeks } from "date-fns";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle, Clock, Circle, XCircle, PartyPopper, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerCalculator } from '@shared/services/timer-store';
 import { ReviewForm } from "@/components/ui/review-form";
+import { Button } from "@/components/ui/button";
 
 interface WeekViewProps {
   tasks: Task[];
@@ -23,9 +24,10 @@ interface WeekViewProps {
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onTaskDelete?: (taskId: string) => void;
   onTaskCreate: (newTask: InsertTask) => void;
+  onChangeDate?: (date: Date) => void;
 }
 
-export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTaskCreate }: WeekViewProps) {
+export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTaskCreate, onChangeDate }: WeekViewProps) {
   const DAILY_TARGET_SECONDS = 8 * 60 * 60; // 8 hours target per day
   const [goalsRefresh, setGoalsRefresh] = useState(0);
   const { toast } = useToast();
@@ -44,6 +46,17 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   const currentTaskId = timer.activeTaskId;
   const currentElapsedSeconds = timer.displaySeconds;
   const [newTitleByDay, setNewTitleByDay] = useState<Record<string, string>>({});
+  const todayCardRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll to today's card when week view mounts or the visible week changes
+  useEffect(() => {
+    if (!todayCardRef.current) return;
+    const el = todayCardRef.current;
+    // Defer to next frame to ensure layout is settled
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    });
+  }, [weekStart.getTime()]);
   
   const completedTasks = tasks.filter(task => task.completed);
   const totalTasks = tasks.length;
@@ -108,9 +121,27 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-foreground" data-testid="week-title">
-              Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}
-            </h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Previous week"
+                onClick={() => onChangeDate?.(addWeeks(currentDate, -1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-2xl font-bold text-foreground" data-testid="week-title">
+                Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}
+              </h2>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Next week"
+                onClick={() => onChangeDate?.(addWeeks(currentDate, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             <GoalInline type="weekly" date={currentDate} label="WEEKLY GOAL:" />
           </div>
           <div className="flex items-center space-x-4">
@@ -146,6 +177,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
           
             return (
               <Card 
+              ref={isCurrentDay ? todayCardRef : undefined}
               key={dayIndex} 
               className={cn(
                 "overflow-hidden transition-all duration-200",
