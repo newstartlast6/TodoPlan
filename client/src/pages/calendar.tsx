@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Settings, Pause, CheckCircle, Clock } from "lucide-react";
+import { Plus, Settings, Pause, CheckCircle, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
@@ -358,7 +358,7 @@ export default function Calendar() {
     <div className="flex-1 flex flex-col">
       {timer.isRunning && timer.activeTaskId && (
         <div
-          className="sticky top-0 z-40 bg-accent text-accent-foreground backdrop-blur supports-[backdrop-filter]:bg-accent border-b border-accent"
+          className="sticky top-0 z-40 bg-orange-50/95 backdrop-blur supports-[backdrop-filter]:bg-orange-50/80 border-b border-orange-200"
           onClick={() => {
             const targetDate = activeTaskDate ?? new Date();
             setCurrentDate(targetDate);
@@ -375,15 +375,15 @@ export default function Calendar() {
 
             {/* Center content */}
             <div className="min-w-0 flex items-center justify-center text-center gap-3">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground ring-1 ring-accent shrink-0 flex-none">
-                <Clock className="h-4 w-4" />
+              <span className="inline-flex items-center justify-center rounded-full  text-orange-500  shrink-0 flex-none">
+                <Timer className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex items-center gap-2">
-                <span className="text-[13px] font-medium truncate max-w-[40vw]">
+                <span className="text-[13px] font-medium text-orange-600 truncate max-w-[40vw]">
                   {activeTaskTitle}
                 </span>
-                <span className="text-accent-foreground opacity-60">•</span>
-                <span className="inline-flex items-center rounded-full bg-accent text-accent-foreground ring-1 ring-accent px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
+                <span className="text-orange-300">•</span>
+                <span className="inline-flex items-center rounded-full  text-orange-600 ring-1 ring-orange-200 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
                   {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
                 </span>
               </div>
@@ -393,7 +393,7 @@ export default function Calendar() {
             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
-                className="hover:bg-accent hover:text-accent-foreground"
+                className="hover:bg-orange-400 hover:text-white hover:ring-0 text-orange-600 ring-1 ring-orange-400 bg-orange-50"
                 variant="outline"
                 onClick={() => { void timer.pause(); }}
               >
@@ -403,7 +403,7 @@ export default function Calendar() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-background text-accent-foreground border-accent hover:bg-accent"
+                  className="bg-white text-orange-700 border-orange-300 hover:bg-orange-50"
                   onClick={async () => {
                     const id = timer.activeTaskId!;
                     try { await timer.pause(); } catch {}
