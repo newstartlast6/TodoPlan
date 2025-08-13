@@ -26,6 +26,16 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+// Notes preview helpers
+const NOTES_CHARACTER_LIMIT = 80;
+const ELLIPSIS_CHARACTER = "…";
+function truncateTextWithEllipsis(text: string, maxCharacters: number): string {
+  if (!text) return "";
+  const normalizedText = String(text);
+  if (normalizedText.length <= maxCharacters) return normalizedText;
+  return normalizedText.slice(0, Math.max(0, maxCharacters - 1)).trimEnd() + ELLIPSIS_CHARACTER;
+}
+
 interface SelectableTodoItemProps {
   task: Task;
   isSelected: boolean;
@@ -279,7 +289,21 @@ export function SelectableTodoItem({
               </div>              
             </div>
             {task.notes ? (
-              <p className="text-xs text-muted-foreground mt-1 truncate italic" data-testid={`todo-notes-${task.id}`}>{task.notes}</p>
+              <p
+                className="text-xs text-muted-foreground mt-1 truncate italic"
+                data-testid={`todo-notes-${task.id}`}
+                title={(() => {
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = task.notes as any;
+                  return tmp.textContent || tmp.innerText || '';
+                })()}
+              >
+                {truncateTextWithEllipsis((() => {
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = task.notes as any;
+                  return tmp.textContent || tmp.innerText || '';
+                })(), NOTES_CHARACTER_LIMIT)}
+              </p>
             ) : task.description ? (
               <p className="text-sm text-gray-500 mb-2 mt-1 truncate">{task.description}</p>
             ) : null}
@@ -400,8 +424,12 @@ export function SelectableTodoItem({
             
             {/* Task Notes Preview */}
             {task.notes && (variant === 'default' || variant === 'compact') && (
-              <p className="text-xs text-muted-foreground mt-1 truncate italic" data-testid={`todo-notes-${task.id}`}>
-                {task.notes}
+              <p
+                className="text-xs text-muted-foreground mt-1 truncate italic"
+                data-testid={`todo-notes-${task.id}`}
+                title={task.notes}
+              >
+                {truncateTextWithEllipsis(task.notes, NOTES_CHARACTER_LIMIT)}
               </p>
             )}
             

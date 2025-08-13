@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getAccessToken, authEnabledOnClient } from "./supabaseClient";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -13,12 +14,35 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const fullUrl = resolveApiUrl(url);
-  const res = await fetch(fullUrl, {
+  const headers: Record<string, string> = {};
+  if (data) headers["Content-Type"] = "application/json";
+  if (authEnabledOnClient) {
+    try {
+      const token = await getAccessToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    } catch {}
+  }
+  let res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+
+  // Retry once after a possible token refresh
+  if (res.status === 401 && authEnabledOnClient) {
+    try {
+      const token = await getAccessToken();
+      const retryHeaders = { ...headers };
+      if (token) retryHeaders["Authorization"] = `Bearer ${token}`;
+      res = await fetch(fullUrl, {
+        method,
+        headers: retryHeaders,
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+    } catch {}
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -32,9 +56,29 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const url = Array.isArray(queryKey) ? (queryKey[0] as string) : (queryKey as unknown as string);
     const fullUrl = resolveApiUrl(url);
-    const res = await fetch(fullUrl, {
+    const headers: Record<string, string> = {};
+    if (authEnabledOnClient) {
+      try {
+        const token = await getAccessToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      } catch {}
+    }
+    let res = await fetch(fullUrl, {
       credentials: "include",
+      headers,
     });
+
+    if (res.status === 401 && authEnabledOnClient) {
+      try {
+        const token = await getAccessToken();
+        const retryHeaders = { ...headers };
+        if (token) retryHeaders["Authorization"] = `Bearer ${token}`;
+        res = await fetch(fullUrl, {
+          credentials: "include",
+          headers: retryHeaders,
+        });
+      } catch {}
+    }
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;

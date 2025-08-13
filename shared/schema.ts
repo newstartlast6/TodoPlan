@@ -8,6 +8,7 @@ export const lists = pgTable("lists", {
   name: text("name").notNull(),
   emoji: text("emoji").notNull().default("📋"),
   color: text("color"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -27,6 +28,7 @@ export const tasks = pgTable("tasks", {
   timeLoggedSeconds: integer("time_logged_seconds").notNull().default(0),
   // Order of the task within a given day's list. When set, UI sorts by this ascending within that date.
   dayOrder: integer("day_order"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -34,6 +36,7 @@ export const tasks = pgTable("tasks", {
 const baseInsertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
   createdAt: true,
+  userId: true,
 });
 
 // Extend to accept ISO strings or Date for startTime/endTime/scheduledDate by transforming to Date
@@ -75,6 +78,7 @@ export type Task = typeof tasks.$inferSelect;
 // List schemas
 export const insertListSchema = createInsertSchema(lists).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -96,6 +100,7 @@ export const goals = pgTable("goals", {
   // Anchor date is normalized to the start of the period (Mon for weekly, 1st for monthly, Jan 1 for yearly)
   anchorDate: timestamp("anchor_date").notNull(),
   value: text("value").notNull().default(""),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -113,7 +118,8 @@ export const insertGoalSchema = createInsertSchema(goals)
       }
       return val;
     }, z.date()),
-  });
+  })
+  .omit({ userId: true });
 
 export const updateGoalSchema = insertGoalSchema.partial().omit({ type: true, anchorDate: true });
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
@@ -143,12 +149,13 @@ export const reviews = pgTable("reviews", {
   nextFocusPlan: text("next_focus_plan"),
   energyLevel: integer("energy_level").default(0),
   mood: text("mood"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertReviewSchema = createInsertSchema(reviews)
-  .omit({ id: true, createdAt: true, updatedAt: true })
+  .omit({ id: true, createdAt: true, updatedAt: true, userId: true })
   .extend({
     type: reviewTypeEnum,
     anchorDate: z.preprocess((val) => {
@@ -189,12 +196,13 @@ export const notes = pgTable("notes", {
   type: text("type").notNull(),
   anchorDate: date("anchor_date", { mode: "date" }).notNull(),
   content: text("content"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertNoteSchema = createInsertSchema(notes)
-  .omit({ id: true, createdAt: true, updatedAt: true })
+  .omit({ id: true, createdAt: true, updatedAt: true, userId: true })
   .extend({
     type: noteTypeEnum,
     anchorDate: z.preprocess((val) => {
@@ -235,6 +243,7 @@ export const timerSessions = pgTable("timer_sessions", {
   endTime: timestamp("end_time"),
   durationSeconds: integer("duration_seconds").default(0),
   isActive: boolean("is_active").default(false),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -244,6 +253,7 @@ export const taskEstimates = pgTable("task_estimates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   taskId: varchar("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }).unique(),
   estimatedDurationMinutes: integer("estimated_duration_minutes").notNull(),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -252,6 +262,7 @@ export const insertTimerSessionSchema = createInsertSchema(timerSessions).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  userId: true,
 });
 
 export const updateTimerSessionSchema = insertTimerSessionSchema.partial();
@@ -260,6 +271,7 @@ export const updateTimerSessionSchema = insertTimerSessionSchema.partial();
 export const insertTaskEstimateSchema = createInsertSchema(taskEstimates).omit({
   id: true,
   createdAt: true,
+  userId: true,
 });
 
 export const updateTaskEstimateSchema = insertTaskEstimateSchema.partial();

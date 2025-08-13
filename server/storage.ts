@@ -19,57 +19,59 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  // List operations
-  getLists(): Promise<List[]>;
-  getList(id: string): Promise<List | undefined>;
-  createList(list: InsertList): Promise<List>;
-  updateList(id: string, list: UpdateList): Promise<List | undefined>;
-  deleteList(id: string): Promise<boolean>;
-  getTasksByList(listId: string): Promise<Task[]>;
+  // List operations (scoped)
+  getLists(userId: string): Promise<List[]>;
+  getList(userId: string, id: string): Promise<List | undefined>;
+  createList(userId: string, list: InsertList): Promise<List>;
+  updateList(userId: string, id: string, list: UpdateList): Promise<List | undefined>;
+  deleteList(userId: string, id: string): Promise<boolean>;
+  getTasksByList(userId: string, listId: string): Promise<Task[]>;
   
-  // Task operations
-  getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]>;
-  getTask(id: string): Promise<Task | undefined>;
-  createTask(task: InsertTask): Promise<Task>;
-  updateTask(id: string, task: UpdateTask): Promise<Task | undefined>;
-  deleteTask(id: string): Promise<boolean>;
+  // Task operations (scoped)
+  getTasks(userId: string, startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]>;
+  getTask(userId: string, id: string): Promise<Task | undefined>;
+  createTask(userId: string, task: InsertTask): Promise<Task>;
+  updateTask(userId: string, id: string, task: UpdateTask): Promise<Task | undefined>;
+  deleteTask(userId: string, id: string): Promise<boolean>;
 
-  // Timer session operations
-  getActiveTimerSession(): Promise<TimerSession | undefined>;
-  getTimerSession(id: string): Promise<TimerSession | undefined>;
-  getTimerSessionsByTask(taskId: string): Promise<TimerSession[]>;
-  createTimerSession(session: InsertTimerSession): Promise<TimerSession>;
-  updateTimerSession(id: string, session: UpdateTimerSession): Promise<TimerSession | undefined>;
-  deleteTimerSession(id: string): Promise<boolean>;
-  stopActiveTimerSessions(): Promise<void>;
+  // Timer session operations (scoped)
+  getActiveTimerSession(userId: string): Promise<TimerSession | undefined>;
+  getTimerSession(userId: string, id: string): Promise<TimerSession | undefined>;
+  getTimerSessionsByTask(userId: string, taskId: string): Promise<TimerSession[]>;
+  createTimerSession(userId: string, session: InsertTimerSession): Promise<TimerSession>;
+  updateTimerSession(userId: string, id: string, session: UpdateTimerSession): Promise<TimerSession | undefined>;
+  deleteTimerSession(userId: string, id: string): Promise<boolean>;
+  stopActiveTimerSessions(userId: string): Promise<void>;
   // Task logged time aggregation
-  incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void>;
+  incrementTaskLoggedTime(userId: string, taskId: string, deltaSeconds: number): Promise<void>;
 
-  // Task estimate operations
-  getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined>;
-  createTaskEstimate(estimate: InsertTaskEstimate): Promise<TaskEstimate>;
-  updateTaskEstimate(taskId: string, estimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined>;
-  deleteTaskEstimate(taskId: string): Promise<boolean>;
+  // Task estimate operations (scoped)
+  getTaskEstimate(userId: string, taskId: string): Promise<TaskEstimate | undefined>;
+  createTaskEstimate(userId: string, estimate: InsertTaskEstimate): Promise<TaskEstimate>;
+  updateTaskEstimate(userId: string, taskId: string, estimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined>;
+  deleteTaskEstimate(userId: string, taskId: string): Promise<boolean>;
 
-  // Daily summary operations
-  getDailySummary(date: Date): Promise<DailyTimeSummary[]>;
-  getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]>;
+  // Daily summary operations (scoped)
+  getDailySummary(userId: string, date: Date): Promise<DailyTimeSummary[]>;
+  getDailySummaryByDateRange(userId: string, startDate: Date, endDate: Date): Promise<DailyTimeSummary[]>;
 
-  // Goals
-  getGoal(type: string, anchorDate: Date): Promise<Goal | undefined>;
-  setGoal(type: string, anchorDate: Date, value: string): Promise<Goal>;
+  // Goals (scoped)
+  getGoal(userId: string, type: string, anchorDate: Date): Promise<Goal | undefined>;
+  setGoal(userId: string, type: string, anchorDate: Date, value: string): Promise<Goal>;
 
-  // Reviews
-  getReview(type: string, anchorDate: Date): Promise<Review | undefined>;
+  // Reviews (scoped)
+  getReview(userId: string, type: string, anchorDate: Date): Promise<Review | undefined>;
   setReview(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
   ): Promise<Review>;
 
-  // Notes
-  getNote(type: string, anchorDate: Date): Promise<Note | undefined>;
+  // Notes (scoped)
+  getNote(userId: string, type: string, anchorDate: Date): Promise<Note | undefined>;
   setNote(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
@@ -100,6 +102,7 @@ export class MemStorage implements IStorage {
   }
 
   private initializeSampleData() {
+    const devUserId = process.env.DEV_USER_ID || 'dev-user-00000000-0000-0000-0000-000000000000';
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
@@ -119,6 +122,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       {
         id: randomUUID(),
@@ -134,6 +138,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       // Tuesday - completed
       {
@@ -150,6 +155,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       // Today - mixed
       {
@@ -166,6 +172,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       {
         id: randomUUID(),
@@ -181,6 +188,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       {
         id: randomUUID(),
@@ -196,6 +204,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       {
         id: randomUUID(),
@@ -211,6 +220,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
       // Tomorrow
       {
@@ -227,6 +237,7 @@ export class MemStorage implements IStorage {
         scheduledDate: null,
         timeLoggedSeconds: 0,
         dayOrder: null,
+        userId: devUserId,
       },
     ];
     // Ensure default timeLoggedSeconds
@@ -251,25 +262,27 @@ export class MemStorage implements IStorage {
   }
 
   // List operations
-  async getLists(): Promise<List[]> {
-    return Array.from(this.lists.values()).sort((a, b) => {
+  async getLists(userId: string): Promise<List[]> {
+    return Array.from(this.lists.values()).filter(l => l.userId === userId).sort((a, b) => {
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return aTime - bTime;
     });
   }
 
-  async getList(id: string): Promise<List | undefined> {
-    return this.lists.get(id);
+  async getList(userId: string, id: string): Promise<List | undefined> {
+    const l = this.lists.get(id);
+    return l && l.userId === userId ? l : undefined;
   }
 
-  async createList(insertList: InsertList): Promise<List> {
+  async createList(userId: string, insertList: InsertList): Promise<List> {
     const id = randomUUID();
     const list: List = {
       ...insertList,
       id,
       emoji: insertList.emoji ?? '📋',
       color: insertList.color ?? null,
+      userId,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -277,8 +290,8 @@ export class MemStorage implements IStorage {
     return list;
   }
 
-  async updateList(id: string, updateList: UpdateList): Promise<List | undefined> {
-    const existingList = this.lists.get(id);
+  async updateList(userId: string, id: string, updateList: UpdateList): Promise<List | undefined> {
+    const existingList = await this.getList(userId, id);
     if (!existingList) return undefined;
     
     const updatedList: List = { 
@@ -290,26 +303,28 @@ export class MemStorage implements IStorage {
     return updatedList;
   }
 
-  async deleteList(id: string): Promise<boolean> {
+  async deleteList(userId: string, id: string): Promise<boolean> {
     // Set list_id to null for all tasks in this list
     Array.from(this.tasks.values())
-      .filter(task => task.listId === id)
+      .filter(task => task.listId === id && task.userId === userId)
       .forEach(task => {
         const updatedTask = { ...task, listId: null };
         this.tasks.set(task.id, updatedTask);
       });
     
+    const l = this.lists.get(id);
+    if (!l || l.userId !== userId) return false;
     return this.lists.delete(id);
   }
 
-  async getTasksByList(listId: string): Promise<Task[]> {
+  async getTasksByList(userId: string, listId: string): Promise<Task[]> {
     return Array.from(this.tasks.values())
-      .filter(task => task.listId === listId)
+      .filter(task => task.listId === listId && task.userId === userId)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
-  async getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
-    let tasks = Array.from(this.tasks.values());
+  async getTasks(userId: string, startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
+    let tasks = Array.from(this.tasks.values()).filter(t => t.userId === userId);
     
     if (startDate && endDate) {
       tasks = tasks.filter(task => {
@@ -319,7 +334,7 @@ export class MemStorage implements IStorage {
       });
       if (includeUnscheduled) {
         // Also include explicitly unscheduled tasks
-        const unscheduled = Array.from(this.tasks.values()).filter(t => !t.scheduledDate);
+        const unscheduled = Array.from(this.tasks.values()).filter(t => !t.scheduledDate && t.userId === userId);
         const byId = new Map(tasks.map(t => [t.id, t] as const));
         for (const t of unscheduled) {
           if (!byId.has(t.id)) {
@@ -353,15 +368,17 @@ export class MemStorage implements IStorage {
     });
   }
 
-  async getTask(id: string): Promise<Task | undefined> {
-    return this.tasks.get(id);
+  async getTask(userId: string, id: string): Promise<Task | undefined> {
+    const t = this.tasks.get(id);
+    return t && t.userId === userId ? t : undefined;
   }
 
-  async createTask(insertTask: InsertTask): Promise<Task> {
+  async createTask(userId: string, insertTask: InsertTask): Promise<Task> {
     const id = randomUUID();
     const task: Task = {
       ...insertTask,
       id,
+      userId,
       createdAt: new Date(),
       description: insertTask.description || null,
       notes: insertTask.notes || null,
@@ -370,13 +387,14 @@ export class MemStorage implements IStorage {
       listId: insertTask.listId ?? null,
       scheduledDate: (insertTask as any).scheduledDate ?? null,
       timeLoggedSeconds: (insertTask as any).timeLoggedSeconds ?? 0,
+      dayOrder: (insertTask as any).dayOrder ?? null,
     };
     this.tasks.set(id, task);
     return task;
   }
 
-  async updateTask(id: string, updateTask: UpdateTask): Promise<Task | undefined> {
-    const existingTask = this.tasks.get(id);
+  async updateTask(userId: string, id: string, updateTask: UpdateTask): Promise<Task | undefined> {
+    const existingTask = await this.getTask(userId, id);
     if (!existingTask) return undefined;
     
     const updatedTask: Task = { ...existingTask, ...updateTask };
@@ -384,26 +402,29 @@ export class MemStorage implements IStorage {
     return updatedTask;
   }
 
-  async deleteTask(id: string): Promise<boolean> {
+  async deleteTask(userId: string, id: string): Promise<boolean> {
+    const t = this.tasks.get(id);
+    if (!t || t.userId !== userId) return false;
     return this.tasks.delete(id);
   }
 
   // Timer session operations
-  async getActiveTimerSession(): Promise<TimerSession | undefined> {
-    return Array.from(this.timerSessions.values()).find(session => session.isActive);
+  async getActiveTimerSession(userId: string): Promise<TimerSession | undefined> {
+    return Array.from(this.timerSessions.values()).find(session => session.isActive && (session as any).userId === userId);
   }
 
-  async getTimerSession(id: string): Promise<TimerSession | undefined> {
-    return this.timerSessions.get(id);
+  async getTimerSession(userId: string, id: string): Promise<TimerSession | undefined> {
+    const s = this.timerSessions.get(id);
+    return s && (s as any).userId === userId ? s : undefined;
   }
 
-  async getTimerSessionsByTask(taskId: string): Promise<TimerSession[]> {
+  async getTimerSessionsByTask(userId: string, taskId: string): Promise<TimerSession[]> {
     return Array.from(this.timerSessions.values())
-      .filter(session => session.taskId === taskId)
+      .filter(session => session.taskId === taskId && (session as any).userId === userId)
       .sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
   }
 
-  async createTimerSession(insertSession: InsertTimerSession): Promise<TimerSession> {
+  async createTimerSession(userId: string, insertSession: InsertTimerSession): Promise<TimerSession> {
     const id = randomUUID();
     const session: TimerSession = {
       ...insertSession,
@@ -411,6 +432,7 @@ export class MemStorage implements IStorage {
       endTime: insertSession.endTime ?? null,
       durationSeconds: insertSession.durationSeconds ?? 0,
       isActive: insertSession.isActive ?? false,
+      userId: userId as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -418,8 +440,8 @@ export class MemStorage implements IStorage {
     return session;
   }
 
-  async updateTimerSession(id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
-    const existingSession = this.timerSessions.get(id);
+  async updateTimerSession(userId: string, id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
+    const existingSession = await this.getTimerSession(userId, id);
     if (!existingSession) return undefined;
     
     const updatedSession: TimerSession = { 
@@ -431,12 +453,14 @@ export class MemStorage implements IStorage {
     return updatedSession;
   }
 
-  async deleteTimerSession(id: string): Promise<boolean> {
+  async deleteTimerSession(userId: string, id: string): Promise<boolean> {
+    const s = this.timerSessions.get(id);
+    if (!s || (s as any).userId !== userId) return false;
     return this.timerSessions.delete(id);
   }
 
-  async stopActiveTimerSessions(): Promise<void> {
-    const activeSessions = Array.from(this.timerSessions.values()).filter(session => session.isActive);
+  async stopActiveTimerSessions(userId: string): Promise<void> {
+    const activeSessions = Array.from(this.timerSessions.values()).filter(session => session.isActive && (session as any).userId === userId);
     const now = new Date();
     
     activeSessions.forEach(session => {
@@ -457,31 +481,32 @@ export class MemStorage implements IStorage {
     });
   }
 
-  async incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void> {
-    const task = this.tasks.get(taskId);
+  async incrementTaskLoggedTime(userId: string, taskId: string, deltaSeconds: number): Promise<void> {
+    const task = await this.getTask(userId, taskId);
     if (!task) return;
     const add = Math.max(0, Math.floor(deltaSeconds || 0));
     this.tasks.set(taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + add });
   }
 
   // Task estimate operations
-  async getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined> {
-    return Array.from(this.taskEstimates.values()).find(estimate => estimate.taskId === taskId);
+  async getTaskEstimate(userId: string, taskId: string): Promise<TaskEstimate | undefined> {
+    return Array.from(this.taskEstimates.values()).find(estimate => estimate.taskId === taskId && (estimate as any).userId === userId);
   }
 
-  async createTaskEstimate(insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
+  async createTaskEstimate(userId: string, insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
     const id = randomUUID();
     const estimate: TaskEstimate = {
       ...insertEstimate,
       id,
+      userId: userId as any,
       createdAt: new Date(),
     };
     this.taskEstimates.set(id, estimate);
     return estimate;
   }
 
-  async updateTaskEstimate(taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
-    const existingEstimate = Array.from(this.taskEstimates.values()).find(est => est.taskId === taskId);
+  async updateTaskEstimate(userId: string, taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
+    const existingEstimate = Array.from(this.taskEstimates.values()).find(est => est.taskId === taskId && (est as any).userId === userId);
     if (!existingEstimate) return undefined;
     
     const updatedEstimate: TaskEstimate = { ...existingEstimate, ...updateEstimate };
@@ -489,25 +514,25 @@ export class MemStorage implements IStorage {
     return updatedEstimate;
   }
 
-  async deleteTaskEstimate(taskId: string): Promise<boolean> {
-    const estimate = Array.from(this.taskEstimates.entries()).find(([_, est]) => est.taskId === taskId);
+  async deleteTaskEstimate(userId: string, taskId: string): Promise<boolean> {
+    const estimate = Array.from(this.taskEstimates.entries()).find(([_, est]) => est.taskId === taskId && (est as any).userId === userId);
     if (!estimate) return false;
     
     return this.taskEstimates.delete(estimate[0]);
   }
 
   // Daily summary operations
-  async getDailySummary(date: Date): Promise<DailyTimeSummary[]> {
+  async getDailySummary(userId: string, date: Date): Promise<DailyTimeSummary[]> {
     const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
     
-    return this.getDailySummaryByDateRange(startOfDay, endOfDay);
+    return this.getDailySummaryByDateRange(userId, startOfDay, endOfDay);
   }
 
-  async getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
+  async getDailySummaryByDateRange(userId: string, startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
     const sessions = Array.from(this.timerSessions.values())
       .filter(session => 
-        session.endTime && 
+        session.endTime && (session as any).userId === userId &&
         session.startTime >= startDate && 
         session.startTime < endDate
       );
@@ -541,12 +566,13 @@ export class MemStorage implements IStorage {
     return `${type}:${d.toISOString().slice(0, 10)}`;
   }
 
-  async getGoal(type: string, anchorDate: Date): Promise<Goal | undefined> {
+  async getGoal(userId: string, type: string, anchorDate: Date): Promise<Goal | undefined> {
     const key = this.goalKey(type, anchorDate);
-    return this.goals.get(key);
+    const g = this.goals.get(key);
+    return g && (g as any).userId === userId ? g : undefined;
   }
 
-  async setGoal(type: string, anchorDate: Date, value: string): Promise<Goal> {
+  async setGoal(userId: string, type: string, anchorDate: Date, value: string): Promise<Goal> {
     const key = this.goalKey(type, anchorDate);
     const existing = this.goals.get(key);
     const base: Goal = existing ?? {
@@ -554,6 +580,7 @@ export class MemStorage implements IStorage {
       type,
       anchorDate: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()),
       value: "",
+      userId: userId as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Goal;
@@ -567,12 +594,14 @@ export class MemStorage implements IStorage {
     return `${type}:${d.toISOString().slice(0, 10)}`;
   }
 
-  async getReview(type: string, anchorDate: Date): Promise<Review | undefined> {
+  async getReview(userId: string, type: string, anchorDate: Date): Promise<Review | undefined> {
     const key = this.reviewKey(type, anchorDate);
-    return this.reviewsMap.get(key);
+    const r = this.reviewsMap.get(key);
+    return r && (r as any).userId === userId ? r : undefined;
   }
 
   async setReview(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
@@ -596,6 +625,7 @@ export class MemStorage implements IStorage {
       energyLevel: 0,
       mood: null,
       goalAchievementStatus: null as any,
+      userId: userId as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as unknown as Review);
@@ -613,14 +643,15 @@ export class MemStorage implements IStorage {
     return `${type}:${d.toISOString().slice(0, 10)}`;
   }
 
-  async getNote(type: string, anchorDate: Date): Promise<Note | undefined> {
+  async getNote(userId: string, type: string, anchorDate: Date): Promise<Note | undefined> {
     const key = this.noteKey(type, anchorDate);
     const n = this.notesMap.get(key);
-    if (!n) return undefined;
+    if (!n || (n as any).userId !== userId) return undefined;
     return { ...n, anchorDate } as Note;
   }
 
   async setNote(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
@@ -632,6 +663,7 @@ export class MemStorage implements IStorage {
       type,
       anchorDate,
       content: null,
+       userId: userId as any,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as unknown as Note);
@@ -699,42 +731,42 @@ class DbStorage implements IStorage {
   }
 
   // List operations
-  async getLists(): Promise<List[]> {
+  async getLists(userId: string): Promise<List[]> {
     return this.withPersistence("get_lists", {}, async () => {
-      return await this.db.select().from(lists).orderBy(lists.createdAt);
+      return await this.db.select().from(lists).where(eq(lists.userId as any, userId as any)).orderBy(lists.createdAt);
     });
   }
 
-  async getList(id: string): Promise<List | undefined> {
+  async getList(userId: string, id: string): Promise<List | undefined> {
     return this.withPersistence("get_list", { id }, async () => {
       const result = await this.db
         .select()
         .from(lists)
-        .where(eq(lists.id, id))
+        .where(and(eq(lists.id, id), eq(lists.userId as any, userId as any)))
         .limit(1);
       return result[0];
     });
   }
 
-  async createList(insertList: InsertList): Promise<List> {
+  async createList(userId: string, insertList: InsertList): Promise<List> {
     return this.withPersistence("create_list", { name: insertList.name }, async () => {
-      const result = await this.db.insert(lists).values(insertList).returning();
+      const result = await this.db.insert(lists).values({ ...insertList, userId } as any).returning();
       return result[0];
     });
   }
 
-  async updateList(id: string, updateList: UpdateList): Promise<List | undefined> {
+  async updateList(userId: string, id: string, updateList: UpdateList): Promise<List | undefined> {
     return this.withPersistence("update_list", { id }, async () => {
       const result = await this.db
         .update(lists)
         .set({ ...updateList, updatedAt: new Date() })
-        .where(eq(lists.id, id))
+        .where(and(eq(lists.id, id), eq(lists.userId as any, userId as any)))
         .returning();
       return result[0];
     });
   }
 
-  async deleteList(id: string): Promise<boolean> {
+  async deleteList(userId: string, id: string): Promise<boolean> {
     return this.withPersistence("delete_list", { id }, async () => {
       const db = this.db;
       return await db.transaction(async (tx) => {
@@ -742,12 +774,12 @@ class DbStorage implements IStorage {
         await tx
           .update(tasks)
           .set({ listId: null })
-          .where(eq(tasks.listId, id));
+          .where(and(eq(tasks.listId, id), eq(tasks.userId as any, userId as any)));
         
         // Delete the list
         const result = await tx
           .delete(lists)
-          .where(eq(lists.id, id))
+          .where(and(eq(lists.id, id), eq(lists.userId as any, userId as any)))
           .returning({ id: lists.id });
         
         return result.length > 0;
@@ -755,17 +787,17 @@ class DbStorage implements IStorage {
     });
   }
 
-  async getTasksByList(listId: string): Promise<Task[]> {
+  async getTasksByList(userId: string, listId: string): Promise<Task[]> {
     return this.withPersistence("get_tasks_by_list", { listId }, async () => {
       return await this.db
         .select()
         .from(tasks)
-        .where(eq(tasks.listId, listId))
+        .where(and(eq(tasks.listId, listId), eq(tasks.userId as any, userId as any)))
         .orderBy(tasks.startTime);
     });
   }
 
-  async getTasks(startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
+  async getTasks(userId: string, startDate?: Date, endDate?: Date, includeUnscheduled?: boolean): Promise<Task[]> {
     return this.withPersistence("get_tasks", {
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
@@ -773,11 +805,11 @@ class DbStorage implements IStorage {
     }, async () => {
       if (startDate && endDate) {
         const baseWhere = or(
-          and(gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)),
-          and(gte(tasks.scheduledDate as any, startDate as any), lte(tasks.scheduledDate as any, endDate as any))
+          and(eq(tasks.userId as any, userId as any), gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)),
+          and(eq(tasks.userId as any, userId as any), gte(tasks.scheduledDate as any, startDate as any), lte(tasks.scheduledDate as any, endDate as any))
         );
         const whereClause = includeUnscheduled
-          ? or(baseWhere, isNull(tasks.scheduledDate as any))
+          ? or(baseWhere, and(eq(tasks.userId as any, userId as any), isNull(tasks.scheduledDate as any)))
           : baseWhere;
         return await this.db
           .select()
@@ -786,83 +818,83 @@ class DbStorage implements IStorage {
           .orderBy(tasks.startTime);
       }
       // No date filter
-      return await this.db.select().from(tasks).orderBy(tasks.startTime);
+      return await this.db.select().from(tasks).where(eq(tasks.userId as any, userId as any)).orderBy(tasks.startTime);
     });
   }
 
-  async getTask(id: string): Promise<Task | undefined> {
+  async getTask(userId: string, id: string): Promise<Task | undefined> {
     return this.withPersistence("get_task", { id }, async () => {
       const result = await this.db
         .select()
         .from(tasks)
-        .where(eq(tasks.id, id))
+        .where(and(eq(tasks.id, id), eq(tasks.userId as any, userId as any)))
         .limit(1);
       return result[0];
     });
   }
 
-  async createTask(insertTask: InsertTask): Promise<Task> {
+  async createTask(userId: string, insertTask: InsertTask): Promise<Task> {
     return this.withPersistence("create_task", { title: insertTask.title }, async () => {
-      const result = await this.db.insert(tasks).values(insertTask).returning();
+      const result = await this.db.insert(tasks).values({ ...insertTask, userId } as any).returning();
       return result[0];
     });
   }
 
-  async updateTask(id: string, updateTask: UpdateTask): Promise<Task | undefined> {
+  async updateTask(userId: string, id: string, updateTask: UpdateTask): Promise<Task | undefined> {
     return this.withPersistence("update_task", { id }, async () => {
       const result = await this.db
         .update(tasks)
         .set(updateTask)
-        .where(eq(tasks.id, id))
+        .where(and(eq(tasks.id, id), eq(tasks.userId as any, userId as any)))
         .returning();
       return result[0];
     });
   }
 
-  async deleteTask(id: string): Promise<boolean> {
+  async deleteTask(userId: string, id: string): Promise<boolean> {
     return this.withPersistence("delete_task", { id }, async () => {
       const result = await this.db
         .delete(tasks)
-        .where(eq(tasks.id, id))
+        .where(and(eq(tasks.id, id), eq(tasks.userId as any, userId as any)))
         .returning({ id: tasks.id });
       return result.length > 0;
     });
   }
 
-  async getActiveTimerSession(): Promise<TimerSession | undefined> {
+  async getActiveTimerSession(userId: string): Promise<TimerSession | undefined> {
     return this.withPersistence("get_active_timer_session", {}, async () => {
       const result = await this.db
         .select()
         .from(timerSessions)
-        .where(eq(timerSessions.isActive, true))
+        .where(and(eq(timerSessions.isActive, true), eq(timerSessions.userId as any, userId as any)))
         .orderBy(desc(timerSessions.startTime))
         .limit(1);
       return result[0];
     });
   }
 
-  async getTimerSession(id: string): Promise<TimerSession | undefined> {
+  async getTimerSession(userId: string, id: string): Promise<TimerSession | undefined> {
     return this.withPersistence("get_timer_session", { id }, async () => {
       const result = await this.db
         .select()
         .from(timerSessions)
-        .where(eq(timerSessions.id, id))
+        .where(and(eq(timerSessions.id, id), eq(timerSessions.userId as any, userId as any)))
         .limit(1);
       return result[0];
     });
   }
 
-  async getTimerSessionsByTask(taskId: string): Promise<TimerSession[]> {
+  async getTimerSessionsByTask(userId: string, taskId: string): Promise<TimerSession[]> {
     return this.withPersistence("get_timer_sessions_by_task", { taskId }, async () => {
       return await this.db
         .select()
         .from(timerSessions)
-        .where(eq(timerSessions.taskId, taskId))
+        .where(and(eq(timerSessions.taskId, taskId), eq(timerSessions.userId as any, userId as any)))
         .orderBy(desc(timerSessions.startTime));
     });
   }
 
-  async createTimerSession(insertSession: InsertTimerSession): Promise<TimerSession> {
+  async createTimerSession(userId: string, insertSession: InsertTimerSession): Promise<TimerSession> {
     return this.withPersistence("create_timer_session", { taskId: insertSession.taskId }, async () => {
       const now = new Date();
       const withDefaults = {
@@ -870,6 +902,7 @@ class DbStorage implements IStorage {
         endTime: insertSession.endTime ?? null,
         durationSeconds: insertSession.durationSeconds ?? 0,
         isActive: insertSession.isActive ?? false,
+        userId: userId as any,
         createdAt: now,
         updatedAt: now,
       };
@@ -881,36 +914,36 @@ class DbStorage implements IStorage {
     });
   }
 
-  async updateTimerSession(id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
+  async updateTimerSession(userId: string, id: string, updateSession: UpdateTimerSession): Promise<TimerSession | undefined> {
     return this.withPersistence("update_timer_session", { id }, async () => {
       const now = new Date();
       const result = await this.db
         .update(timerSessions)
         .set({ ...updateSession, updatedAt: now })
-        .where(eq(timerSessions.id, id))
+        .where(and(eq(timerSessions.id, id), eq(timerSessions.userId as any, userId as any)))
         .returning();
       return result[0];
     });
   }
 
-  async deleteTimerSession(id: string): Promise<boolean> {
+  async deleteTimerSession(userId: string, id: string): Promise<boolean> {
     return this.withPersistence("delete_timer_session", { id }, async () => {
       const result = await this.db
         .delete(timerSessions)
-        .where(eq(timerSessions.id, id))
+        .where(and(eq(timerSessions.id, id), eq(timerSessions.userId as any, userId as any)))
         .returning({ id: timerSessions.id });
       return result.length > 0;
     });
   }
 
-  async stopActiveTimerSessions(): Promise<void> {
+  async stopActiveTimerSessions(userId: string): Promise<void> {
     return this.withPersistence("stop_active_timer_sessions", {}, async () => {
       const db = this.db;
       await db.transaction(async (tx) => {
         const active = await tx
           .select()
           .from(timerSessions)
-          .where(eq(timerSessions.isActive, true));
+          .where(and(eq(timerSessions.isActive, true), eq(timerSessions.userId as any, userId as any)));
         if (active.length === 0) return;
         const now = new Date();
         for (const session of active) {
@@ -920,75 +953,75 @@ class DbStorage implements IStorage {
           await tx
             .update(timerSessions)
             .set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now })
-            .where(eq(timerSessions.id, session.id));
+            .where(and(eq(timerSessions.id, session.id), eq(timerSessions.userId as any, userId as any)));
           // Increment the task's logged time
           await tx
             .update(tasks)
             .set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${elapsed}` } as any)
-            .where(eq(tasks.id, session.taskId));
+            .where(and(eq(tasks.id, session.taskId), eq(tasks.userId as any, userId as any)));
         }
       });
     });
   }
 
-  async incrementTaskLoggedTime(taskId: string, deltaSeconds: number): Promise<void> {
+  async incrementTaskLoggedTime(userId: string, taskId: string, deltaSeconds: number): Promise<void> {
     return this.withPersistence("increment_task_logged_time", { taskId, deltaSeconds }, async () => {
       const add = Math.max(0, Math.floor(deltaSeconds || 0));
       await this.db
         .update(tasks)
         .set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${add}` } as any)
-        .where(eq(tasks.id, taskId));
+        .where(and(eq(tasks.id, taskId), eq(tasks.userId as any, userId as any)));
     });
   }
 
-  async getTaskEstimate(taskId: string): Promise<TaskEstimate | undefined> {
+  async getTaskEstimate(userId: string, taskId: string): Promise<TaskEstimate | undefined> {
     return this.withPersistence("get_task_estimate", { taskId }, async () => {
       const result = await this.db
         .select()
         .from(taskEstimates)
-        .where(eq(taskEstimates.taskId, taskId))
+        .where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId as any, userId as any)))
         .limit(1);
       return result[0];
     });
   }
 
-  async createTaskEstimate(insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
+  async createTaskEstimate(userId: string, insertEstimate: InsertTaskEstimate): Promise<TaskEstimate> {
     return this.withPersistence("create_task_estimate", { taskId: insertEstimate.taskId }, async () => {
-      const result = await this.db.insert(taskEstimates).values(insertEstimate).returning();
+      const result = await this.db.insert(taskEstimates).values({ ...insertEstimate, userId } as any).returning();
       return result[0];
     });
   }
 
-  async updateTaskEstimate(taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
+  async updateTaskEstimate(userId: string, taskId: string, updateEstimate: UpdateTaskEstimate): Promise<TaskEstimate | undefined> {
     return this.withPersistence("update_task_estimate", { taskId }, async () => {
       const result = await this.db
         .update(taskEstimates)
         .set(updateEstimate)
-        .where(eq(taskEstimates.taskId, taskId))
+        .where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId as any, userId as any)))
         .returning();
       return result[0];
     });
   }
 
-  async deleteTaskEstimate(taskId: string): Promise<boolean> {
+  async deleteTaskEstimate(userId: string, taskId: string): Promise<boolean> {
     return this.withPersistence("delete_task_estimate", { taskId }, async () => {
       const result = await this.db
         .delete(taskEstimates)
-        .where(eq(taskEstimates.taskId, taskId))
+        .where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId as any, userId as any)))
         .returning({ id: taskEstimates.id });
       return result.length > 0;
     });
   }
 
-  async getDailySummary(date: Date): Promise<DailyTimeSummary[]> {
+  async getDailySummary(userId: string, date: Date): Promise<DailyTimeSummary[]> {
     return this.withPersistence("get_daily_summary", { date: date.toISOString() }, async () => {
       const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-      return await this.getDailySummaryByDateRange(startOfDay, endOfDay);
+      return await this.getDailySummaryByDateRange(userId, startOfDay, endOfDay);
     });
   }
 
-  async getDailySummaryByDateRange(startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
+  async getDailySummaryByDateRange(userId: string, startDate: Date, endDate: Date): Promise<DailyTimeSummary[]> {
     return this.withPersistence(
       "get_daily_summary_by_range",
       { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
@@ -999,6 +1032,7 @@ class DbStorage implements IStorage {
           .where(
             and(
               isNotNull(timerSessions.endTime),
+              eq(timerSessions.userId as any, userId as any),
               gte(timerSessions.startTime, startDate),
               lt(timerSessions.startTime, endDate)
             )
@@ -1028,7 +1062,7 @@ class DbStorage implements IStorage {
           const taskList = await this.db
             .select()
             .from(tasks)
-            .where(inArray(tasks.id, Array.from(taskIds)));
+            .where(and(inArray(tasks.id, Array.from(taskIds)), eq(tasks.userId as any, userId as any)));
           const idToTask = new Map(taskList.map((t) => [t.id, t] as const));
           Array.from(summaryMap.values()).forEach((item) => {
             item.task = idToTask.get(item.taskId);
@@ -1040,55 +1074,56 @@ class DbStorage implements IStorage {
     );
   }
 
-  async getGoal(type: string, anchorDate: Date): Promise<Goal | undefined> {
+  async getGoal(userId: string, type: string, anchorDate: Date): Promise<Goal | undefined> {
     return this.withPersistence("get_goal", { type, anchorDate: anchorDate.toISOString() }, async () => {
       const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
       const result = await this.db
         .select()
         .from(goals)
-        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any), eq(goals.userId as any, userId as any)))
         .limit(1);
       return result[0];
     });
   }
 
-  async setGoal(type: string, anchorDate: Date, value: string): Promise<Goal> {
+  async setGoal(userId: string, type: string, anchorDate: Date, value: string): Promise<Goal> {
     return this.withPersistence("set_goal", { type, anchorDate: anchorDate.toISOString() }, async () => {
       const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
       const existing = await this.db
         .select()
         .from(goals)
-        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+        .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any), eq(goals.userId as any, userId as any)))
         .limit(1);
       if (existing[0]) {
         const updated = await this.db
           .update(goals)
           .set({ value, updatedAt: new Date() } as any)
-          .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any)))
+          .where(and(eq(goals.type as any, type), eq(goals.anchorDate as any, dateOnly as any), eq(goals.userId as any, userId as any)))
           .returning();
         return updated[0];
       }
       const inserted = await this.db
         .insert(goals)
-        .values({ type, anchorDate: dateOnly, value } as any)
+        .values({ type, anchorDate: dateOnly, value, userId } as any)
         .returning();
       return inserted[0];
     });
   }
 
-  async getReview(type: string, anchorDate: Date): Promise<Review | undefined> {
+  async getReview(userId: string, type: string, anchorDate: Date): Promise<Review | undefined> {
     return this.withPersistence("get_review", { type, anchorDate: anchorDate.toISOString() }, async () => {
       const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
       const result = await this.db
         .select()
         .from(reviews)
-        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any), eq(reviews.userId as any, userId as any)))
         .limit(1);
       return result[0] as unknown as Review | undefined;
     });
   }
 
   async setReview(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
@@ -1098,36 +1133,37 @@ class DbStorage implements IStorage {
       const existing = await this.db
         .select()
         .from(reviews)
-        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any), eq(reviews.userId as any, userId as any)))
         .limit(1);
       if (existing[0]) {
         const updated = await this.db
           .update(reviews)
           .set({ ...values, updatedAt: new Date() } as any)
-          .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+          .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any), eq(reviews.userId as any, userId as any)))
           .returning();
         return updated[0] as unknown as Review;
       }
       const inserted = await this.db
         .insert(reviews)
-        .values({ type, anchorDate: dateOnly, ...values } as any)
+        .values({ type, anchorDate: dateOnly, ...values, userId } as any)
         .returning();
       return inserted[0] as unknown as Review;
     });
   }
 
-  async getNote(type: string, anchorDate: Date): Promise<Note | undefined> {
+  async getNote(userId: string, type: string, anchorDate: Date): Promise<Note | undefined> {
     return this.withPersistence("get_note", { type, anchorDate: anchorDate.toISOString() }, async () => {
       const result = await this.db
         .select()
         .from(notes)
-        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any), eq(notes.userId as any, userId as any)))
         .limit(1);
       return result[0] as unknown as Note | undefined;
     });
   }
 
   async setNote(
+    userId: string,
     type: string,
     anchorDate: Date,
     values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
@@ -1136,19 +1172,19 @@ class DbStorage implements IStorage {
       const existing = await this.db
         .select()
         .from(notes)
-        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any), eq(notes.userId as any, userId as any)))
         .limit(1);
       if (existing[0]) {
         const updated = await this.db
           .update(notes)
           .set({ ...values, updatedAt: new Date() } as any)
-          .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+          .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any), eq(notes.userId as any, userId as any)))
           .returning();
         return updated[0] as unknown as Note;
       }
       const inserted = await this.db
         .insert(notes)
-        .values({ type, anchorDate, ...values } as any)
+        .values({ type, anchorDate, ...values, userId } as any)
         .returning();
       return inserted[0] as unknown as Note;
     });

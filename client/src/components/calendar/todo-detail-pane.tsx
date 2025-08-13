@@ -4,7 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { NotesEditor } from "@/components/calendar/notes-editor";
+// import { NotesEditor } from "@/components/calendar/notes-editor";
+// import { EnhancedNotesEditor } from "@/components/calendar/enhanced-notes-editor";
+
+import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNotesEditor } from "@/components/calendar/block-notes-editor";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimation } from "@/components/timer/task-estimation";
 import { useTimerStore } from "@/hooks/use-timer-store";
@@ -29,6 +36,15 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { selectedTodoId, closeDetailPane } = useSelectedTodo();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const editor = useCreateBlockNote({
+    theme: "light",
+    sideMenu: false,
+    tableHandles: false,
+    filePanel: false,
+    comments: false,
+    emojiPicker: false,
+  });
+
   
   // Timer integration (sessionless)
   const timer = useTimerStore();
@@ -347,12 +363,15 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               </div>
               <h4 className="text-xs font-medium text-foreground">Notes</h4>
             </div>
-            <NotesEditor
+            <BlockNotesEditor
               taskId={selectedTask.id}
               initialNotes={selectedTask.notes || ""}
               placeholder="Capture thoughts, plans, or links..."
               className="min-h-[180px] bg-transparent"
             />
+          </div>
+          <div>
+          <BlockNoteView editor={editor} />;
           </div>
 
           {/* Time Tracking */}

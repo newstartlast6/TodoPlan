@@ -38,22 +38,22 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
   - Locate `JWT_SECRET` and JWKS URL (for server token verification)
 
 ### 2) Environment and configuration
-- **Server (.env)**: `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (or JWKS), `SUPABASE_SERVICE_ROLE_KEY`, `PORT`, `DATABASE_URL`
+- **Server (.env)**: `AUTH_ENABLED`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET` (or JWKS), `SUPABASE_SERVICE_ROLE_KEY`, `PORT`, `DATABASE_URL`
 - **Client (.env)**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - **Electron**: if using deep links, register custom scheme and redirect to app route handling `auth-callback`
 - **Do not commit secrets**; update README with env setup steps
 
-### 3) Database and Drizzle schema changes (no code here, describe changes)
+### 3) Database and Drizzle schema changes
 - **Replace `users` with `profiles` table** (app-managed):
   - Columns: `user_id uuid primary key references auth.users(id)`, `display_name text`, `avatar_url text`, `created_at timestamp default now()`, `updated_at timestamp default now()`
   - Purpose: store app-specific profile fields; identity lives in `auth.users`
   - Migration: copy/merge from legacy `users` if needed, then deprecate old `users` table
-- **Add `user_id uuid not null` referencing `auth.users(id)` to per-user tables**:
+- **Add `user_id not null` to per-user tables**:
   - `lists`, `tasks`, `goals`, `reviews`, `notes`, `timer_sessions`, `task_estimates`
-  - Backfill strategy: for existing rows, set `user_id` to a chosen dev user (create test user in Supabase), or create a temporary admin user to own existing data
+  - Implemented in migration `0016_add_user_scoping.sql` with indexes and common composites
+  - Backfill strategy: defaults to `DEV_USER_ID` placeholder; replace with a real Supabase user in staging/prod
 - **Indexes and constraints**:
-  - Add index on `user_id` for each table
-  - Add composite indexes for common queries, e.g. `tasks(user_id, start_time)`, `lists(user_id, created_at)`, `reviews(user_id, anchor_date)`, `notes(user_id, anchor_date)`
+  - Index on `user_id` for each table; composites on hot paths done in `0016_add_user_scoping.sql`
   - Keep current PKs as-is; `user_id` scopes all data
 - **Foreign key considerations**:
   - If a child table references a parent (e.g., `tasks.list_id`), ensure both belong to the same `user_id`; enforce in application layer and tests
@@ -76,10 +76,9 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
   - Require auth for all `/api` routes that handle user data
   - Define a `/api/me` endpoint that returns basic profile/session info
 - **Storage layer changes**:
-  - Update storage methods to accept `userId`
-  - On insert: set `user_id = userId`
-  - On read/update/delete: filter by `user_id = userId` and by resource ID
-  - Validate cross-resource ownership (e.g., `task.list_id` belongs to same `user_id`)
+  - Updated: `server/storage.ts` now scopes all methods by `userId`
+  - Inserts set `user_id = userId`; reads/updates/deletes filter by `user_id`
+  - Cross-resource ownership validated by scoping queries
 - **Error handling**:
   - Standardize 401/403 responses and error codes
   - Log token verification failures with minimal PII
@@ -94,8 +93,7 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
   - Email/Password: sign up (with optional email confirmation), sign in, error states (invalid creds, rate limiting)
   - Password reset: request reset email; handle redirect route to set a new password using the provided access token
 - **API calls**:
-  - Inject `Authorization: Bearer <access_token>` into all `fetch`/XHR requests to the server
-  - Implement a fetch wrapper to re-try once after token refresh, then logout on hard failure
+  - Implemented token injection and 401 retry in `client/src/lib/queryClient.ts`
 - **Routing/UX**:
   - Add a `/login` page; gate app routes (`/lists`, `/calendar`, etc.) behind auth
   - Show loading and error states; surface email verification pending if required
@@ -103,9 +101,8 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 
 ### 7) Data migration
 - Write migrations to:
-  - Create `profiles` table
-  - Add `user_id` to all per-user tables (not null), plus indexes
-  - Backfill existing rows to a known dev user
+  - Add `user_id` to all per-user tables (not null), plus indexes (done in `0016_add_user_scoping.sql`)
+  - Backfill existing rows to a known dev user via column defaults, then remove defaults later
   - Drop legacy `users` table after confirming no references (or keep temporarily and mark deprecated)
 - Update seed scripts to create data under a test `user_id`
 - Validate migrations on a staging database before production
@@ -133,21 +130,23 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 - Alerting for abnormal error rates
 
 ### 11) Rollout plan
-- Behind a feature flag, initially enabling auth on a staging environment
+- Behind a feature flag (`AUTH_ENABLED`), initially enabling auth on a staging environment
 - Migrate data with backfill user; verify per-user isolation
 - Roll out to production; provide a temporary migration banner for existing users
 
 ## Deliverables checklist (what to build)
-- Supabase project configured with Google + Email/Password + Reset Password
-- Env files for server and client with Supabase config
-- Database migrations:
-  - `profiles` table
-  - `user_id` added to per-user tables; indexes created
-  - Optional RLS enabled and policies written
-- Express middleware verifying Supabase JWT and attaching `userId`
-- All `/api` routes protected and scoped by `userId`
-- Frontend auth provider + login page + password reset page; token injection on API calls
-- Tests: unit, integration, and basic E2E
+- [ ] Supabase project configured with Google + Email/Password + Reset Password
+- [ ] Env files for server and client with Supabase config
+- [ ] Database migrations: `profiles` table
+- [x] Database migrations: `user_id` added to per-user tables; indexes created
+- [ ] Database migrations: Optional RLS enabled and policies written
+- [x] Express middleware verifying Supabase JWT and attaching `userId`
+- [x] All `/api` routes protected and scoped by `userId`
+- [x] Frontend auth provider
+- [x] Frontend login page (Google + Email/Password)
+- [ ] Frontend password reset page
+- [x] Token injection on API calls (with one retry on 401)
+- [ ] Tests: unit, integration, and basic E2E
 
 ## Notes on type/column choices
 - Keep existing table PKs as-is; add `user_id uuid` referencing `auth.users(id)`

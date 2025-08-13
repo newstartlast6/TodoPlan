@@ -32,6 +32,7 @@ export function useLists() {
             name: list.name,
             emoji: list.emoji,
             color: null as string | null,
+            userId: list.userId,
             createdAt: (list.createdAt as any) ?? new Date(),
             updatedAt: (list.updatedAt as any) ?? new Date(),
             taskCount: tasks.length,

@@ -12,6 +12,7 @@ import {
   updateNoteSchema
 } from "@shared/schema";
 import { z } from "zod";
+import { requireAuth } from "./auth";
 // Legacy session error helpers removed in sessionless rewrite
 
 // Legacy timer error helpers removed
@@ -21,12 +22,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.head('/api/health', (_req, res) => res.status(200).end());
   app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 
+  // Session info endpoint
+  app.get('/api/me', requireAuth(), async (req, res) => {
+    const userId = (req as any).userId as string | undefined;
+    res.json({ userId });
+  });
+
+  // Protect all subsequent /api routes (excluding already-defined public ones like /api/health, /api/me)
+  app.use('/api', requireAuth());
+
   // Lists endpoints
   
   // Get all lists with task counts
   app.get("/api/lists", async (req, res) => {
     try {
-      const lists = await storage.getLists();
+      const lists = await storage.getLists(req.userId!);
       res.json(lists);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch lists" });
@@ -36,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single list
   app.get("/api/lists/:id", async (req, res) => {
     try {
-      const list = await storage.getList(req.params.id);
+      const list = await storage.getList(req.userId!, req.params.id);
       if (!list) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -50,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/lists", async (req, res) => {
     try {
       const validatedData = insertListSchema.parse(req.body);
-      const list = await storage.createList(validatedData);
+      const list = await storage.createList(req.userId!, validatedData);
       res.status(201).json(list);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -64,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/lists/:id", async (req, res) => {
     try {
       const validatedData = updateListSchema.parse(req.body);
-      const list = await storage.updateList(req.params.id, validatedData);
+      const list = await storage.updateList(req.userId!, req.params.id, validatedData);
       if (!list) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -80,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete list
   app.delete("/api/lists/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteList(req.params.id);
+      const deleted = await storage.deleteList(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -93,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get tasks for specific list
   app.get("/api/lists/:id/tasks", async (req, res) => {
     try {
-      const tasks = await storage.getTasksByList(req.params.id);
+      const tasks = await storage.getTasksByList(req.userId!, req.params.id);
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tasks for list" });
@@ -110,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const type = goalTypeEnum.parse(typeRaw);
       const anchorDate = new Date(dateRaw);
-      const goal = await storage.getGoal(type, anchorDate);
+      const goal = await storage.getGoal(req.userId!, type, anchorDate);
       res.json(goal ?? null);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -131,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (typeof value !== 'string') {
         return res.status(400).json({ message: "value must be a string" });
       }
-      const updated = await storage.setGoal(type, anchorDate, value);
+      const updated = await storage.setGoal(req.userId!, type, anchorDate, value);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -151,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const type = reviewTypeEnum.parse(typeRaw);
       const anchorDate = new Date(dateRaw);
-      const review = await storage.getReview(type, anchorDate);
+      const review = await storage.getReview(req.userId!, type, anchorDate);
       res.json(review ?? null);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -170,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const anchorDate = new Date(dateRaw);
       const validated = updateReviewSchema.parse(values);
-      const updated = await storage.setReview(type, anchorDate, validated);
+      const updated = await storage.setReview(req.userId!, type, anchorDate, validated);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -190,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const type = noteTypeEnum.parse(typeRaw);
       const anchorDate = new Date(dateRaw);
-      const note = await storage.getNote(type, anchorDate);
+      const note = await storage.getNote(req.userId!, type, anchorDate);
       res.json(note ?? null);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -209,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const anchorDate = new Date(dateRaw);
       const validated = updateNoteSchema.parse(values);
-      const updated = await storage.setNote(type, anchorDate, validated);
+      const updated = await storage.setNote(req.userId!, type, anchorDate, validated);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -233,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         end = new Date(endDate as string);
       }
       
-      const tasks = await storage.getTasks(start, end, includeUnscheduled === 'true');
+      const tasks = await storage.getTasks(req.userId!, start, end, includeUnscheduled === 'true');
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tasks" });
@@ -243,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single task
   app.get("/api/tasks/:id", async (req, res) => {
     try {
-      const task = await storage.getTask(req.params.id);
+      const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -264,12 +274,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const seconds = Math.max(0, Math.floor(timeLoggedSeconds));
-      const existing = await storage.getTask(taskId);
+      const existing = await storage.getTask(req.userId!, taskId);
       if (!existing) {
         return res.status(404).json({ message: "Task not found" });
       }
 
-      const updated = await storage.updateTask(taskId, { timeLoggedSeconds: seconds } as any);
+      const updated = await storage.updateTask(req.userId!, taskId, { timeLoggedSeconds: seconds } as any);
       if (!updated) {
         return res.status(500).json({ message: "Failed to update task time" });
       }
@@ -283,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tasks", async (req, res) => {
     try {
       const validatedData = insertTaskSchema.parse(req.body);
-      const task = await storage.createTask(validatedData);
+      const task = await storage.createTask(req.userId!, validatedData);
       res.status(201).json(task);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -297,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/tasks/:id", async (req, res) => {
     try {
       const validatedData = updateTaskSchema.parse(req.body);
-      const task = await storage.updateTask(req.params.id, validatedData);
+      const task = await storage.updateTask(req.userId!, req.params.id, validatedData);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -313,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete task
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteTask(req.params.id);
+      const deleted = await storage.deleteTask(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -328,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get overall logged time for a task (persisted)
   app.get("/api/tasks/:id/time-logged", async (req, res) => {
     try {
-      const task = await storage.getTask(req.params.id);
+      const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
         return res.status(404).json({ message: 'Task not found' });
       }
@@ -346,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { date } = req.query;
       const targetDate = date ? new Date(date as string) : new Date();
       
-      const dailySummary = await storage.getDailySummary(targetDate);
+      const dailySummary = await storage.getDailySummary(req.userId!, targetDate);
       const totalSeconds = dailySummary.reduce((sum, item) => sum + item.totalSeconds, 0);
       const targetSeconds = 8 * 60 * 60; // 8 hours
       const remainingSeconds = Math.max(0, targetSeconds - totalSeconds);
@@ -372,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get task estimate
   app.get("/api/tasks/:id/estimate", async (req, res) => {
     try {
-      const estimate = await storage.getTaskEstimate(req.params.id);
+      const estimate = await storage.getTaskEstimate(req.userId!, req.params.id);
       res.json({ estimate });
     } catch (error) {
       res.status(500).json({ message: "Failed to get task estimate" });
@@ -391,13 +401,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const taskId = req.params.id;
       
       // Check if task exists
-      const task = await storage.getTask(taskId);
+      const task = await storage.getTask(req.userId!, taskId);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
 
       // Try to update existing estimate first
-      let estimate = await storage.updateTaskEstimate(taskId, { estimatedDurationMinutes });
+      let estimate = await storage.updateTaskEstimate(req.userId!, taskId, { estimatedDurationMinutes });
       
       // If no existing estimate, create new one
       if (!estimate) {
@@ -405,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           taskId,
           estimatedDurationMinutes,
         });
-        estimate = await storage.createTaskEstimate(estimateData);
+        estimate = await storage.createTaskEstimate(req.userId!, estimateData);
       }
 
       res.json({ estimate });
@@ -420,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete task estimate
   app.delete("/api/tasks/:id/estimate", async (req, res) => {
     try {
-      const deleted = await storage.deleteTaskEstimate(req.params.id);
+      const deleted = await storage.deleteTaskEstimate(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Task estimate not found" });
       }
