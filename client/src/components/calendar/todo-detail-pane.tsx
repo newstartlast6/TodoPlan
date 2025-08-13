@@ -1,4 +1,4 @@
-import { X, Calendar, Timer, StickyNote, Target, Clock, Flag, Folder } from "lucide-react";
+import { X, Calendar, Timer, StickyNote, Target, Clock, Flag, Folder, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -367,6 +367,32 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
+                    variant="default"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        if (isActiveTask && isTimerRunning) {
+                          await timer.pause();
+                        } else {
+                          await timer.start(selectedTask.id);
+                        }
+                      } catch {}
+                    }}
+                    className="h-8"
+                  >
+                    {isActiveTask && isTimerRunning ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-1.5" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-1.5" />
+                        Start
+                      </>
+                    )}
+                  </Button>               
+                  <Button
                     variant="outline"
                     size="sm"
                     onClick={handleResetLoggedTime}
@@ -374,12 +400,6 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                   >
                     Reset to 0:00
                   </Button>
-                  <TaskTimerButton
-                    taskId={selectedTask.id}
-                    taskTitle={selectedTask.title}
-                    variant="icon-only"
-                    className="h-7 w-7 p-0 bg-accent text-accent-foreground ring-1 ring-accent hover:bg-accent/90"
-                  />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
@@ -413,14 +433,25 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                   <div className="flex items-center justify-center">
                     {(() => {
                       const persisted = (selectedTask as any).timeLoggedSeconds || 0;
-                      const totalSeconds = persisted + liveSessionSeconds;
-                      const progress = Math.min(100, (totalSeconds / (estimateMinutes * 60)) * 100);
+                      const totalSeconds = (persisted || 0) + (liveSessionSeconds || 0);
+                      const estimatedSeconds = estimateMinutes * 60;
+                      const raw = estimatedSeconds > 0 ? (totalSeconds / estimatedSeconds) * 100 : 0;
+                      const progress = Math.min(100, raw);
+                      const isOver = totalSeconds > estimatedSeconds;
+                      const badgeClass = isOver
+                        ? 'bg-red-100 text-red-800'
+                        : progress > 75
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-100 text-green-800';
                       return (
                         <div className="flex flex-col items-center gap-2">
                           <ProgressRing progress={progress} size={56} className="text-accent-foreground" />
-                          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Target className="w-3 h-3 text-accent-foreground" />
-                            <span className="text-accent-foreground">{Math.round(progress)}% of {estimateMinutes} minutes</span>
+                          <div className="flex items-center gap-2">
+                            <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${badgeClass}`}>
+                              <Target className="w-3 h-3" />
+                              <span>{Math.round(progress)}%</span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground">of {estimateMinutes} minutes</span>
                           </div>
                         </div>
                       );

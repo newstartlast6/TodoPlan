@@ -72,12 +72,7 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
             </button>
           )}
         </div>
-        <div className="mt-2">
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
-            <CalendarDays className="h-3 w-3" />
-            Drag to calendar to schedule
-          </span>
-        </div>
+   
         <div className="mt-2">
           <input
             value={query}
@@ -85,6 +80,12 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
             placeholder="Search tasks"
             className="w-full text-sm px-3 py-2 rounded-md border bg-background"
           />
+        </div>
+        <div className="mt-2 w-full">
+          <span className="inline-flex items-center gap-1 px-4 py-1 text-[11px] rounded-full bg-green-50 text-green-700 ring-1 ring-green-200 w-full">
+            <CalendarDays className="h-3 w-3" />
+            Drag tasks to calendar to schedule
+          </span>
         </div>
       </div>
 
@@ -121,6 +122,10 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
                         showTime={false}
                         showDate={false}
                         showTimer={false}
+                        showListChip={false}
+                        showScheduledDateUnderTitle
+                        showUnscheduledBadge
+                        disableTitleEditing
                         enableMoveMenu
                         className="!cursor-grab active:!cursor-grabbing select-none"
                       />

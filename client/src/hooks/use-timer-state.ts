@@ -3,6 +3,7 @@
 import { TimerStatus } from '@shared/timer-types';
 import { TimerCalculator } from '@shared/services/timer-store';
 import { useTimerStore } from './use-timer-store';
+import { queryClient } from '@/lib/queryClient';
 
 /**
  * Hook for accessing timer state and computed values
@@ -83,8 +84,22 @@ export function useTimerActions() {
 export function useTaskTimer(taskId: string) {
   const timer = useTimerStore();
   
-  // Find sessions for this task
-  const totalTaskSeconds = 0;
+  // Find persisted logged time for this task from query cache
+  let totalTaskSeconds = 0;
+  try {
+    const cachedTask: any = queryClient.getQueryData(['task', taskId]);
+    if (cachedTask) {
+      totalTaskSeconds = Math.max(0, Math.floor((cachedTask?.timeLoggedSeconds ?? cachedTask?.time_logged_seconds ?? 0) || 0));
+    } else {
+      const cachedTasks: any[] | undefined = queryClient.getQueryData(['/api/tasks']) as any;
+      if (Array.isArray(cachedTasks)) {
+        const t: any = cachedTasks.find((x: any) => x?.id === taskId);
+        if (t) {
+          totalTaskSeconds = Math.max(0, Math.floor((t?.timeLoggedSeconds ?? t?.time_logged_seconds ?? 0) || 0));
+        }
+      }
+    }
+  } catch {}
   const sessionCount = 0;
   
   // Check if this task has the active timer

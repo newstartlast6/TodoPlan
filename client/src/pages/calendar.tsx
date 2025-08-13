@@ -358,7 +358,7 @@ export default function Calendar() {
     <div className="flex-1 flex flex-col">
       {timer.isRunning && timer.activeTaskId && (
         <div
-          className="sticky top-0 z-40 bg-orange-50/95 backdrop-blur supports-[backdrop-filter]:bg-orange-50/80 border-b border-orange-200"
+          className="sticky top-0 z-40 bg-accent/95 text-accent-foreground backdrop-blur supports-[backdrop-filter]:bg-accent/80 border-b border-accent"
           onClick={() => {
             const targetDate = activeTaskDate ?? new Date();
             setCurrentDate(targetDate);
@@ -375,15 +375,15 @@ export default function Calendar() {
 
             {/* Center content */}
             <div className="min-w-0 flex items-center justify-center text-center gap-3">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 text-orange-700 ring-1 ring-orange-300 shrink-0 flex-none">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground ring-1 ring-accent shrink-0 flex-none">
                 <Clock className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex items-center gap-2">
-                <span className="text-[13px] font-medium text-orange-900 truncate max-w-[40vw]">
+                <span className="text-[13px] font-medium truncate max-w-[40vw]">
                   {activeTaskTitle}
                 </span>
-                <span className="text-orange-400">•</span>
-                <span className="inline-flex items-center rounded-full bg-orange-100 text-orange-800 ring-1 ring-orange-200 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
+                <span className="text-accent-foreground/50">•</span>
+                <span className="inline-flex items-center rounded-full bg-accent text-accent-foreground ring-1 ring-accent px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
                   {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
                 </span>
               </div>
@@ -393,7 +393,7 @@ export default function Calendar() {
             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
-                className="hover:bg-orange-600 hover:text-white"
+                className="hover:bg-accent hover:text-accent-foreground"
                 variant="outline"
                 onClick={() => { void timer.pause(); }}
               >
@@ -403,7 +403,7 @@ export default function Calendar() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-white text-orange-700 border-orange-300 hover:bg-orange-50"
+                  className="bg-background text-accent-foreground border-accent hover:bg-accent/10"
                   onClick={async () => {
                     const id = timer.activeTaskId!;
                     try { await timer.pause(); } catch {}
@@ -450,7 +450,7 @@ export default function Calendar() {
           <div className="flex items-center space-x-3" data-testid="header-actions">
             {/* Removed Add Task from calendar header to emphasize Plan flow */}
             <Button
-              variant={isPlanPanelOpen ? 'default' : 'outline'}
+              variant={isPlanPanelOpen ? 'outline' : 'default'}
               onClick={() => {
                 setIsPlanPanelOpen((v) => !v);
               }}

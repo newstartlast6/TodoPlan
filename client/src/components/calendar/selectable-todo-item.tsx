@@ -49,6 +49,10 @@ interface SelectableTodoItemProps {
   enableMoveMenu?: boolean;
   // Show an "Unscheduled" badge when task has no scheduledDate
   showUnscheduledBadge?: boolean;
+  // When true, and when task has a scheduledDate, show a small scheduled date row under the title
+  showScheduledDateUnderTitle?: boolean;
+  // Disable inline editing for the title
+  disableTitleEditing?: boolean;
 }
 
 export function SelectableTodoItem({
@@ -69,6 +73,8 @@ export function SelectableTodoItem({
   startEditing = false,
   enableMoveMenu = false,
   showUnscheduledBadge = false,
+  showScheduledDateUnderTitle = false,
+  disableTitleEditing = false,
 }: SelectableTodoItemProps) {
   const isTaskCompleted = task.completed;
   const taskStartTime = new Date(task.startTime);
@@ -108,8 +114,10 @@ export function SelectableTodoItem({
       return;
     }
     onSelect(task.id);
-    // Start inline editing of title on item click
-    setTitleEditTrigger((n) => n + 1);
+    // Start inline editing of title on item click (unless disabled)
+    if (!disableTitleEditing) {
+      setTitleEditTrigger((n) => n + 1);
+    }
   };
 
   const handleToggleComplete = (e: React.MouseEvent) => {
@@ -239,21 +247,30 @@ export function SelectableTodoItem({
           <div>
             <div className="flex items-center space-x-2">
               <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
-                <EditableText
-                  value={task.title}
-                  onChange={(newTitle) => {
-                    if (newTitle && newTitle !== task.title) {
-                      onUpdate?.(task.id, { title: newTitle });
-                    }
-                  }}
-                  onStartEditing={() => {
-                    if (!isSelected) onSelect(task.id);
-                  }}
-                  placeholder={task.title ? undefined : ""}
-                  className={cn("font-medium text-gray-900 truncate align-middle", isTaskCompleted && "line-through")}
-                  editTrigger={titleEditTrigger}
-                  autoFocusOnEmpty
-                />
+                {disableTitleEditing ? (
+                  <div
+                    className={cn("font-medium text-gray-900 truncate align-middle", isTaskCompleted && "line-through")}
+                    data-testid={`todo-title-${task.id}`}
+                  >
+                    {task.title}
+                  </div>
+                ) : (
+                  <EditableText
+                    value={task.title}
+                    onChange={(newTitle) => {
+                      if (newTitle && newTitle !== task.title) {
+                        onUpdate?.(task.id, { title: newTitle });
+                      }
+                    }}
+                    onStartEditing={() => {
+                      if (!isSelected) onSelect(task.id);
+                    }}
+                    placeholder={task.title ? undefined : ""}
+                    className={cn("font-medium text-gray-900 truncate align-middle", isTaskCompleted && "line-through")}
+                    editTrigger={titleEditTrigger}
+                    autoFocusOnEmpty
+                  />
+                )}
                 {isRunning && (
                   <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
                     In Progress
@@ -343,16 +360,29 @@ export function SelectableTodoItem({
                     In Progress
                   </Badge>
                 )}
-                {showUnscheduledBadge && !task.scheduledDate && (
-                  <Badge
-                    variant="outline"
-                    className="ml-2 align-middle text-[10px] tracking-wide bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 text-slate-700 shadow-sm hover:from-slate-100 hover:to-white hover:shadow transition-colors duration-200 rounded-full px-2.5 py-0.5"
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-                      Unscheduled
-                    </span>
-                  </Badge>
+                {showScheduledDateUnderTitle && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {task.scheduledDate ? (
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>
+                          {isToday(new Date(task.scheduledDate as any)) ? 'Today' : format(new Date(task.scheduledDate as any), 'MMM d')}
+                        </span>
+                      </span>
+                    ) : (
+                      showUnscheduledBadge ? (
+                        <span className="inline-flex items-center gap-1 text-slate-600">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10l6 6M15 10l-6 6" />
+                          </svg>
+                          <span>Unscheduled</span>
+                        </span>
+                      ) : null
+                    )}
+                  </div>
                 )}
               </div>
               {ListChip && (
