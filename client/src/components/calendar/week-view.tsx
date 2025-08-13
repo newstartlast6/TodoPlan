@@ -26,9 +26,10 @@ interface WeekViewProps {
   onTaskDelete?: (taskId: string) => void;
   onTaskCreate: (newTask: InsertTask) => void;
   onChangeDate?: (date: Date) => void;
+  scrollToTaskId?: string | null;
 }
 
-export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTaskCreate, onChangeDate }: WeekViewProps) {
+export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTaskCreate, onChangeDate, scrollToTaskId }: WeekViewProps) {
   const DAILY_TARGET_SECONDS = 8 * 60 * 60; // 8 hours target per day
   const [goalsRefresh, setGoalsRefresh] = useState(0);
   const { toast } = useToast();
@@ -79,6 +80,24 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
       el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
     });
   }, [weekStart.getTime()]);
+
+  // If parent requests to scroll to a specific task, do it after mount/layout
+  useEffect(() => {
+    if (!scrollToTaskId) return;
+    const selector = `[data-testid="selectable-todo-${scrollToTaskId}"]`;
+    const scrollToEl = () => {
+      const el = document.querySelector(selector) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        try {
+          el.classList.add('ring-2', 'ring-orange-400');
+          setTimeout(() => { el.classList.remove('ring-2', 'ring-orange-400'); }, 1200);
+        } catch {}
+      }
+    };
+    // Defer to next frame to allow list to render, then one more tick
+    requestAnimationFrame(() => setTimeout(scrollToEl, 0));
+  }, [scrollToTaskId, weekStart.getTime()]);
   
   const completedTasks = tasks.filter(task => task.completed);
   const totalTasks = tasks.length;
@@ -189,41 +208,6 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
           const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalSeconds);
           
             return (
-              <Card 
-              ref={isCurrentDay ? todayCardRef : undefined}
-              key={dayIndex} 
-              className={cn(
-                "overflow-hidden transition-all duration-200",
-                  !isCurrentDay && isPastDay && "crossed-out",
-                isCurrentDay && "border-2 border-primary shadow-md"
-              )}
-              data-testid={`day-card-${dayIndex}`}
-            >
-              <CardHeader className={cn(
-                "border-b",
-                !isCurrentDay && isPastDay && "bg-muted/50",
-                isCurrentDay && "bg-accent"
-              )}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(dayStatus)}
-                    <h3 className="text-lg font-semibold text-foreground" data-testid={`day-title-${dayIndex}`}>
-                      {format(day, "EEEE, MMM d")}
-                    </h3>
-                    {getStatusBadge(dayStatus)}
-                  </div>
-                  <div className="text-sm text-muted-foreground" data-testid={`day-progress-${dayIndex}`}>
-                    {Math.round(dayProgressPercent)}% • {dayTasks.length} tasks
-                  </div>
-                </div>
-                 <div className="mt-1 flex items-center justify-between">
-                  <GoalInline type="daily" date={day} label="GOAL:" />
-                  <div className="text-sm text-muted-foreground font-semibold" data-testid={`day-total-time-${dayIndex}`}>
-                    Total Time: {dayTotalFormatted}
-                  </div>
-                </div>
-              </CardHeader>
-              
               <DroppableDay onDropTask={(dragItem) => {
                 const taskId = dragItem.taskId;
                 const previous = tasks.find(t => t.id === taskId);
@@ -256,83 +240,124 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                   ),
                 });
               }}>
-              <CardContent className="p-6 space-y-4">
-                {dayTasks.length > 0 && (
-                  <div className="space-y-3">
-                    {dayTasks.map((task) => (
-                      <DraggableCalendarTask key={task.id} task={task}>
-                        <SelectableTodoItem
-                          task={task}
-                          isSelected={selectedTodoId === task.id}
-                          onSelect={selectTodo}
-                          onToggleComplete={toggleTaskCompletion}
-                          onUpdate={(id, updates) => onTaskUpdate(id, updates)}
-                          onDelete={onTaskDelete}
-                          variant="list"
-                          showTime={false}
-                          showLoggedTime={true}
-                          startEditing={task.title === ""}
-                        />
-                      </DraggableCalendarTask>
-                    ))}
-                  </div>
+                {({ isOver, canDrop, isDragging }: { isOver: boolean; canDrop: boolean; isDragging: boolean }) => (
+                  <>
+                    <Card 
+                      ref={isCurrentDay ? todayCardRef : undefined}
+                      key={dayIndex} 
+                      className={cn(
+                        "overflow-hidden transition-all duration-200",
+                        !isCurrentDay && isPastDay && "crossed-out",
+                        isCurrentDay && "border-2 border-primary shadow-md",
+                        // Hide the card's own border while dragging so the outer dashed border replaces it
+                        isDragging && canDrop && "border-transparent"
+                      )}
+                      data-testid={`day-card-${dayIndex}`}
+                    >
+                      <CardHeader className={cn(
+                        "border-b",
+                        !isCurrentDay && isPastDay && "bg-muted/50",
+                        isCurrentDay && "bg-accent"
+                      )}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {getStatusIcon(dayStatus)}
+                            <h3 className="text-lg font-semibold text-foreground" data-testid={`day-title-${dayIndex}`}>
+                              {format(day, "EEEE, MMM d")}
+                            </h3>
+                            {getStatusBadge(dayStatus)}
+                          </div>
+                          <div className="text-sm text-muted-foreground" data-testid={`day-progress-${dayIndex}`}>
+                            {Math.round(dayProgressPercent)}% • {dayTasks.length} tasks
+                          </div>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <GoalInline type="daily" date={day} label="GOAL:" />
+                          <div className="text-sm text-muted-foreground font-semibold" data-testid={`day-total-time-${dayIndex}`}>
+                            Total Time: {dayTotalFormatted}
+                          </div>
+                        </div>
+                      </CardHeader>
+                    
+                      <CardContent className="p-6 space-y-4">
+                        {dayTasks.length > 0 && (
+                          <div className="space-y-3">
+                            {dayTasks.map((task) => (
+                              <DraggableCalendarTask key={task.id} task={task}>
+                                <SelectableTodoItem
+                                  task={task}
+                                  isSelected={selectedTodoId === task.id}
+                                  onSelect={selectTodo}
+                                  onToggleComplete={toggleTaskCompletion}
+                                  onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                                  onDelete={onTaskDelete}
+                                  variant="list"
+                                  showTime={false}
+                                  showLoggedTime={true}
+                                  startEditing={task.title === ""}
+                                />
+                              </DraggableCalendarTask>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="space-y-6">
+                          {/* Add New Todo Input */}
+                          <div
+                            className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-500 transition-colors duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                              input?.focus();
+                            }}
+                            data-testid={`add-input-${dayIndex}`}
+                          >
+                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
+                            <input
+                              type="text"
+                              placeholder="Add a new task..."
+                              className="flex-1 bg-transparent outline-none text-muted-foreground placeholder-gray-400"
+                              value={newTitle}
+                              onChange={(e) => setNewTitleByDay((prev) => ({ ...prev, [dayKey]: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const title = newTitle.trim();
+                                  if (!title) return;
+                                  const start = new Date(day);
+                                  start.setHours(9, 0, 0, 0);
+                                  const end = new Date(start.getTime() + 60 * 60 * 1000);
+                                  const payload: InsertTask = {
+                                    title,
+                                    startTime: start,
+                                    endTime: end,
+                                    completed: false,
+                                    priority: 'medium',
+                                    scheduledDate: day,
+                                  };
+                                  onTaskCreate(payload);
+                                  setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
+                                }
+                              }}
+                            />
+                          </div>
+
+                          {/* Daily Review row (click to open review in detail pane) */}
+                          <button
+                            className="w-full group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-3 flex items-center justify-between"
+                            onClick={() => selectReview('daily', day)}
+                            aria-label="Open Daily Review"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="inline-flex h-6 w-6 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">DR</span>
+                              <span className="text-sm font-medium text-foreground">Daily Review</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">Click to reflect</span>
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
                 )}
-
-                <div className="space-y-6">
-                  {/* Add New Todo Input */}
-                  <div
-                    className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-500 transition-colors duration-200 cursor-pointer"
-                    onClick={(e) => {
-                      const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
-                      input?.focus();
-                    }}
-                    data-testid={`add-input-${dayIndex}`}
-                  >
-                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
-                    <input
-                      type="text"
-                      placeholder="Add a new task..."
-                      className="flex-1 bg-transparent outline-none text-muted-foreground placeholder-gray-400"
-                      value={newTitle}
-                      onChange={(e) => setNewTitleByDay((prev) => ({ ...prev, [dayKey]: e.target.value }))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const title = newTitle.trim();
-                          if (!title) return;
-                          const start = new Date(day);
-                          start.setHours(9, 0, 0, 0);
-                          const end = new Date(start.getTime() + 60 * 60 * 1000);
-                          const payload: InsertTask = {
-                            title,
-                            startTime: start,
-                            endTime: end,
-                            completed: false,
-                            priority: 'medium',
-                            scheduledDate: day,
-                          };
-                          onTaskCreate(payload);
-                          setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Daily Review row (click to open review in detail pane) */}
-                  <button
-                    className="w-full group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-3 flex items-center justify-between"
-                    onClick={() => selectReview('daily', day)}
-                    aria-label="Open Daily Review"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-6 w-6 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">DR</span>
-                      <span className="text-sm font-medium text-foreground">Daily Review</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Click to reflect</span>
-                  </button>
-                </div>
-              </CardContent>
               </DroppableDay>
-            </Card>
           );
         })}
       </div>
@@ -383,8 +408,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   );
 }
 
-function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskItem) => void; children: React.ReactNode }) {
-  const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
+function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskItem) => void; children: React.ReactNode | ((state: { isOver: boolean; canDrop: boolean; isDragging: boolean }) => React.ReactNode) }) {
+  const [{ isOver, canDrop, isDragging }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean; isDragging: boolean }>({
     accept: DND_TYPES.TASK,
     drop: (item) => {
       onDropTask(item);
@@ -392,14 +417,32 @@ function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskIte
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
+      isDragging: !!monitor.getItemType(),
     }),
   });
+  const content = typeof children === 'function' ? (children as (s: { isOver: boolean; canDrop: boolean; isDragging: boolean }) => React.ReactNode)({ isOver, canDrop, isDragging }) : children;
   return (
-    <div ref={drop} className={cn(
-      'rounded-md transition-colors',
-      isOver && canDrop ? 'ring-2 ring-primary/40' : ''
-    )}>
-      {children}
+    <div
+      ref={drop}
+      className={cn(
+        'relative rounded-lg transition-all',
+        // Show dashed border on all day cards while dragging tasks
+        canDrop && isDragging && 'border-2 border-dashed border-orange-300',
+        // Emphasize hovered day
+        isOver && canDrop && 'border-orange-500 shadow-[0_0_0_4px_rgba(251,146,60,0.15)]'
+      )}
+    >
+      {content}
+      {isOver && canDrop && (
+        <>
+          <div className="pointer-events-none absolute inset-0 z-10 bg-slate-900/5 dark:bg-slate-50/5" />
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            <span className="text-orange-700 bg-orange-50/90 ring-1 ring-orange-300 shadow-sm px-3 py-1 rounded-full text-sm font-medium">
+              Drop here to schedule
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

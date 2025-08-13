@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, Pause, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
@@ -15,15 +15,15 @@ import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
 import { YearView } from "@/components/calendar/year-view";
 import { TaskForm } from "@/components/calendar/task-form";
-import { TimerDisplay } from "@/components/timer/timer-display";
 import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
 import { Task, InsertTask } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { PlanPanel } from "../components/planning/plan-panel";
-import { X } from "lucide-react";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useTimerStore } from "@/hooks/use-timer-store";
+import { TimerCalculator } from "@shared/services/timer-store";
  
 
 type CalendarView = 'day' | 'week' | 'month' | 'year';
@@ -33,10 +33,12 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(false);
+  const [scrollTargetTaskId, setScrollTargetTaskId] = useState<string | null>(null);
  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+  const timer = useTimerStore();
 
   // No goal chips in tabs; goals are displayed within each view
 
@@ -65,6 +67,18 @@ export default function Calendar() {
       return new Date(aDate).getTime() - new Date(bDate).getTime();
     });
   }, [tasks]);
+
+  // Active task info for banner
+  const activeTask = useMemo(() => {
+    if (!timer.activeTaskId) return null;
+    const fromList = tasksSorted.find(t => t.id === timer.activeTaskId);
+    if (fromList) return fromList;
+    const fromCache = queryClient.getQueryData<Task>(['task', timer.activeTaskId]);
+    return fromCache ?? null;
+  }, [timer.activeTaskId, tasksSorted, queryClient]);
+
+  const activeTaskTitle = activeTask?.title || 'Active Task';
+  const activeTaskDate = activeTask?.scheduledDate ? new Date(activeTask.scheduledDate) : (activeTask?.startTime ? new Date(activeTask.startTime as any) : null);
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -283,6 +297,7 @@ export default function Calendar() {
             onTaskDelete={handleDeleteTask}
             onTaskCreate={handleCreateTask}
             onChangeDate={(date) => setCurrentDate(date)}
+            scrollToTaskId={scrollTargetTaskId}
           />
         );
       case 'month':
@@ -316,17 +331,78 @@ export default function Calendar() {
   );
 
   // Render main content
-  // Auto-close and prevent detail pane in Month/Year views and when Plan panel is open
+  // Auto-close and prevent detail pane only in Month/Year views
   useEffect(() => {
-    if (isPlanPanelOpen || currentView === 'month' || currentView === 'year') {
+    if (currentView === 'month' || currentView === 'year') {
       if (isDetailPaneOpen) {
         closeDetailPane();
       }
     }
-  }, [isPlanPanelOpen, currentView, isDetailPaneOpen, closeDetailPane]);
+  }, [currentView, isDetailPaneOpen, closeDetailPane]);
 
   const renderMainContent = () => (
     <div className="flex-1 flex flex-col">
+      {timer.isRunning && timer.activeTaskId && (
+        <div
+          className="sticky top-0 z-40 bg-orange-50/95 backdrop-blur supports-[backdrop-filter]:bg-orange-50/80 border-b border-orange-200"
+          onClick={() => {
+            const targetDate = activeTaskDate ?? new Date();
+            setCurrentDate(targetDate);
+            setCurrentView('week');
+            setScrollTargetTaskId(timer.activeTaskId!);
+            window.setTimeout(() => setScrollTargetTaskId(null), 1500);
+          }}
+          role="button"
+          aria-label="Timer running banner"
+        >
+          <div className="px-8 py-3 grid grid-cols-3 items-center gap-3">
+            {/* Left spacer to help center content */}
+            <div className="hidden sm:block" />
+
+            {/* Center content */}
+            <div className="min-w-0 flex items-center justify-center text-center gap-3">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 text-orange-700 ring-1 ring-orange-300 shrink-0 flex-none">
+                <Clock className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex items-center gap-2">
+                <span className="text-[13px] font-medium text-orange-900 truncate max-w-[40vw]">
+                  {activeTaskTitle}
+                </span>
+                <span className="text-orange-400">•</span>
+                <span className="inline-flex items-center rounded-full bg-orange-100 text-orange-800 ring-1 ring-orange-200 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
+                  {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Right controls */}
+            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                className="hover:bg-orange-600 hover:text-white"
+                variant="outline"
+                onClick={() => { void timer.pause(); }}
+              >
+                <Pause className="h-4 w-4 mr-1" /> Pause
+              </Button>
+              {timer.activeTaskId && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white text-orange-700 border-orange-300 hover:bg-orange-50"
+                  onClick={async () => {
+                    const id = timer.activeTaskId!;
+                    try { await timer.pause(); } catch {}
+                    updateTaskMutation.mutate({ id, updates: { completed: true } });
+                  }}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" /> Mark Complete
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-surface border-b border-border px-8 py-4" data-testid="calendar-header">
         <div className="flex items-center justify-between">
@@ -370,13 +446,7 @@ export default function Calendar() {
             <Button
               variant={isPlanPanelOpen ? 'default' : 'outline'}
               onClick={() => {
-                setIsPlanPanelOpen((v) => {
-                  const next = !v;
-                  if (next) {
-                    closeDetailPane();
-                  }
-                  return next;
-                });
+                setIsPlanPanelOpen((v) => !v);
               }}
               data-testid="button-toggle-plan"
             >
@@ -437,16 +507,13 @@ export default function Calendar() {
           sidebar={renderSidebar()}
           main={renderMainContent()}
           detail={renderDetailPane()}
-          isDetailOpen={isDetailPaneOpen && currentView !== 'month' && currentView !== 'year' && !isPlanPanelOpen}
+          isDetailOpen={isDetailPaneOpen && currentView !== 'month' && currentView !== 'year'}
           onDetailClose={closeDetailPane}
           detailWidthClass={selectedReviewType ? 'w-[500px]' : undefined}
         />
       </DndProvider>
 
-      {/* Global Timer Display */}
-      <div className="fixed top-4 right-4 z-50">
-        <TimerDisplay compact />
-      </div>
+      {/* Global Timer Display removed in favor of sticky banner */}
 
       <Toaster />
 
