@@ -17,6 +17,8 @@ import { ProgressRing } from "@/components/ui/progress-ring";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as DatePicker } from "@/components/ui/calendar";
   
 interface TodoDetailPaneProps {
   onClose?: () => void;
@@ -301,7 +303,9 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             </h2>
             <div className="flex items-center space-x-2 mt-1">
               {isActiveTask && isTimerRunning ? (
-                <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
+                <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                  In Progress
+                </Badge>
               ) : null}
             </div>
           </div>
@@ -325,7 +329,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-12">
           {/* Notes */}
-          <div className="space-y-3 rounded-2xl p-5 -mx-3 sm:mx-0">
+          <div className="space-y-3 rounded-2xl p-5 -mx-4 sm:mx-0">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-md bg-yellow-100">
                 <StickyNote className="w-4 h-4 text-yellow-600" />
@@ -524,42 +528,34 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                       {selectedTask.startTime && format(new Date(selectedTask.startTime), 'MMM d, yyyy')}
                     </span>
                   </div>
-                  {/* Due */}
+                  {/* Due (calendar popover) */}
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center justify-center p-1 rounded-md bg-rose-100">
                       <Calendar className="w-3.5 h-3.5 text-rose-600" />
                     </span>
                     <span className="text-xs">Due</span>
-                    <Select
-                      value={selectedTask.scheduledDate ? new Date(selectedTask.scheduledDate as any).toISOString().split('T')[0] : 'none'}
-                      onValueChange={(val) => {
-                        if (val === 'none') {
-                          updateTaskMutation.mutate({ scheduledDate: null as any });
-                        } else {
-                          const date = new Date(val + 'T00:00:00');
-                          updateTaskMutation.mutate({ scheduledDate: date as any });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-7 w-[9rem] text-xs">
-                        <SelectValue placeholder="None">
-                          {selectedTask.scheduledDate ? format(new Date(selectedTask.scheduledDate as any), 'MMM d, yyyy') : 'None'}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="max-h-64 overflow-y-auto">
-                        {Array.from({ length: 30 }).map((_, idx) => {
-                          const d = new Date();
-                          d.setDate(d.getDate() + idx);
-                          const v = d.toISOString().split('T')[0];
-                          return (
-                            <SelectItem key={v} value={v}>
-                              {format(d, 'EEE, MMM d')}
-                            </SelectItem>
-                          );
-                        })}
-                        <SelectItem value="none">None</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                          {selectedTask.scheduledDate
+                            ? format(new Date(selectedTask.scheduledDate as any), 'MMM d, yyyy')
+                            : 'None'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3" align="start">
+                        <DatePicker
+                          mode="single"
+                          selected={selectedTask.scheduledDate ? new Date(selectedTask.scheduledDate as any) : undefined}
+                          onSelect={(d) => updateTaskMutation.mutate({ scheduledDate: d || null as any })}
+                        />
+                        <div className="flex items-center gap-2 pt-2">
+                          <Button variant="ghost" size="sm" onClick={() => updateTaskMutation.mutate({ scheduledDate: new Date() as any })}>Today</Button>
+                          <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); d.setDate(d.getDate()+1); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Tomorrow</Button>
+                          <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); const day = d.getDay(); const offset = (8 - (day || 7)); d.setDate(d.getDate()+offset); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Next Week</Button>
+                          <Button variant="ghost" size="sm" className="text-red-600" onClick={() => updateTaskMutation.mutate({ scheduledDate: null as any })}>Clear</Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>

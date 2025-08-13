@@ -17,6 +17,7 @@ import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerCalculator } from '@shared/services/timer-store';
 import { ReviewForm } from "@/components/ui/review-form";
 import { Button } from "@/components/ui/button";
+import { DraggableCalendarTask } from "@/components/planning/draggable-calendar-task";
 
 interface WeekViewProps {
   tasks: Task[];
@@ -47,6 +48,27 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   const currentElapsedSeconds = timer.displaySeconds;
   const [newTitleByDay, setNewTitleByDay] = useState<Record<string, string>>({});
   const todayCardRef = useRef<HTMLDivElement | null>(null);
+  
+  // Group tasks by scheduled day for efficient lookups and stable references
+  const tasksByDay = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of tasks) {
+      const sd = t.scheduledDate ? new Date(t.scheduledDate) : null;
+      if (!sd) continue;
+      const key = format(sd, 'yyyy-MM-dd');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(t);
+    }
+    // Stable ordering by creation time (fallback to startTime)
+    for (const [, list] of map) {
+      list.sort((a, b) => {
+        const aKey = (a.createdAt ?? a.startTime) as unknown as string;
+        const bKey = (b.createdAt ?? b.startTime) as unknown as string;
+        return new Date(aKey).getTime() - new Date(bKey).getTime();
+      });
+    }
+    return map;
+  }, [tasks]);
 
   // Auto-scroll to today's card when week view mounts or the visible week changes
   useEffect(() => {
@@ -62,18 +84,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   const totalTasks = tasks.length;
   
   const getTasksForDay = (day: Date) => {
-    // Only include tasks that are explicitly scheduled for this day.
-    // Unscheduled tasks (scheduledDate null) should not appear in week view.
-    return tasks
-      .filter(task => {
-        const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
-        return !!sd && isSameDay(sd, day);
-      })
-      .sort((a, b) => {
-        const aKey = (a.createdAt ?? a.startTime) as unknown as string;
-        const bKey = (b.createdAt ?? b.startTime) as unknown as string;
-        return new Date(aKey).getTime() - new Date(bKey).getTime();
-      });
+    const key = format(day, 'yyyy-MM-dd');
+    return tasksByDay.get(key) || [];
   };
 
   const getDayStatus = (day: Date, dayTotalSeconds: number) => {
@@ -212,8 +224,20 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                 </div>
               </CardHeader>
               
-              <DroppableDay onDropTask={(taskId) => {
+              <DroppableDay onDropTask={(dragItem) => {
+                const taskId = dragItem.taskId;
                 const previous = tasks.find(t => t.id === taskId);
+                // Skip update if dropping onto the same day
+                const targetKey = format(day, 'yyyy-MM-dd');
+                const prevKey = previous?.scheduledDate ? format(new Date(previous.scheduledDate), 'yyyy-MM-dd') : undefined;
+                if (dragItem.source === 'calendar' && dragItem.fromDate) {
+                  // Compare date-only via keys as fromDate is ISO midnight
+                  const fromKey = format(new Date(dragItem.fromDate), 'yyyy-MM-dd');
+                  if (fromKey === targetKey) return;
+                } else if (prevKey === targetKey) {
+                  return;
+                }
+
                 onTaskUpdate(taskId, { scheduledDate: day });
                 const undo = toast({
                   title: 'Task scheduled',
@@ -236,19 +260,20 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                 {dayTasks.length > 0 && (
                   <div className="space-y-3">
                     {dayTasks.map((task) => (
-                      <SelectableTodoItem
-                        key={task.id}
-                        task={task}
-                        isSelected={selectedTodoId === task.id}
-                        onSelect={selectTodo}
-                        onToggleComplete={toggleTaskCompletion}
-                        onUpdate={(id, updates) => onTaskUpdate(id, updates)}
-                        onDelete={onTaskDelete}
-                        variant="list"
-                        showTime={false}
-                        showLoggedTime={true}
-                        startEditing={task.title === ""}
-                      />
+                      <DraggableCalendarTask key={task.id} task={task}>
+                        <SelectableTodoItem
+                          task={task}
+                          isSelected={selectedTodoId === task.id}
+                          onSelect={selectTodo}
+                          onToggleComplete={toggleTaskCompletion}
+                          onUpdate={(id, updates) => onTaskUpdate(id, updates)}
+                          onDelete={onTaskDelete}
+                          variant="list"
+                          showTime={false}
+                          showLoggedTime={true}
+                          startEditing={task.title === ""}
+                        />
+                      </DraggableCalendarTask>
                     ))}
                   </div>
                 )}
@@ -358,11 +383,11 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   );
 }
 
-function DroppableDay({ onDropTask, children }: { onDropTask: (taskId: string) => void; children: React.ReactNode }) {
+function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskItem) => void; children: React.ReactNode }) {
   const [{ isOver, canDrop }, drop] = useDrop<DragTaskItem, void, { isOver: boolean; canDrop: boolean }>({
     accept: DND_TYPES.TASK,
     drop: (item) => {
-      onDropTask(item.taskId);
+      onDropTask(item);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),

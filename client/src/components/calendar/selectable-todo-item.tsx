@@ -123,7 +123,7 @@ export function SelectableTodoItem({
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
     isRunningActive ? "hover:bg-orange-50/60" : "hover:bg-blue-50/60",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400",
+    isRunningActive && (isSelected ? "bg-orange-50/70 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -133,7 +133,7 @@ export function SelectableTodoItem({
     "flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/50" : "hover:bg-blue-50/50",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400",
+    isRunningActive && (isSelected ? "bg-orange-50/70 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -142,7 +142,7 @@ export function SelectableTodoItem({
   const minimalClasses = cn(
     "flex items-center space-x-2 p-2 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/40" : "hover:bg-blue-50/40",
-    isRunningActive && "bg-orange-50/60 ring-1 ring-orange-200 border border-orange-400",
+    isRunningActive && (isSelected ? "bg-orange-50/60 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/60 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
     className
@@ -150,8 +150,14 @@ export function SelectableTodoItem({
 
   const listClasses = cn(
     "group flex items-center space-x-4 p-4 rounded-lg transition-all cursor-pointer",
-    isSelected ? "bg-orange-50 border-l-4 border-orange-500" : "hover:bg-gray-50",
-    isRunningActive && "border border-orange-400",
+    // Running state border around card (thin). If selected too, keep same orange color.
+    isRunningActive && (isSelected ? "border border-orange-500" : "border border-orange-400"),
+    // Base hover when not selected
+    !isSelected && "hover:bg-gray-50",
+    // Selected background
+    isSelected && "bg-orange-50",
+    // Selected left accent border — placed AFTER generic border so width isn't overridden
+    isSelected && "border-l-4 border-orange-500",
     isTaskCompleted && "opacity-75",
     className
   );
