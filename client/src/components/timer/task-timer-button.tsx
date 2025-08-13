@@ -66,10 +66,16 @@ export function TaskTimerButton({
       <>
         <Button
           size="sm"
-          variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
+          variant={"ghost"}
           onClick={handleTimerAction}
           disabled={disabled}
-          className={cn("h-8 w-8 p-0", className)}
+          className={cn(
+            "h-8 w-8 p-0",
+            isActiveTask && isRunning
+              ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+              : "hover:bg-muted",
+            className
+          )}
           title={isActiveTask ? (isRunning ? 'Pause timer' : 'Start timer') : 'Start timer'}
         >
           {isActiveTask ? (
@@ -98,10 +104,15 @@ export function TaskTimerButton({
         <div className={cn("flex items-center gap-2", className)}>
           <Button
             size="sm"
-            variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
+            variant={"ghost"}
             onClick={handleTimerAction}
             disabled={disabled}
-            className="h-7 px-2"
+            className={cn(
+              "h-7 px-2",
+              isActiveTask && isRunning
+                ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+                : "hover:bg-muted"
+            )}
           >
             {isActiveTask ? (
               isRunning ? (
@@ -136,8 +147,13 @@ export function TaskTimerButton({
         <Button
           onClick={handleTimerAction}
           disabled={disabled}
-          variant={isActiveTask ? (isRunning ? "default" : "default") : "default"}
-          className="w-full"
+          variant={"secondary"}
+          className={cn(
+            "w-full",
+            isActiveTask && isRunning
+              ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+              : ""
+          )}
         >
           {isActiveTask ? (
             isRunning ? (

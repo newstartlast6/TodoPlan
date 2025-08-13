@@ -410,7 +410,7 @@ export const TimerCalculator = {
   },
   calculateProgress(elapsedSeconds: number, estimatedSeconds?: number): number {
     if (!estimatedSeconds || estimatedSeconds <= 0) return 0;
-    return Math.min((elapsedSeconds / estimatedSeconds) * 100, 100);
+    return (elapsedSeconds / estimatedSeconds) * 100;
   },
   isOverEstimate(elapsedSeconds: number, estimatedSeconds?: number): boolean {
     if (!estimatedSeconds || estimatedSeconds <= 0) return false;

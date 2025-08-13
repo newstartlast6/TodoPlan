@@ -106,47 +106,30 @@ export function TaskEstimation({
   if (compact) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        {isEditing ? (
-          <DurationPicker
-            value={estimate}
-            onChange={handleEstimateChange}
-            className="w-32"
-            disabled={isLoading}
-          />
-        ) : hasEstimate ? (
-          <div className="flex items-center gap-2">
-            <div className={cn(
+        {hasEstimate && (
+          <div
+            className={cn(
               "flex items-center gap-1 px-2 py-1 rounded text-xs",
-              isOverEstimate 
-                ? "bg-red-100 text-red-800" 
+              isOverEstimate
+                ? "bg-red-100 text-red-800"
                 : progressPercentage > 75
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-green-100 text-green-800"
-            )}>
-              <Target className="w-3 h-3" />
-              <span>{Math.round(progressPercentage)}%</span>
-            </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              className="h-6 px-2 text-xs"
-            >
-              {formattedEstimate}
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-6 px-2 text-xs text-muted-foreground"
+            )}
+            aria-label={`Estimate progress ${Math.round(progressPercentage)}%`}
           >
-            <Clock className="w-3 h-3 mr-1" />
-            Add estimate
-          </Button>
+            <Target className="w-3 h-3" />
+            <span>{Math.round(progressPercentage)}%</span>
+          </div>
         )}
+        <DurationPicker
+          value={estimate}
+          onChange={handleEstimateChange}
+          className="w-36"
+          disabled={isLoading}
+          placeholder={hasEstimate ? undefined : "Add estimate"}
+          showEditIconOnHover
+        />
       </div>
     );
   }

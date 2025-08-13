@@ -123,7 +123,7 @@ export function SelectableTodoItem({
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
     isRunningActive ? "hover:bg-orange-50/60" : "hover:bg-blue-50/60",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400",
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -133,7 +133,7 @@ export function SelectableTodoItem({
     "flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/50" : "hover:bg-blue-50/50",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400",
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -142,15 +142,16 @@ export function SelectableTodoItem({
   const minimalClasses = cn(
     "flex items-center space-x-2 p-2 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/40" : "hover:bg-blue-50/40",
-    isRunningActive && "bg-orange-50/60 ring-1 ring-orange-200",
+    isRunningActive && "bg-orange-50/60 ring-1 ring-orange-200 border border-orange-400",
     !isRunningActive && isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
     className
   );
 
   const listClasses = cn(
-    "group flex items-start space-x-4 p-4 rounded-lg transition-all cursor-pointer",
+    "group flex items-center space-x-4 p-4 rounded-lg transition-all cursor-pointer",
     isSelected ? "bg-orange-50 border-l-4 border-orange-500" : "hover:bg-gray-50",
+    isRunningActive && "border border-orange-400",
     isTaskCompleted && "opacity-75",
     className
   );
@@ -198,7 +199,7 @@ export function SelectableTodoItem({
         <button
           onClick={handleToggleComplete}
           className={cn(
-            "mt-1 w-5 h-5 rounded-full flex items-center justify-center ",
+            "w-5 h-5 rounded-full flex items-center justify-center ",
             isTaskCompleted ? "" : "border-2 border-gray-300 hover:border-orange-500"
           )}
           data-completion-button
@@ -247,6 +248,11 @@ export function SelectableTodoItem({
                   editTrigger={titleEditTrigger}
                   autoFocusOnEmpty
                 />
+                {isRunning && (
+                  <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                    In Progress
+                  </Badge>
+                )}
               </div>              
             </div>
             {task.notes ? (
@@ -294,8 +300,8 @@ export function SelectableTodoItem({
               <div className="flex items-center space-x-1">
                 {hasLoggedTime && (
                   <span className="inline-flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span className="font-medium">{formattedPersistedTime}</span>
+                    <Clock className={cn("w-3 h-3", isRunning ? "text-orange-600" : undefined)} />
+                    <span className={cn("font-medium", isRunning ? "text-orange-700" : undefined)}>{formattedPersistedTime}</span>
                   </span>
                 )}
               </div>          
@@ -326,6 +332,11 @@ export function SelectableTodoItem({
                   editTrigger={titleEditTrigger}
                   autoFocusOnEmpty
                 />
+                {isRunning && (
+                  <Badge className="ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                    In Progress
+                  </Badge>
+                )}
                 {showUnscheduledBadge && !task.scheduledDate && (
                   <Badge
                     variant="outline"
@@ -363,8 +374,8 @@ export function SelectableTodoItem({
             {/* Time Logged (always visible; persisted per-task, continues while running) */}
             {showLoggedTime && variant !== 'minimal' && hasLoggedTime && (
               <div className="flex items-center gap-4 mt-1">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground font-mono">
+                <Clock className={cn("w-3 h-3", isRunning ? "text-orange-600" : "text-muted-foreground")} />
+                <span className={cn("text-xs font-mono", isRunning ? "text-orange-700" : "text-muted-foreground")}>
                   {formattedPersistedTime}
                 </span>
               </div>
@@ -381,7 +392,7 @@ export function SelectableTodoItem({
             data-timer-control
             className={cn(
               "shrink-0 transition-opacity",
-              isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              isRunningActive ? "opacity-100" : (isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100")
             )}
           >
             <TaskTimerButton

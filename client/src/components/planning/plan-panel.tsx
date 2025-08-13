@@ -113,7 +113,9 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
                         task={task}
                         isSelected={false}
                         onSelect={() => {}}
-                        onToggleComplete={() => {}}
+                        onToggleComplete={(id, completed) => {
+                          updateTaskMutation.mutate({ taskId: id, updates: { completed: !completed } });
+                        }}
                         onUpdate={(id, updates) => updateTaskMutation.mutate({ taskId: id, updates })}
                         variant="compact"
                         showTime={false}

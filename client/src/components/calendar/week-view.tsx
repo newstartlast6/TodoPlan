@@ -62,11 +62,12 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   const totalTasks = tasks.length;
   
   const getTasksForDay = (day: Date) => {
+    // Only include tasks that are explicitly scheduled for this day.
+    // Unscheduled tasks (scheduledDate null) should not appear in week view.
     return tasks
       .filter(task => {
-        const st = new Date(task.startTime);
         const sd = task.scheduledDate ? new Date(task.scheduledDate) : null;
-        return isSameDay(st, day) || (sd ? isSameDay(sd, day) : false);
+        return !!sd && isSameDay(sd, day);
       })
       .sort((a, b) => {
         const aKey = (a.createdAt ?? a.startTime) as unknown as string;
@@ -200,7 +201,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                     {getStatusBadge(dayStatus)}
                   </div>
                   <div className="text-sm text-muted-foreground" data-testid={`day-progress-${dayIndex}`}>
-                    {!isCurrentDay && isPastDay ? '100%' : Math.round(dayProgressPercent) + '%'} • {dayTasks.length} tasks
+                    {Math.round(dayProgressPercent)}% • {dayTasks.length} tasks
                   </div>
                 </div>
                  <div className="mt-1 flex items-center justify-between">

@@ -24,6 +24,7 @@ interface DurationPickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  showEditIconOnHover?: boolean;
 }
 
 const PRESET_DURATIONS = [
@@ -44,6 +45,7 @@ export function DurationPicker({
   placeholder = "Select duration",
   className,
   disabled = false,
+  showEditIconOnHover = false,
 }: DurationPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [customHours, setCustomHours] = useState('');
@@ -89,6 +91,7 @@ export function DurationPicker({
           variant="outline"
           className={cn(
             "justify-between font-normal",
+            showEditIconOnHover && "group",
             !value && "text-muted-foreground",
             className
           )}
@@ -98,7 +101,7 @@ export function DurationPicker({
             <Clock className="w-4 h-4" />
             {displayValue}
           </div>
-          <Edit3 className="w-4 h-4 opacity-50" />
+          <Edit3 className={cn("w-4 h-4", showEditIconOnHover ? "opacity-0 group-hover:opacity-50 transition-opacity" : "opacity-50")} />
         </Button>
       </PopoverTrigger>
 
