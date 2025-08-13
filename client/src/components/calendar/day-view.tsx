@@ -8,7 +8,7 @@ import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
 // import { DailySummary } from "@/components/timer/daily-summary";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { useTimerStore } from "@/hooks/use-timer-store";
-import { Task } from "@shared/schema";
+import { Task, InsertTask } from "@shared/schema";
 import { useDrop } from 'react-dnd';
 import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/use-notes";
 import { StickyNote } from "lucide-react";
 import { DraggableCalendarTask } from "@/components/planning/draggable-calendar-task";
+import { AddTaskInline } from "@/components/calendar/add-task-inline";
  
 
 interface DayViewProps {
@@ -28,11 +29,13 @@ interface DayViewProps {
   onAddTask: () => void;
   onTaskDelete?: (taskId: string) => void;
   onChangeDate?: (date: Date) => void;
+  onTaskCreate?: (newTask: InsertTask) => void;
 }
 
-export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTask, onTaskDelete, onChangeDate }: DayViewProps) {
+export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTask, onTaskDelete, onChangeDate, onTaskCreate }: DayViewProps) {
   const { selectedTodoId, selectTodo, selectReview, selectNotes } = useSelectedTodo();
   const { toast } = useToast();
+  const [newTitle, setNewTitle] = useState("");
   const dayTasks = tasks
     .filter(task => {
       const st = new Date(task.startTime);
@@ -281,6 +284,16 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
                     ))}
                   </div>
                 )}
+
+                <AddTaskInline
+                  date={currentDate}
+                  tasksCountForDay={dayTasks.length}
+                  onCreate={(payload) => {
+                    if (onTaskCreate) onTaskCreate(payload);
+                    setNewTitle('');
+                  }}
+                  testId={`add-input-day`}
+                />
 
                 {/* Daily Review row (inside card content) */}
                 <button

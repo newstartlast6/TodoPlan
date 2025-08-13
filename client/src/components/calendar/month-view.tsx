@@ -13,7 +13,7 @@ import { GoalInline } from "@/components/calendar/goal-inline";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/use-notes";
-import { NotesButton } from "@/components/ui/notes-button";
+import { StickyNote } from "lucide-react";
 
 interface MonthViewProps {
   tasks: Task[];
@@ -24,7 +24,7 @@ interface MonthViewProps {
 }
 
 export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onChangeDate }: MonthViewProps) {
-  const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { selectedTodoId, selectTodo, selectNotes } = useSelectedTodo();
   const { toast } = useToast();
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -75,7 +75,7 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onCha
               </Button>
               <h2 className="text-2xl font-bold text-foreground flex items-center gap-1" data-testid="month-title">
                 <span>{format(currentDate, "MMMM yyyy")}</span>
-                <MonthNotesInline date={currentDate} />
+                <MonthNotesInline date={currentDate} onOpenDetail={() => selectNotes('monthly', currentDate)} />
               </h2>
               <Button
                 variant="outline"
@@ -214,18 +214,8 @@ function MonthDayCell({
   selectedTodoId: string | null;
   onSelectTodo: (id: string) => void;
 }) {
-  const { note, upsert } = useNotes("daily", day);
   return (
     <div className="relative">
-      <div className="absolute top-1 right-1 z-10" onClick={(e) => e.stopPropagation()}>
-        <NotesButton
-          type="daily"
-          anchorDate={day}
-          value={note?.content ?? ""}
-          onSave={async (content) => { await upsert(content); }}
-          className="h-6 w-6"
-        />
-      </div>
       <button
         onClick={() => onDateClick(day)}
         className={cn(
@@ -288,16 +278,21 @@ function MonthDayCell({
   );
 }
 
-function MonthNotesInline({ date }: { date: Date }) {
-  const { note, upsert } = useNotes("monthly", date);
+function MonthNotesInline({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => void }) {
+  const { note } = useNotes("monthly", date);
+  const hasNotes = (note?.content ?? "").trim().length > 0;
   return (
-    <NotesButton
-      type="monthly"
-      anchorDate={date}
-      value={note?.content ?? ""}
-      onSave={async (content) => { await upsert(content); }}
-      className="ml-1"
-    />
+    <button
+      type="button"
+      onClick={onOpenDetail}
+      className={cn(
+        "ml-1 inline-flex items-center justify-center h-7 w-7 rounded-full border border-transparent",
+        hasNotes ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300" : "text-orange-600 hover:bg-orange-50"
+      )}
+      aria-label="Open month notes"
+   >
+      <StickyNote className="h-3.5 w-3.5" />
+    </button>
   );
 }
 

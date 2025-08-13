@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useNotes } from "@/hooks/use-notes";
 import { StickyNote } from "lucide-react";
 import { DraggableCalendarTask } from "@/components/planning/draggable-calendar-task";
+import { AddTaskInline } from "@/components/calendar/add-task-inline";
 
 interface WeekViewProps {
   tasks: Task[];
@@ -364,43 +365,15 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
 
                         <div className="space-y-6">
                           {/* Add New Todo Input */}
-                          <div
-                            className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-500 transition-colors duration-200 cursor-pointer"
-                            onClick={(e) => {
-                              const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
-                              input?.focus();
+                          <AddTaskInline
+                            date={day}
+                            tasksCountForDay={dayTasks.length}
+                            onCreate={(payload) => {
+                              onTaskCreate(payload);
+                              setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
                             }}
-                            data-testid={`add-input-${dayIndex}`}
-                          >
-                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
-                            <input
-                              type="text"
-                              placeholder="Add a new task..."
-                              className="flex-1 bg-transparent outline-none text-muted-foreground placeholder-gray-400"
-                              value={newTitle}
-                              onChange={(e) => setNewTitleByDay((prev) => ({ ...prev, [dayKey]: e.target.value }))}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const title = newTitle.trim();
-                                  if (!title) return;
-                                  const start = new Date(day);
-                                  start.setHours(9, 0, 0, 0);
-                                  const end = new Date(start.getTime() + 60 * 60 * 1000);
-                                  const payload: InsertTask = {
-                                    title,
-                                    startTime: start,
-                                    endTime: end,
-                                    completed: false,
-                                    priority: 'medium',
-                                    scheduledDate: day,
-                                    dayOrder: dayTasks.length,
-                                  };
-                                  onTaskCreate(payload);
-                                  setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
-                                }
-                              }}
-                            />
-                          </div>
+                            testId={`add-input-${dayIndex}`}
+                          />
 
                           {/* Daily Review row (click to open review in detail pane) */}
                           <button

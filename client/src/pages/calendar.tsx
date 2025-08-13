@@ -301,6 +301,7 @@ export default function Calendar() {
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
             onAddTask={handleAddEmptyTaskInline}
+            onTaskCreate={handleCreateTask}
             onChangeDate={(date) => setCurrentDate(date)}
           />
         );
