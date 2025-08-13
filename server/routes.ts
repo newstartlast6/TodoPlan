@@ -17,6 +17,10 @@ import { z } from "zod";
 // Legacy timer error helpers removed
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check
+  app.head('/api/health', (_req, res) => res.status(200).end());
+  app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
+
   // Lists endpoints
   
   // Get all lists with task counts

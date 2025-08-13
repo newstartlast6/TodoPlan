@@ -46,6 +46,17 @@ async function startExpressServer(port: number): Promise<Server> {
   exp.use(express.json());
   exp.use(express.urlencoded({ extended: false }));
 
+  // In production, serve the built frontend from the embedded Express server
+  if (!isDev) {
+    try {
+      const staticDir = path.resolve(app.getAppPath(), 'dist', 'public');
+      exp.use(express.static(staticDir));
+      exp.get(/^(?!\/api\/).*/, (_req, res) => {
+        res.sendFile(path.join(staticDir, 'index.html'));
+      });
+    } catch {}
+  }
+
   const httpServer = await registerRoutes(exp);
 
   // Error middleware similar to server/index.ts
@@ -107,8 +118,9 @@ async function createWindow() {
     await mainWindow.loadURL(devServerUrl);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    const indexPath = path.resolve(process.cwd(), 'dist', 'public', 'index.html');
-    await mainWindow.loadURL(pathToFileURL(indexPath).toString());
+    // Load the app from the embedded Express server so relative /api requests work
+    const appUrl = `http://localhost:${API_PORT}`;
+    await mainWindow.loadURL(appUrl);
   }
 
   mainWindow.on('closed', () => {

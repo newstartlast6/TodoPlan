@@ -145,7 +145,7 @@ export function NotesEditor({
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
           className={cn(
-            "w-full p-3 text-sm resize-none border-0 bg-transparent",
+            "w-full p-3 text-base font-medium resize-none border-0 bg-transparent",
             "placeholder:text-muted-foreground focus:outline-none",
             "leading-relaxed overflow-hidden"
           )}

@@ -38,8 +38,8 @@ export function NotesDetailPane({ type, anchorDate, onClose, className }: NotesD
   }, [type, anchorDate]);
 
   return (
-    <div className={cn("h-full flex flex-col bg-white border-l border-gray-100", className)} data-testid="notes-detail-pane">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
+    <div className={cn("h-full flex flex-col bg-white border-l border-gray-100 py-3", className)} data-testid="notes-detail-pane">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white ">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-orange-700 ring-1 ring-orange-300">
             <StickyNote className="h-3.5 w-3.5" />
@@ -96,8 +96,8 @@ export function NotesDetailPane({ type, anchorDate, onClose, className }: NotesD
             key={`${type}:${anchorDate.toISOString().slice(0,10)}`}
             value={note?.content ?? ""}
             onChange={setDraft}
-            placeholder="Set goal, brain dump, ideas, plan,…"
-            className="text-[15px] h-full"
+            placeholder="Dump your thoughts, ideas, plans, etc."
+            className="text-lg md:text-[16px] font-medium h-full border-none"
           />
         </div>
       </div>

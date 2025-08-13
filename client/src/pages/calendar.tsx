@@ -379,11 +379,11 @@ export default function Calendar() {
                 <Timer className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex items-center gap-2">
-                <span className="text-[13px] font-medium text-orange-600 truncate max-w-[40vw]">
+                <span className="text-[13px] font-medium text-orange-600 tesxtfont-semibold truncate max-w-[40vw]">
                   {activeTaskTitle}
                 </span>
                 <span className="text-orange-300">•</span>
-                <span className="inline-flex items-center rounded-full  text-orange-600 ring-1 ring-orange-200 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
+                <span className="inline-flex items-center rounded-full  text-orange-600 text-sm font-semibold ring-1 ring-orange-400 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
                   {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
                 </span>
               </div>

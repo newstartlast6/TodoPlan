@@ -288,7 +288,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
 
   return (
-    <div className={cn("h-full flex flex-col bg-background", className)} data-testid="todo-detail-pane">
+    <div className={cn("h-full flex flex-col bg-background py-3", className)} data-testid="todo-detail-pane">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-accent/50 bg-accent/30">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -351,7 +351,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               taskId={selectedTask.id}
               initialNotes={selectedTask.notes || ""}
               placeholder="Capture thoughts, plans, or links..."
-              className="min-h-[140px] bg-transparent"
+              className="min-h-[180px] bg-transparent"
             />
           </div>
 
