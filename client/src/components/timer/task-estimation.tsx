@@ -118,10 +118,11 @@ export function TaskEstimation({
             )}
             aria-label={`Estimate progress ${Math.round(progressPercentage)}%`}
           >
-            <Target className="w-3 h-3" />
+            <Target className="w-3 h-3" /> 
             <span>{Math.round(progressPercentage)}%</span>
           </div>
         )}
+        <span className='text-xs mx-1'>of</span>
         <DurationPicker
           value={estimate}
           onChange={handleEstimateChange}

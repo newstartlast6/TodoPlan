@@ -6,7 +6,8 @@ import {
   type Goal, type InsertGoal, type UpdateGoal,
   type List, type InsertList, type UpdateList,
   type Review, type InsertReview, type UpdateReview,
-  tasks, users, timerSessions, taskEstimates, goals, lists, reviews 
+  type Note, type InsertNote, type UpdateNote,
+  tasks, users, timerSessions, taskEstimates, goals, lists, reviews, notes 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
@@ -65,6 +66,14 @@ export interface IStorage {
     anchorDate: Date,
     values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
   ): Promise<Review>;
+
+  // Notes
+  getNote(type: string, anchorDate: Date): Promise<Note | undefined>;
+  setNote(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
+  ): Promise<Note>;
 }
 
 export class MemStorage implements IStorage {
@@ -75,6 +84,7 @@ export class MemStorage implements IStorage {
   private taskEstimates: Map<string, TaskEstimate>;
   private goals: Map<string, Goal>;
   private reviewsMap: Map<string, Review>;
+  private notesMap: Map<string, Note>;
 
   constructor() {
     this.users = new Map();
@@ -84,6 +94,7 @@ export class MemStorage implements IStorage {
     this.taskEstimates = new Map();
     this.goals = new Map();
     this.reviewsMap = new Map();
+    this.notesMap = new Map();
     // Initialize with some sample tasks for demonstration
     this.initializeSampleData();
   }
@@ -568,6 +579,38 @@ export class MemStorage implements IStorage {
     this.reviewsMap.set(key, updated);
     return updated;
   }
+
+  private noteKey(type: string, anchorDate: Date): string {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    return `${type}:${d.toISOString().slice(0, 10)}`;
+  }
+
+  async getNote(type: string, anchorDate: Date): Promise<Note | undefined> {
+    const key = this.noteKey(type, anchorDate);
+    const n = this.notesMap.get(key);
+    if (!n) return undefined;
+    return { ...n, anchorDate } as Note;
+  }
+
+  async setNote(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
+  ): Promise<Note> {
+    const key = this.noteKey(type, anchorDate);
+    const existing = this.notesMap.get(key);
+    const base: Note = existing ?? ({
+      id: randomUUID(),
+      type,
+      anchorDate,
+      content: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as Note);
+    const updated: Note = { ...base, ...values, updatedAt: new Date() } as Note;
+    this.notesMap.set(key, updated);
+    return updated;
+  }
 }
 
 // Database-backed storage using Drizzle + Postgres (Supabase)
@@ -1042,6 +1085,44 @@ class DbStorage implements IStorage {
         .values({ type, anchorDate: dateOnly, ...values } as any)
         .returning();
       return inserted[0] as unknown as Review;
+    });
+  }
+
+  async getNote(type: string, anchorDate: Date): Promise<Note | undefined> {
+    return this.withPersistence("get_note", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const result = await this.db
+        .select()
+        .from(notes)
+        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+        .limit(1);
+      return result[0] as unknown as Note | undefined;
+    });
+  }
+
+  async setNote(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
+  ): Promise<Note> {
+    return this.withPersistence("set_note", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const existing = await this.db
+        .select()
+        .from(notes)
+        .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+        .limit(1);
+      if (existing[0]) {
+        const updated = await this.db
+          .update(notes)
+          .set({ ...values, updatedAt: new Date() } as any)
+          .where(and(eq(notes.type as any, type), eq(notes.anchorDate as any, anchorDate as any)))
+          .returning();
+        return updated[0] as unknown as Note;
+      }
+      const inserted = await this.db
+        .insert(notes)
+        .values({ type, anchorDate, ...values } as any)
+        .returning();
+      return inserted[0] as unknown as Note;
     });
   }
 }

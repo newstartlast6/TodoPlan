@@ -16,6 +16,9 @@ import { GoalInline } from "@/components/calendar/goal-inline";
 import { TimerCalculator } from "@shared/services/timer-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNotes } from "@/hooks/use-notes";
+import { StickyNote } from "lucide-react";
+ 
 
 interface DayViewProps {
   tasks: Task[];
@@ -27,7 +30,7 @@ interface DayViewProps {
 }
 
 export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTask, onTaskDelete, onChangeDate }: DayViewProps) {
-  const { selectedTodoId, selectTodo, selectReview } = useSelectedTodo();
+  const { selectedTodoId, selectTodo, selectReview, selectNotes } = useSelectedTodo();
   const { toast } = useToast();
   const dayTasks = tasks
     .filter(task => {
@@ -119,6 +122,8 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask: _onAddTas
               <h2 className="text-3xl font-bold text-foreground" data-testid="day-title">
                 {format(currentDate, "EEEE, MMMM d, yyyy")}
               </h2>
+              {/* Day notes button */}
+              <DayNotesInline date={currentDate} onOpenDetail={() => selectNotes('daily', currentDate)} />
               <Button
                 variant="outline"
                 size="icon"
@@ -256,5 +261,23 @@ function DroppableDay({ onDropTask, children }: { onDropTask: (taskId: string) =
     <div ref={drop} className={isOver && canDrop ? 'ring-2 ring-primary/40 rounded-md' : ''}>
       {children}
     </div>
+  );
+}
+
+function DayNotesInline({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => void }) {
+  const { note } = useNotes("daily", date);
+  const hasNotes = (note?.content ?? "").trim().length > 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpenDetail}
+      className={cn(
+        "ml-1 inline-flex items-center justify-center h-7 w-7 rounded-full border border-transparent",
+        hasNotes ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300" : "text-orange-600 hover:bg-orange-50"
+      )}
+      aria-label="Open day notes"
+    >
+      <StickyNote className="h-3.5 w-3.5" />
+    </button>
   );
 }

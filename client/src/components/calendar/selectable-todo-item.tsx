@@ -296,7 +296,7 @@ export function SelectableTodoItem({
                 <span
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    task.priority === 'high' ? 'bg-red-400' : task.priority === 'medium' ? 'bg-yellow-400' : 'bg-green-500'
+                    task.priority === 'high' ? 'bg-red-300 animate-pulse' : task.priority === 'medium' ? 'bg-yellow-300 animate-pulse-subtle' : 'bg-green-300 animate-pulse-extra-light'
                   )}
                 />
                 <span>

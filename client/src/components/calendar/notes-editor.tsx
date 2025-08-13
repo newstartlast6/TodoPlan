@@ -1,7 +1,41 @@
 import { useEffect, useRef, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { useNotesAutoSave } from "@/hooks/use-notes-auto-save";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface NotesPlainEditorProps {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+export function NotesPlainEditor({ value = "", onChange, placeholder, className }: NotesPlainEditorProps) {
+  const [text, setText] = useState(value ?? "");
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    setText(value ?? "");
+  }, [value]);
+
+  return (
+    <Textarea
+      ref={ref}
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange?.(e.target.value);
+      }}
+      placeholder={placeholder}
+      className={cn(
+        // Fill available height inside its container
+        "h-full min-h-0 resize-none border-0 shadow-none focus-visible:ring-0 px-0",
+        className
+      )}
+    />
+  );
+}
 
 interface NotesEditorProps {
   taskId: string;

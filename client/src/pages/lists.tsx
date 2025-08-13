@@ -10,11 +10,12 @@ import { type UpdateTask } from '@shared/schema';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Toaster } from '@/components/ui/toaster';
-import { Plus, Edit3, Trash2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, CalendarDays } from 'lucide-react';
 import { CreateListDialog } from '@/components/lists/create-list-dialog';
 import { SelectableTodoItem } from '@/components/calendar/selectable-todo-item';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MinimalisticSidebar } from '@/components/calendar/minimalistic-sidebar';
+import { useLocation } from 'wouter';
 
 interface ListsState {
   selectedListId: string | null;
@@ -24,6 +25,7 @@ export function Lists() {
   const [state, setState] = useState<ListsState>({
     selectedListId: null,
   });
+  const [, setLocation] = useLocation();
   const [isCreateListOpen, setIsCreateListOpen] = useState<boolean>(false);
   const [listSearch, setListSearch] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -275,16 +277,13 @@ export function Lists() {
               </div>
             </div>
             <button
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center space-x-2"
               onClick={() => {
-                if (!state.selectedListId) return;
-                setShowNewTaskInput(true);
-                setTimeout(() => newTaskInputRef.current?.focus(), 0);
+                setLocation('/?view=week&plan=open');
               }}
-              disabled={!state.selectedListId}
             >
-              <Plus className="w-4 h-4" />
-              <span>Add Task</span>
+              <CalendarDays className="w-4 h-4" />
+              <span>Plan</span>
             </button>
           </div>
           <div className="flex items-center space-x-4">

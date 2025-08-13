@@ -288,22 +288,33 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
 
   return (
-    <div className={cn("h-full flex flex-col bg-surface", className)} data-testid="todo-detail-pane">
+    <div className={cn("h-full flex flex-col bg-background", className)} data-testid="todo-detail-pane">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-b from-muted/40 to-transparent">
+      <div className="flex items-center justify-between p-4 border-b border-accent/50 bg-accent/30">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-semibold text-foreground break-words flex items-center gap-2" data-testid="todo-detail-title">
+            <h2 className="text-lg font-medium text-foreground break-words flex items-center gap-2" data-testid="todo-detail-title">
+              <span
+                className={cn(
+                  "inline-flex h-2.5 w-2.5 rounded-full mr-1.5",
+                  selectedTask.priority === 'high'
+                    ? 'bg-red-400 ring-2 ring-red-200 animate-pulse'
+                    : selectedTask.priority === 'medium'
+                    ? 'bg-yellow-200 ring-2 ring-yellow-100 animate-pulse-subtle'
+                    : 'bg-green-200 ring-2 ring-green-100 animate-pulse-extra-light'
+                )}
+                aria-label={`Priority ${selectedTask.priority || 'none'}`}
+              />
               {selectedTask.title}
               {isActiveTask && isTimerRunning ? (
-                <span className="inline-flex items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_0_3px_rgba(251,146,60,0.25)] animate-pulse" />
+                <span className="inline-flex items-center ml-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent-foreground shadow-[0_0_0_3px_rgba(251,146,60,0.25)] animate-pulse" />
                 </span>
               ) : null}
             </h2>
             <div className="flex items-center space-x-2 mt-1">
               {isActiveTask && isTimerRunning ? (
-                <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-accent text-accent-foreground">
                   In Progress
                 </Badge>
               ) : null}
@@ -327,58 +338,60 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
       {/* Content - Single scroll container */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-12">
+        <div className="p-4 space-y-8">
           {/* Notes */}
-          <div className="space-y-3 rounded-2xl p-5 -mx-4 sm:mx-0">
+          <div className="space-y-2 rounded-xl p-4 border border-accent/40 bg-accent/20 -mx-4 sm:mx-0">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-md bg-yellow-100">
-                <StickyNote className="w-4 h-4 text-yellow-600" />
+              <div className="p-1.5 rounded-md bg-accent text-accent-foreground">
+                <StickyNote className="w-4 h-4 text-accent-foreground" />
               </div>
-              <h4 className="text-sm font-medium text-foreground">Notes</h4>
+              <h4 className="text-xs font-medium text-foreground">Notes</h4>
             </div>
             <NotesEditor
               taskId={selectedTask.id}
               initialNotes={selectedTask.notes || ""}
               placeholder="Capture thoughts, plans, or links..."
-              className="min-h-[170px] bg-transparent"
+              className="min-h-[140px] bg-transparent"
             />
           </div>
 
           {/* Time Tracking */}
           {!selectedTask.completed && (
-            <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-orange-50/60 to-transparent p-4 shadow-sm backdrop-blur-sm">
+            <div className="rounded-xl border border-accent/50 bg-accent/30 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-orange-100">
-                    <Timer className="w-4 h-4 text-orange-600" />
+                  <div className="p-1.5 rounded-md bg-accent text-accent-foreground">
+                    <Timer className="w-4 h-4 text-accent-foreground" />
                   </div>
                   <h4 className="text-sm font-medium text-foreground">Time Tracking</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={handleResetLoggedTime}
-                    className="h-9 border-red-200 text-red-600 hover:bg-red-50"
+                    className="h-8 border-red-200 text-red-600 hover:bg-red-50"
                   >
                     Reset to 0:00
                   </Button>
                   <TaskTimerButton
                     taskId={selectedTask.id}
                     taskTitle={selectedTask.title}
-                    variant="default"
+                    variant="icon-only"
+                    className="h-7 w-7 p-0 bg-accent text-accent-foreground ring-1 ring-accent hover:bg-accent/90"
                   />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                <div className="rounded-xl bg-muted/20 p-4 flex items-center justify-between sm:col-span-2">
+                <div className="rounded-xl bg-background/60 py-4 flex items-center justify-between sm:col-span-2">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center p-1.5 rounded-md bg-orange-100">
-                      <Clock className="w-4 h-4 text-orange-600" />
+                    <span className="inline-flex items-center justify-center p-1.5 rounded-md bg-accent text-accent-foreground">
+                      <Clock className="w-4 h-4 text-accent-foreground" />
                     </span>
                     <div>
                       <div className="text-xs font-medium text-muted-foreground">Time Logged</div>
                       <div className="mt-0.5 flex items-center gap-2">
-                        <div className="text-3xl font-mono font-semibold tabular-nums text-foreground">
+                        <div className="text-2xl font-mono font-semibold tabular-nums text-accent-foreground">
                           {(() => {
                             const persisted = (selectedTask as any).timeLoggedSeconds || 0;
                             if (isActiveTask) {
@@ -388,8 +401,8 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                           })()}
                         </div>
                         {isActiveTask && isTimerRunning ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-semibold uppercase tracking-wide animate-pulse">
-                            Live
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold uppercase tracking-wide animate-pulse">
+                            In Progress
                           </span>
                         ) : null}
                       </div>
@@ -404,10 +417,10 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                       const progress = Math.min(100, (totalSeconds / (estimateMinutes * 60)) * 100);
                       return (
                         <div className="flex flex-col items-center gap-2">
-                          <ProgressRing progress={progress} size={64} />
+                          <ProgressRing progress={progress} size={56} className="text-accent-foreground" />
                           <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <Target className="w-3 h-3" />
-                            <span>{Math.round(progress)}%</span>
+                            <Target className="w-3 h-3 text-accent-foreground" />
+                            <span className="text-accent-foreground">{Math.round(progress)}% of {estimateMinutes} minutes</span>
                           </div>
                         </div>
                       );
@@ -419,12 +432,12 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
           )}
 
           {/* Estimate & Details */}
-          <div className="rounded-2xl border border-border/60 bg-background/40 p-4 space-y-4 shadow-sm">
+          <div className="rounded-xl border border-accent/40 bg-accent/20 p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-md bg-sky-100">
-                <Target className="w-4 h-4 text-sky-600" />
+              <div className="p-1.5 rounded-md bg-accent text-accent-foreground">
+                <Target className="w-4 h-4 text-accent-foreground" />
               </div>
-              <h4 className="text-sm font-medium text-foreground">Estimate & Details</h4>
+              <h4 className="text-xs font-medium text-foreground">Estimate & Details</h4>
             </div>
             {!selectedTask.completed && (
               <TaskEstimation taskId={selectedTask.id} taskTitle={selectedTask.title} compact />
@@ -433,9 +446,9 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
             <div className="space-y-3">
               {/* Priority (editable) */}
               <div className="rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-amber-100">
-                    <Flag className="w-3.5 h-3.5 text-amber-600" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-accent text-accent-foreground">
+                    <Flag className="w-3.5 h-3.5 text-accent-foreground" />
                   </span>
                   Priority
                 </div>
@@ -444,10 +457,10 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                     className={cn(
                       "w-2 h-2 rounded-full",
                       selectedTask.priority === 'high'
-                        ? 'bg-red-500'
+                        ? 'bg-red-200 animate-pulse'
                         : selectedTask.priority === 'medium'
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
+                        ? 'bg-yellow-200 animate-pulse-subtle'
+                        : 'bg-green-200 animate-pulse-extra-light'
                     )}
                     aria-hidden
                   />
@@ -463,7 +476,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                           <span
                             className={cn(
                               "inline-block w-2 h-2 rounded-full mr-2",
-                              p === 'high' ? 'bg-red-500' : p === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                              p === 'high' ? 'bg-red-300' : p === 'medium' ? 'bg-yellow-300' : 'bg-green-300'
                             )}
                           />
                           {`${p[0].toUpperCase()}${p.slice(1)}`}
@@ -478,9 +491,9 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
               {/* Project selection */}
               <div className="rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-violet-100">
-                    <Folder className="w-3.5 h-3.5 text-violet-600" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-accent text-accent-foreground">
+                    <Folder className="w-3.5 h-3.5 text-accent-foreground" />
                   </span>
                   Project
                 </div>
@@ -489,7 +502,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                     value={selectedTask.listId || ''}
                     onValueChange={(val) => updateTaskMutation.mutate({ listId: val || null as any })}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8 ring-1 ring-accent focus:ring-accent">
                       <SelectValue placeholder="Choose project" />
                     </SelectTrigger>
                     <SelectContent>
@@ -505,58 +518,58 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
               <Separator />
 
-              {/* Dates (Created + Due) on one line with due editable */}
-              <div className="rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                  {/* Created */}
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center p-1 rounded-md bg-sky-100">
-                      <Calendar className="w-3.5 h-3.5 text-sky-600" />
-                    </span>
-                    <span className="text-xs">Created</span>
-                    <span className="text-xs text-foreground">
-                      {selectedTask.createdAt && format(new Date(selectedTask.createdAt), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                  {/* Date (start) */}
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center p-1 rounded-md bg-sky-100">
-                      <Calendar className="w-3.5 h-3.5 text-sky-600" />
-                    </span>
-                    <span className="text-xs">Date</span>
-                    <span className="text-xs text-foreground">
-                      {selectedTask.startTime && format(new Date(selectedTask.startTime), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                  {/* Due (calendar popover) */}
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center p-1 rounded-md bg-rose-100">
-                      <Calendar className="w-3.5 h-3.5 text-rose-600" />
-                    </span>
-                    <span className="text-xs">Due</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7 text-xs">
-                          {selectedTask.scheduledDate
-                            ? format(new Date(selectedTask.scheduledDate as any), 'MMM d, yyyy')
-                            : 'None'}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-3" align="start">
-                        <DatePicker
-                          mode="single"
-                          selected={selectedTask.scheduledDate ? new Date(selectedTask.scheduledDate as any) : undefined}
-                          onSelect={(d) => updateTaskMutation.mutate({ scheduledDate: d || null as any })}
-                        />
-                        <div className="flex items-center gap-2 pt-2">
-                          <Button variant="ghost" size="sm" onClick={() => updateTaskMutation.mutate({ scheduledDate: new Date() as any })}>Today</Button>
-                          <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); d.setDate(d.getDate()+1); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Tomorrow</Button>
-                          <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); const day = d.getDay(); const offset = (8 - (day || 7)); d.setDate(d.getDate()+offset); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Next Week</Button>
-                          <Button variant="ghost" size="sm" className="text-red-600" onClick={() => updateTaskMutation.mutate({ scheduledDate: null as any })}>Clear</Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+              {/* Dates (stacked; Due first) */}
+              <div className="rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors space-y-3">
+                {/* Due (calendar popover) */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-accent text-accent-foreground">
+                    <Calendar className="w-3.5 h-3.5 text-accent-foreground" />
+                  </span>
+                  <span className="text-xs">Due</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 text-xs ring-1 ring-accent hover:bg-accent/20 text-accent-foreground">
+                        {selectedTask.scheduledDate
+                          ? format(new Date(selectedTask.scheduledDate as any), 'MMM d, yyyy')
+                          : 'None'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3" align="start">
+                      <DatePicker
+                        mode="single"
+                        selected={selectedTask.scheduledDate ? new Date(selectedTask.scheduledDate as any) : undefined}
+                        onSelect={(d) => updateTaskMutation.mutate({ scheduledDate: d || null as any })}
+                      />
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button variant="ghost" size="sm" onClick={() => updateTaskMutation.mutate({ scheduledDate: new Date() as any })}>Today</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); d.setDate(d.getDate()+1); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Tomorrow</Button>
+                        <Button variant="ghost" size="sm" onClick={() => { const d = new Date(); const day = d.getDay(); const offset = (8 - (day || 7)); d.setDate(d.getDate()+offset); updateTaskMutation.mutate({ scheduledDate: d as any }); }}>Next Week</Button>
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => updateTaskMutation.mutate({ scheduledDate: null as any })}>Clear</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Created */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-accent text-accent-foreground">
+                    <Calendar className="w-3.5 h-3.5 text-accent-foreground" />
+                  </span>
+                  <span className="text-xs">Created</span>
+                  <span className="text-xs text-foreground">
+                    {selectedTask.createdAt && format(new Date(selectedTask.createdAt), 'MMM d, yyyy')}
+                  </span>
+                </div>
+
+                {/* Date (start) */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-accent text-accent-foreground">
+                    <Calendar className="w-3.5 h-3.5 text-accent-foreground" />
+                  </span>
+                  <span className="text-xs">Date</span>
+                  <span className="text-xs text-foreground">
+                    {selectedTask.startTime && format(new Date(selectedTask.startTime), 'MMM d, yyyy')}
+                  </span>
                 </div>
               </div>
             </div>

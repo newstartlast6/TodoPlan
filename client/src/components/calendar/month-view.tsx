@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNotes } from "@/hooks/use-notes";
+import { NotesButton } from "@/components/ui/notes-button";
 
 interface MonthViewProps {
   tasks: Task[];
@@ -71,8 +73,9 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onCha
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-2xl font-bold text-foreground" data-testid="month-title">
-                {format(currentDate, "MMMM yyyy")}
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-1" data-testid="month-title">
+                <span>{format(currentDate, "MMMM yyyy")}</span>
+                <MonthNotesInline date={currentDate} />
               </h2>
               <Button
                 variant="outline"
@@ -127,65 +130,20 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onCha
                     const isOutsideMonth = dayStatus === 'outside';
 
                     return (
-                      <button
+                      <MonthDayCell
                         key={dayIndex}
-                        onClick={() => onDateClick(day)}
-                        className={cn(
-                          "p-3 min-h-[100px] rounded-lg border text-left transition-all hover:border-primary/50",
-                          isOutsideMonth && "opacity-30",
-                          isDayPast && !isOutsideMonth && "crossed-out bg-muted/30",
-                          isCurrentDay && "border-2 border-primary bg-accent",
-                          !isCurrentDay && !isDayPast && !isOutsideMonth && "hover:bg-muted/50"
-                        )}
-                        data-testid={`calendar-day-${weekIndex}-${dayIndex}`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={cn(
-                            "text-sm font-medium",
-                            isOutsideMonth ? "text-muted-foreground" : "text-foreground",
-                            isCurrentDay && "font-bold"
-                          )}>
-                            {format(day, 'd')}
-                          </span>
-                          {dayTasks.length > 0 && (
-                            <Badge 
-                              variant={completedDayTasks === dayTasks.length ? "default" : "outline"}
-                              className="text-xs px-1 py-0"
-                            >
-                              {completedDayTasks}/{dayTasks.length}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-1">
-                          {dayTasks.slice(0, 3).map((task, taskIndex) => (
-                            <div
-                              key={task.id}
-                              className={cn(
-                                "text-xs p-1 rounded truncate cursor-pointer transition-all",
-                                "hover:ring-1 hover:ring-primary/50",
-                                selectedTodoId === task.id && "ring-1 ring-primary bg-primary/10",
-                                task.completed 
-                                  ? "bg-green-100 text-green-700 line-through" 
-                              : "bg-muted text-muted-foreground"
-                              )}
-                              title={task.title}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                selectTodo(task.id);
-                              }}
-                              data-testid={`task-preview-${weekIndex}-${dayIndex}-${taskIndex}`}
-                            >
-                              {task.title}
-                            </div>
-                          ))}
-                          {dayTasks.length > 3 && (
-                            <div className="text-xs text-muted-foreground">
-                              +{dayTasks.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      </button>
+                        weekIndex={weekIndex}
+                        dayIndex={dayIndex}
+                        day={day}
+                        dayTasks={dayTasks}
+                        isCurrentDay={isCurrentDay}
+                        isDayPast={isDayPast}
+                        isOutsideMonth={isOutsideMonth}
+                        completedDayTasks={completedDayTasks}
+                        onDateClick={onDateClick}
+                        selectedTodoId={selectedTodoId}
+                        onSelectTodo={selectTodo}
+                      />
                     );
                   })}
                 </div>
@@ -228,6 +186,118 @@ export function MonthView({ tasks, currentDate, onDateClick, onTaskUpdate, onCha
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function MonthDayCell({
+  weekIndex,
+  dayIndex,
+  day,
+  dayTasks,
+  isCurrentDay,
+  isDayPast,
+  isOutsideMonth,
+  completedDayTasks,
+  onDateClick,
+  selectedTodoId,
+  onSelectTodo,
+}: {
+  weekIndex: number;
+  dayIndex: number;
+  day: Date;
+  dayTasks: Task[];
+  isCurrentDay: boolean;
+  isDayPast: boolean;
+  isOutsideMonth: boolean;
+  completedDayTasks: number;
+  onDateClick: (date: Date) => void;
+  selectedTodoId: string | null;
+  onSelectTodo: (id: string) => void;
+}) {
+  const { note, upsert } = useNotes("daily", day);
+  return (
+    <div className="relative">
+      <div className="absolute top-1 right-1 z-10" onClick={(e) => e.stopPropagation()}>
+        <NotesButton
+          type="daily"
+          anchorDate={day}
+          value={note?.content ?? ""}
+          onSave={async (content) => { await upsert(content); }}
+          className="h-6 w-6"
+        />
+      </div>
+      <button
+        onClick={() => onDateClick(day)}
+        className={cn(
+          "p-3 min-h-[100px] rounded-lg border text-left transition-all hover:border-primary/50 w-full",
+          isOutsideMonth && "opacity-30",
+          isDayPast && !isOutsideMonth && "crossed-out bg-muted/30",
+          isCurrentDay && "border-2 border-primary bg-accent",
+          !isCurrentDay && !isDayPast && !isOutsideMonth && "hover:bg-muted/50"
+        )}
+        data-testid={`calendar-day-${weekIndex}-${dayIndex}`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className={cn(
+            "text-sm font-medium",
+            isOutsideMonth ? "text-muted-foreground" : "text-foreground",
+            isCurrentDay && "font-bold"
+          )}>
+            {format(day, 'd')}
+          </span>
+          {dayTasks.length > 0 && (
+            <Badge 
+              variant={completedDayTasks === dayTasks.length ? "default" : "outline"}
+              className="text-xs px-1 py-0"
+            >
+              {completedDayTasks}/{dayTasks.length}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="space-y-1">
+          {dayTasks.slice(0, 3).map((task, taskIndex) => (
+            <div
+              key={task.id}
+              className={cn(
+                "text-xs p-1 rounded truncate cursor-pointer transition-all",
+                "hover:ring-1 hover:ring-primary/50",
+                selectedTodoId === task.id && "ring-1 ring-primary bg-primary/10",
+                task.completed 
+                  ? "bg-green-100 text-green-700 line-through" 
+                : "bg-muted text-muted-foreground"
+              )}
+              title={task.title}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectTodo(task.id);
+              }}
+              data-testid={`task-preview-${weekIndex}-${dayIndex}-${taskIndex}`}
+            >
+              {task.title}
+            </div>
+          ))}
+          {dayTasks.length > 3 && (
+            <div className="text-xs text-muted-foreground">
+              +{dayTasks.length - 3} more
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+}
+
+function MonthNotesInline({ date }: { date: Date }) {
+  const { note, upsert } = useNotes("monthly", date);
+  return (
+    <NotesButton
+      type="monthly"
+      anchorDate={date}
+      value={note?.content ?? ""}
+      onSave={async (content) => { await upsert(content); }}
+      className="ml-1"
+    />
   );
 }
 

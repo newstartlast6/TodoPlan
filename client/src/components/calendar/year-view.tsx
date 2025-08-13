@@ -8,6 +8,8 @@ import { Task } from "@shared/schema";
 import { calculateYearProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
+import { useNotes } from "@/hooks/use-notes";
+import { StickyNote } from "lucide-react";
 
 interface YearViewProps {
   tasks: Task[];
@@ -17,6 +19,7 @@ interface YearViewProps {
 
 export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
   const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { selectNotes } = useSelectedTodo();
   const yearStart = startOfYear(currentDate);
   const yearEnd = endOfYear(currentDate);
   const yearProgress = calculateYearProgress(currentDate);
@@ -52,8 +55,9 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-foreground" data-testid="year-title">
-              {format(currentDate, "yyyy")}
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-1" data-testid="year-title">
+              <span>{format(currentDate, "yyyy")}</span>
+              <YearNotesInline date={currentDate} onOpenDetail={() => selectNotes('yearly', currentDate)} />
             </h2>
             <GoalInline type="yearly" date={currentDate} label="YEARLY GOAL:" />
           </div>
@@ -198,5 +202,23 @@ export function YearView({ tasks, currentDate, onMonthClick }: YearViewProps) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function YearNotesInline({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => void }) {
+  const { note } = useNotes("yearly", date);
+  const hasNotes = (note?.content ?? "").trim().length > 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpenDetail}
+      className={cn(
+        "ml-1 inline-flex items-center justify-center h-7 w-7 rounded-full border border-transparent",
+        hasNotes ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300" : "text-orange-600 hover:bg-orange-50"
+      )}
+      aria-label="Open year notes"
+    >
+      <StickyNote className="h-3.5 w-3.5" />
+    </button>
   );
 }

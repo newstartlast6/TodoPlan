@@ -91,7 +91,7 @@ export const goals = pgTable("goals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   type: varchar("type").notNull(),
   // Anchor date is normalized to the start of the period (Mon for weekly, 1st for monthly, Jan 1 for yearly)
-  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  anchorDate: timestamp("anchor_date").notNull(),
   value: text("value").notNull().default(""),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -176,6 +176,39 @@ export const updateReviewSchema = insertReviewSchema.partial().omit({ type: true
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type UpdateReview = z.infer<typeof updateReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+// Period notes: free-form notes per day/week/month/year anchored by date
+export const noteTypeEnum = z.enum(["daily", "weekly", "monthly", "yearly"]);
+export type NoteType = z.infer<typeof noteTypeEnum>;
+
+export const notes = pgTable("notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  content: text("content"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNoteSchema = createInsertSchema(notes)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    type: noteTypeEnum,
+    anchorDate: z.preprocess((val) => {
+      if (val instanceof Date) return val;
+      if (typeof val === "string" || typeof val === "number") {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? val : d;
+      }
+      return val;
+    }, z.date()),
+    content: z.string().optional().nullable(),
+  });
+
+export const updateNoteSchema = insertNoteSchema.partial().omit({ type: true, anchorDate: true });
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+export type UpdateNote = z.infer<typeof updateNoteSchema>;
+export type Note = typeof notes.$inferSelect;
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -92,12 +92,12 @@ export function DurationPicker({
           className={cn(
             "justify-between font-normal",
             showEditIconOnHover && "group",
-            !value && "text-muted-foreground",
+            !value && "text-accent-foreground",
             className
           )}
           disabled={disabled}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-accent-foreground">
             <Clock className="w-4 h-4" />
             {displayValue}
           </div>
@@ -109,7 +109,7 @@ export function DurationPicker({
         <div className="p-4 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-600" />
+            <Clock className="w-4 h-4 text-accent-foreground" />
             <h4 className="font-medium">Estimated Duration</h4>
           </div>
 

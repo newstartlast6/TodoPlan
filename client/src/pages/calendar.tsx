@@ -10,6 +10,7 @@ import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar"
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
 import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
 import { ReviewDetailPane } from "@/components/calendar/review-detail-pane";
+import { NotesDetailPane } from "@/components/calendar/notes-detail-pane";
 import { DayView } from "@/components/calendar/day-view";
 import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
@@ -37,10 +38,25 @@ export default function Calendar() {
  
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+  const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, selectedNotesType, selectedNotesAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
   const timer = useTimerStore();
 
   // No goal chips in tabs; goals are displayed within each view
+
+  // Honor query params to open week view and plan panel from other pages
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view');
+      const planParam = params.get('plan');
+      if (viewParam === 'week') {
+        setCurrentView('week');
+      }
+      if (planParam === 'open') {
+        setIsPlanPanelOpen(true);
+      }
+    } catch {}
+  }, []);
 
   // Get date range for current view
   const { start: rangeStart, end: rangeEnd } = getTimeRangeForView(currentView, currentDate);
@@ -333,12 +349,10 @@ export default function Calendar() {
   // Render main content
   // Auto-close and prevent detail pane only in Month/Year views
   useEffect(() => {
-    if (currentView === 'month' || currentView === 'year') {
-      if (isDetailPaneOpen) {
-        closeDetailPane();
-      }
+    if ((currentView === 'month' || currentView === 'year') && isDetailPaneOpen && !selectedNotesType) {
+      closeDetailPane();
     }
-  }, [currentView, isDetailPaneOpen, closeDetailPane]);
+  }, [currentView, isDetailPaneOpen, selectedNotesType, closeDetailPane]);
 
   const renderMainContent = () => (
     <div className="flex-1 flex flex-col">
@@ -434,15 +448,7 @@ export default function Calendar() {
 
           {/* Actions */}
           <div className="flex items-center space-x-3" data-testid="header-actions">
-            <Button
-              onClick={handleAddEmptyTaskInline}
-              className="flex items-center space-x-2"
-              disabled={createTaskMutation.isPending}
-              data-testid="button-add-task"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Task</span>
-            </Button>
+            {/* Removed Add Task from calendar header to emphasize Plan flow */}
             <Button
               variant={isPlanPanelOpen ? 'default' : 'outline'}
               onClick={() => {
@@ -497,6 +503,15 @@ export default function Calendar() {
         />
       );
     }
+    if (selectedNotesType && selectedNotesAnchorDate && !selectedTodoId) {
+      return (
+        <NotesDetailPane
+          type={selectedNotesType}
+          anchorDate={new Date(selectedNotesAnchorDate)}
+          onClose={closeDetailPane}
+        />
+      );
+    }
     return <TodoDetailPane onClose={closeDetailPane} />;
   };
 
@@ -507,9 +522,9 @@ export default function Calendar() {
           sidebar={renderSidebar()}
           main={renderMainContent()}
           detail={renderDetailPane()}
-          isDetailOpen={isDetailPaneOpen && currentView !== 'month' && currentView !== 'year'}
+          isDetailOpen={isDetailPaneOpen && ((currentView !== 'month' && currentView !== 'year') || Boolean(selectedNotesType))}
           onDetailClose={closeDetailPane}
-          detailWidthClass={selectedReviewType ? 'w-[500px]' : undefined}
+          detailWidthClass={selectedReviewType || selectedNotesType ? 'w-[500px]' : undefined}
         />
       </DndProvider>
 
@@ -520,14 +535,17 @@ export default function Calendar() {
       {/* Task Form Dialog */}
       {/* Form kept for future use; not used for inline quick-add */}
 
-      {/* Floating Add Button (Mobile) */}
+      {/* Floating Plan Button (Mobile) */}
       <Button
-        onClick={handleAddEmptyTaskInline}
+        onClick={() => {
+          setCurrentView('week');
+          setIsPlanPanelOpen(true);
+        }}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg md:hidden"
         size="icon"
-        data-testid="floating-add-button"
+        data-testid="floating-plan-button"
       >
-        <Plus className="w-6 h-6" />
+        <Settings className="w-6 h-6" />
       </Button>
     </>
   );

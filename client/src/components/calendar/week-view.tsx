@@ -17,6 +17,8 @@ import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerCalculator } from '@shared/services/timer-store';
 import { ReviewForm } from "@/components/ui/review-form";
 import { Button } from "@/components/ui/button";
+import { useNotes } from "@/hooks/use-notes";
+import { StickyNote } from "lucide-react";
 import { DraggableCalendarTask } from "@/components/planning/draggable-calendar-task";
 
 interface WeekViewProps {
@@ -44,6 +46,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const weekProgress = calculateWeekProgress(currentDate);
   const timer = useTimerStore();
+  const { selectNotes } = useSelectedTodo();
   const isTimerRunning = timer.isRunning;
   const currentTaskId = timer.activeTaskId;
   const currentElapsedSeconds = timer.displaySeconds;
@@ -162,8 +165,9 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-2xl font-bold text-foreground" data-testid="week-title">
-                Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-1" data-testid="week-title">
+                <span>Week of {format(weekStart, "MMMM d")} - {format(weekEnd, "d, yyyy")}</span>
+                <WeekNotesInline date={weekStart} onOpenDetail={() => selectNotes('weekly', weekStart)} />
               </h2>
               <Button
                 variant="outline"
@@ -262,8 +266,9 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             {getStatusIcon(dayStatus)}
-                            <h3 className="text-lg font-semibold text-foreground" data-testid={`day-title-${dayIndex}`}>
-                              {format(day, "EEEE, MMM d")}
+                            <h3 className="text-lg font-semibold text-foreground flex items-center gap-1" data-testid={`day-title-${dayIndex}`}>
+                              <span>{format(day, "EEEE, MMM d")}</span>
+                              <DayNotesFor date={day} onOpenDetail={() => selectNotes('daily', day)} />
                             </h3>
                             {getStatusBadge(dayStatus)}
                           </div>
@@ -444,5 +449,41 @@ function DroppableDay({ onDropTask, children }: { onDropTask: (item: DragTaskIte
         </>
       )}
     </div>
+  );
+}
+
+function WeekNotesInline({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => void }) {
+  const { note } = useNotes("weekly", date);
+  const hasNotes = (note?.content ?? "").trim().length > 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpenDetail}
+      className={cn(
+        "ml-1 inline-flex items-center justify-center h-7 w-7 rounded-full border border-transparent",
+        hasNotes ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300" : "text-orange-600 hover:bg-orange-50"
+      )}
+      aria-label="Open week notes"
+    >
+      <StickyNote className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+function DayNotesFor({ date, onOpenDetail }: { date: Date; onOpenDetail?: () => void }) {
+  const { note } = useNotes("daily", date);
+  const hasNotes = (note?.content ?? "").trim().length > 0;
+  return (
+    <button
+      type="button"
+      onClick={onOpenDetail}
+      className={cn(
+        "ml-1 inline-flex items-center justify-center h-6 w-6 rounded-full border border-transparent",
+        hasNotes ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300" : "text-orange-600 hover:bg-orange-50"
+      )}
+      aria-label="Open day notes"
+    >
+      <StickyNote className="h-3.5 w-3.5" />
+    </button>
   );
 }
