@@ -5,7 +5,8 @@ import {
   type DailyTimeSummary,
   type Goal, type InsertGoal, type UpdateGoal,
   type List, type InsertList, type UpdateList,
-  tasks, users, timerSessions, taskEstimates, goals, lists 
+  type Review, type InsertReview, type UpdateReview,
+  tasks, users, timerSessions, taskEstimates, goals, lists, reviews 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
@@ -56,6 +57,14 @@ export interface IStorage {
   // Goals
   getGoal(type: string, anchorDate: Date): Promise<Goal | undefined>;
   setGoal(type: string, anchorDate: Date, value: string): Promise<Goal>;
+
+  // Reviews
+  getReview(type: string, anchorDate: Date): Promise<Review | undefined>;
+  setReview(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
+  ): Promise<Review>;
 }
 
 export class MemStorage implements IStorage {
@@ -65,6 +74,7 @@ export class MemStorage implements IStorage {
   private timerSessions: Map<string, TimerSession>;
   private taskEstimates: Map<string, TaskEstimate>;
   private goals: Map<string, Goal>;
+  private reviewsMap: Map<string, Review>;
 
   constructor() {
     this.users = new Map();
@@ -73,6 +83,7 @@ export class MemStorage implements IStorage {
     this.timerSessions = new Map();
     this.taskEstimates = new Map();
     this.goals = new Map();
+    this.reviewsMap = new Map();
     // Initialize with some sample tasks for demonstration
     this.initializeSampleData();
   }
@@ -511,6 +522,52 @@ export class MemStorage implements IStorage {
     this.goals.set(key, updated);
     return updated;
   }
+
+  private reviewKey(type: string, anchorDate: Date): string {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    return `${type}:${d.toISOString().slice(0, 10)}`;
+  }
+
+  async getReview(type: string, anchorDate: Date): Promise<Review | undefined> {
+    const key = this.reviewKey(type, anchorDate);
+    return this.reviewsMap.get(key);
+  }
+
+  async setReview(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
+  ): Promise<Review> {
+    const key = this.reviewKey(type, anchorDate);
+    const existing = this.reviewsMap.get(key);
+    const base: Review = existing ?? ({
+      id: randomUUID(),
+      type,
+      anchorDate: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()),
+      productivityRating: 0,
+      achievedGoal: null,
+      achievedGoalReason: null,
+      satisfied: null,
+      satisfiedReason: null,
+      improvements: null,
+      biggestWin: null,
+      topChallenge: null,
+      topDistraction: null,
+      nextFocusPlan: null,
+      energyLevel: 0,
+      mood: null,
+      goalAchievementStatus: null as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as Review);
+    const updated: Review = {
+      ...base,
+      ...values,
+      updatedAt: new Date(),
+    } as Review;
+    this.reviewsMap.set(key, updated);
+    return updated;
+  }
 }
 
 // Database-backed storage using Drizzle + Postgres (Supabase)
@@ -945,6 +1002,46 @@ class DbStorage implements IStorage {
         .values({ type, anchorDate: dateOnly, value } as any)
         .returning();
       return inserted[0];
+    });
+  }
+
+  async getReview(type: string, anchorDate: Date): Promise<Review | undefined> {
+    return this.withPersistence("get_review", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const result = await this.db
+        .select()
+        .from(reviews)
+        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+        .limit(1);
+      return result[0] as unknown as Review | undefined;
+    });
+  }
+
+  async setReview(
+    type: string,
+    anchorDate: Date,
+    values: Omit<InsertReview, "type" | "anchorDate"> | UpdateReview
+  ): Promise<Review> {
+    return this.withPersistence("set_review", { type, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const existing = await this.db
+        .select()
+        .from(reviews)
+        .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+        .limit(1);
+      if (existing[0]) {
+        const updated = await this.db
+          .update(reviews)
+          .set({ ...values, updatedAt: new Date() } as any)
+          .where(and(eq(reviews.type as any, type), eq(reviews.anchorDate as any, dateOnly as any)))
+          .returning();
+        return updated[0] as unknown as Review;
+      }
+      const inserted = await this.db
+        .insert(reviews)
+        .values({ type, anchorDate: dateOnly, ...values } as any)
+        .returning();
+      return inserted[0] as unknown as Review;
     });
   }
 }

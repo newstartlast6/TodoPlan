@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GoalInline } from "@/components/calendar/goal-inline";
 import { formatTimeRange } from "@/lib/time-utils";
 import { TimerCalculator } from "@shared/services/timer-store";
+import { ReviewForm } from "@/components/ui/review-form";
 
 interface DayViewProps {
   tasks: Task[];
@@ -27,7 +28,7 @@ interface DayViewProps {
 }
 
 export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDelete }: DayViewProps) {
-  const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { selectedTodoId, selectTodo, selectReview } = useSelectedTodo();
   const { toast } = useToast();
   const dayTasks = tasks
     .filter(task => {
@@ -221,6 +222,21 @@ export function DayView({ tasks, currentDate, onTaskUpdate, onAddTask, onTaskDel
       </Card>
       </DroppableDay>
 
+      {/* Daily Review row */}
+      <button
+        className="w-full group rounded-lg border border-dashed border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-colors p-4 flex items-center justify-between"
+        onClick={() => selectReview('daily', currentDate)}
+        aria-label="Open Daily Review"
+      >
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-7 w-7 rounded-full bg-primary/10 text-primary items-center justify-center text-xs font-semibold group-hover:bg-primary/20">DR</span>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-semibold text-foreground">Daily Review</span>
+            <span className="text-xs text-muted-foreground">Reflect on your day</span>
+          </div>
+        </div>
+        <span className="text-xs text-muted-foreground">Click to reflect</span>
+      </button>
 
     </div>
   );

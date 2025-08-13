@@ -195,6 +195,9 @@ export function SelectableTodoItem({
                   onUpdate?.(task.id, { title: newTitle });
                 }
               }}
+              onStartEditing={() => {
+                if (!isSelected) onSelect(task.id);
+              }}
               placeholder={task.title ? undefined : ""}
               className={cn(
                 variant === 'minimal' ? "text-sm font-medium" : "font-medium",

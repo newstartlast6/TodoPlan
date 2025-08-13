@@ -5,7 +5,9 @@ import {
   insertTaskSchema, updateTaskSchema,
   insertTaskEstimateSchema, updateTaskEstimateSchema,
   insertListSchema, updateListSchema,
-  goalTypeEnum
+  goalTypeEnum,
+  reviewTypeEnum,
+  insertReviewSchema, updateReviewSchema
 } from "@shared/schema";
 import { z } from "zod";
 // Legacy session error helpers removed in sessionless rewrite
@@ -130,6 +132,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid goal data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to save goal" });
+    }
+  });
+
+  // Reviews endpoints
+  app.get("/api/reviews", async (req, res) => {
+    try {
+      const typeRaw = req.query.type;
+      const dateRaw = req.query.anchorDate;
+      if (typeof typeRaw !== 'string' || typeof dateRaw !== 'string') {
+        return res.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type = reviewTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const review = await storage.getReview(type, anchorDate);
+      res.json(review ?? null);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review request", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to fetch review" });
+    }
+  });
+
+  app.put("/api/reviews", async (req, res) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, ...values } = req.body || {};
+      const type = reviewTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== 'string' && !(dateRaw instanceof Date)) {
+        return res.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      const validated = updateReviewSchema.parse(values);
+      const updated = await storage.setReview(type, anchorDate, validated);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save review" });
     }
   });
   // Get tasks with optional date filtering

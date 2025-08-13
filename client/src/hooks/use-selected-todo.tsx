@@ -2,13 +2,19 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 
 interface SelectionState {
   selectedTodoId: string | null;
+  // Review selection (mutually exclusive with selectedTodoId)
+  selectedReviewType: 'daily' | 'weekly' | null;
+  selectedReviewAnchorDate: string | null; // ISO date string (yyyy-mm-dd)
   isDetailPaneOpen: boolean;
 }
 
 interface SelectionContextType {
   selectedTodoId: string | null;
+  selectedReviewType: 'daily' | 'weekly' | null;
+  selectedReviewAnchorDate: string | null;
   isDetailPaneOpen: boolean;
   selectTodo: (todoId: string | null) => void;
+  selectReview: (type: 'daily' | 'weekly', anchorDate: Date) => void;
   openDetailPane: () => void;
   closeDetailPane: () => void;
   toggleDetailPane: () => void;
@@ -26,6 +32,8 @@ const loadSelectionState = (): SelectionState => {
       const parsed = JSON.parse(stored);
       return {
         selectedTodoId: parsed.selectedTodoId || null,
+        selectedReviewType: parsed.selectedReviewType || null,
+        selectedReviewAnchorDate: parsed.selectedReviewAnchorDate || null,
         isDetailPaneOpen: parsed.isDetailPaneOpen || false,
       };
     }
@@ -34,6 +42,8 @@ const loadSelectionState = (): SelectionState => {
   }
   return {
     selectedTodoId: null,
+    selectedReviewType: null,
+    selectedReviewAnchorDate: null,
     isDetailPaneOpen: false,
   };
 };
@@ -75,7 +85,21 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
     setState(prev => ({
       ...prev,
       selectedTodoId: todoId,
+      selectedReviewType: null,
+      selectedReviewAnchorDate: null,
       isDetailPaneOpen: todoId !== null, // Auto-open detail pane when selecting a todo
+    }));
+  }, []);
+
+  const selectReview = useCallback((type: 'daily' | 'weekly', anchorDate: Date) => {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    const iso = d.toISOString().slice(0, 10);
+    setState(prev => ({
+      ...prev,
+      selectedTodoId: null,
+      selectedReviewType: type,
+      selectedReviewAnchorDate: iso,
+      isDetailPaneOpen: true,
     }));
   }, []);
 
@@ -87,7 +111,9 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
     setState(prev => ({ 
       ...prev, 
       isDetailPaneOpen: false,
-      selectedTodoId: null, // Clear selection when closing detail pane
+      selectedTodoId: null,
+      selectedReviewType: null,
+      selectedReviewAnchorDate: null,
     }));
   }, []);
 
@@ -97,8 +123,11 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
 
   const value: SelectionContextType = {
     selectedTodoId: state.selectedTodoId,
+    selectedReviewType: state.selectedReviewType,
+    selectedReviewAnchorDate: state.selectedReviewAnchorDate,
     isDetailPaneOpen: state.isDetailPaneOpen,
     selectTodo,
+    selectReview,
     openDetailPane,
     closeDetailPane,
     toggleDetailPane,

@@ -8,12 +8,14 @@ import { initTimerStore } from "@/hooks/use-timer-store";
 import NotFound from "@/pages/not-found";
 import Calendar from "@/pages/calendar";
 import { Lists } from "@/pages/lists";
+import Streak from "@/pages/streak";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Calendar} />
       <Route path="/lists" component={Lists} />
+      <Route path="/streak" component={Streak} />
       <Route component={NotFound} />
     </Switch>
   );

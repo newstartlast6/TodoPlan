@@ -10,6 +10,7 @@ interface ResponsiveLayoutProps {
   isDetailOpen: boolean;
   onDetailClose?: () => void;
   className?: string;
+  detailWidthClass?: string;
 }
 
 // Custom hook to detect screen size breakpoints
@@ -43,6 +44,7 @@ export function ResponsiveLayout({
   isDetailOpen,
   onDetailClose,
   className,
+  detailWidthClass,
 }: ResponsiveLayoutProps) {
   const breakpoint = useBreakpoint();
 
@@ -104,7 +106,7 @@ export function ResponsiveLayout({
         {/* Detail Pane - Overlay on tablet */}
         {isDetailOpen && (
           <div className="absolute inset-0 bg-black/20 z-40 flex justify-end">
-            <div className="w-96 bg-surface border-l border-border shadow-xl h-full flex flex-col">
+            <div className={`${detailWidthClass ?? 'w-96'} bg-surface border-l border-border shadow-xl h-full flex flex-col`}>
               {/* Close button for tablet detail view */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Task Details</h2>
@@ -148,11 +150,11 @@ export function ResponsiveLayout({
       <div className={cn(
         "transition-all duration-300 ease-in-out border-l border-border bg-surface h-full",
         isDetailOpen 
-          ? "w-[480px] opacity-100 translate-x-0" 
+          ? `${detailWidthClass ?? 'w-[480px]'} opacity-100 translate-x-0` 
           : "w-0 opacity-0 translate-x-full overflow-hidden"
       )}>
         {isDetailOpen && (
-          <div className="w-[480px] h-full overflow-y-auto">
+          <div className={`${detailWidthClass ?? 'w-[480px]'} h-full overflow-y-auto`}>
             {detail}
           </div>
         )}

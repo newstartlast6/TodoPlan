@@ -1,6 +1,6 @@
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle, Clock, Circle } from "lucide-react";
+import { CheckCircle, Clock, Circle, XCircle, PartyPopper } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
@@ -15,6 +15,7 @@ import { DND_TYPES, type DragTaskItem } from '@/lib/dnd';
 import { useToast } from '@/hooks/use-toast';
 import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerCalculator } from '@shared/services/timer-store';
+import { ReviewForm } from "@/components/ui/review-form";
 
 interface WeekViewProps {
   tasks: Task[];
@@ -24,6 +25,7 @@ interface WeekViewProps {
 }
 
 export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: WeekViewProps) {
+  const DAILY_TARGET_SECONDS = 8 * 60 * 60; // 8 hours target per day
   const [goalsRefresh, setGoalsRefresh] = useState(0);
   const { toast } = useToast();
   useEffect(() => {
@@ -31,7 +33,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
     window.addEventListener('goals:updated', handler);
     return () => window.removeEventListener('goals:updated', handler);
   }, []);
-  const { selectedTodoId, selectTodo } = useSelectedTodo();
+  const { selectedTodoId, selectTodo, selectReview } = useSelectedTodo();
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
@@ -58,9 +60,11 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
       });
   };
 
-  const getDayStatus = (day: Date) => {
+  const getDayStatus = (day: Date, dayTotalSeconds: number) => {
     if (isToday(day)) return 'current';
-    if (isPast(day)) return 'completed';
+    if (isPast(day)) {
+      return dayTotalSeconds >= DAILY_TARGET_SECONDS ? 'celebration' : 'lost';
+    }
     return 'planned';
   };
 
@@ -78,6 +82,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'celebration': return <PartyPopper className="text-pink-500" />;
+      case 'lost': return <XCircle className="text-red-500" />;
       case 'completed': return <CheckCircle className="text-green-500" />;
       case 'current': return <Clock className="text-primary animate-pulse-subtle" />;
       default: return <Circle className="text-gray-400" />;
@@ -86,6 +92,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'celebration': return <Badge className="bg-green-100 text-green-700">Achieved • Keep it up!</Badge>;
+      case 'lost': return <Badge className="bg-red-100 text-red-700 border-red-200">Lost</Badge>;
       case 'completed': return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
       case 'current': return <Badge className="bg-primary text-primary-foreground">Today</Badge>;
       default: return <Badge variant="outline">Planned</Badge>;
@@ -118,10 +126,6 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
       <div className="space-y-6">
         {weekDays.map((day, dayIndex) => {
           const dayTasks = getTasksForDay(day);
-          const dayStatus = getDayStatus(day);
-          const dayProgressPercent = getDayProgress(day);
-          const isCurrentDay = isToday(day);
-          const isDayCompleted = dayStatus === 'completed';
           // Total Time for this day: for the active task use live session total; others use persisted
           const dayTotalSeconds = dayTasks.reduce((sum, t) => {
             if (isTimerRunning && currentTaskId === t.id) {
@@ -129,21 +133,26 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
             }
             return sum + (Number((t as any).timeLoggedSeconds) || 0);
           }, 0);
+          const dayStatus = getDayStatus(day, dayTotalSeconds);
+          const dayProgressPercent = getDayProgress(day);
+          const isCurrentDay = isToday(day);
+          const isPastDay = isPast(day);
+          const isLostDay = dayStatus === 'lost';
           const dayTotalFormatted = TimerCalculator.formatDuration(dayTotalSeconds);
           
             return (
-            <Card 
+              <Card 
               key={dayIndex} 
               className={cn(
                 "overflow-hidden transition-all duration-200",
-                isDayCompleted && "crossed-out",
+                  !isCurrentDay && isPastDay && "crossed-out",
                 isCurrentDay && "border-2 border-primary shadow-md"
               )}
               data-testid={`day-card-${dayIndex}`}
             >
               <CardHeader className={cn(
                 "border-b",
-                isDayCompleted && "bg-muted/50",
+                !isCurrentDay && isPastDay && "bg-muted/50",
                 isCurrentDay && "bg-accent"
               )}>
                 <div className="flex items-center justify-between">
@@ -155,10 +164,10 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                     {getStatusBadge(dayStatus)}
                   </div>
                   <div className="text-sm text-muted-foreground" data-testid={`day-progress-${dayIndex}`}>
-                    {dayStatus === 'completed' ? '100%' : Math.round(dayProgressPercent) + '%'} • {dayTasks.length} tasks
+                    {!isCurrentDay && isPastDay ? '100%' : Math.round(dayProgressPercent) + '%'} • {dayTasks.length} tasks
                   </div>
                 </div>
-                <div className="mt-1 flex items-center justify-between">
+                 <div className="mt-1 flex items-center justify-between">
                   <GoalInline type="daily" date={day} label="GOAL:" />
                   <div className="text-sm text-muted-foreground font-semibold" data-testid={`day-total-time-${dayIndex}`}>
                     Total Time: {dayTotalFormatted}
@@ -186,7 +195,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                   ),
                 });
               }}>
-              <CardContent className="p-6">
+              <CardContent className="p-6 space-y-4">
                 {dayTasks.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground" data-testid={`no-tasks-${dayIndex}`}>
                     No tasks scheduled for this day
@@ -210,6 +219,18 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                     ))}
                   </div>
                 )}
+                {/* Daily Review row (click to open review in detail pane) */}
+                <button
+                  className="w-full mt-3 group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-3 flex items-center justify-between"
+                  onClick={() => selectReview('daily', day)}
+                  aria-label="Open Daily Review"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-6 w-6 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">DR</span>
+                    <span className="text-sm font-medium text-foreground">Daily Review</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Click to reflect</span>
+                </button>
               </CardContent>
               </DroppableDay>
             </Card>
@@ -243,6 +264,22 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
           </div>
         </CardContent>
       </Card>
+
+      {/* Weekly Review row */}
+      <button
+        className="w-full group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-4 flex items-center justify-between"
+        onClick={() => selectReview('weekly', weekStart)}
+        aria-label="Open Weekly Review"
+      >
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-7 w-7 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">WR</span>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-semibold text-foreground">Weekly Review</span>
+            <span className="text-xs text-muted-foreground">Reflect on your week</span>
+          </div>
+        </div>
+        <span className="text-xs text-muted-foreground">Click to reflect</span>
+      </button>
     </div>
   );
 }

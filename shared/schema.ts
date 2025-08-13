@@ -117,6 +117,66 @@ export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type UpdateGoal = z.infer<typeof updateGoalSchema>;
 export type Goal = typeof goals.$inferSelect;
 
+// Reviews: reflections captured per period and anchor date
+export const reviewTypeEnum = z.enum(["daily", "weekly"]);
+export type ReviewType = z.infer<typeof reviewTypeEnum>;
+export const reviewGoalStatusEnum = z.enum(["yes", "partially", "no"]);
+export type ReviewGoalStatus = z.infer<typeof reviewGoalStatusEnum>;
+
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  productivityRating: integer("productivity_rating").default(0),
+  goalAchievementStatus: text("goal_achievement_status"),
+  achievedGoal: boolean("achieved_goal"),
+  achievedGoalReason: text("achieved_goal_reason"),
+  satisfied: boolean("satisfied"),
+  satisfiedReason: text("satisfied_reason"),
+  improvements: text("improvements"),
+  biggestWin: text("biggest_win"),
+  topChallenge: text("top_challenge"),
+  topDistraction: text("top_distraction"),
+  nextFocusPlan: text("next_focus_plan"),
+  energyLevel: integer("energy_level").default(0),
+  mood: text("mood"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertReviewSchema = createInsertSchema(reviews)
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    type: reviewTypeEnum,
+    anchorDate: z.preprocess((val) => {
+      if (val instanceof Date) return val;
+      if (typeof val === "string" || typeof val === "number") {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? val : d;
+      }
+      return val;
+    }, z.date()),
+    productivityRating: z.number().min(0).max(10).optional(),
+    goalAchievementStatus: reviewGoalStatusEnum.nullable().optional(),
+    achievedGoal: z.boolean().nullable().optional(),
+    achievedGoalReason: z.string().optional().nullable(),
+    satisfied: z.boolean().nullable().optional(),
+    satisfiedReason: z.string().optional().nullable(),
+    improvements: z.string().optional().nullable(),
+    biggestWin: z.string().optional().nullable(),
+    topChallenge: z.string().optional().nullable(),
+    topDistraction: z.string().optional().nullable(),
+    nextFocusPlan: z.string().optional().nullable(),
+    energyLevel: z.number().min(0).max(10).optional(),
+    mood: z.string().optional().nullable(),
+  });
+
+export const updateReviewSchema = insertReviewSchema.partial().omit({ type: true, anchorDate: true });
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type UpdateReview = z.infer<typeof updateReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),

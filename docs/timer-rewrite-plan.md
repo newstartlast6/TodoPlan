@@ -124,7 +124,7 @@ Timer should be very accurate
     - [x] Use `public/timer-worker.js` to post 1Hz ticks regardless of tab visibility.
     - [x] On each tick: `currentSeconds = baseSecondsAtStart + ticksElapsed` (integer seconds). No per-tick wall-clock math.
     - [x] On resume/restore: compute an initial `ticksElapsed` using `(Date.now() - startedAtMs)/1000` once, then continue +1s ticking.
-    - [ ] Correct drift on visibility change by re-seeding `ticksElapsed` from wall-clock once; never per-tick. (follow-up)
+    - [x] Correct drift on visibility change by re-seeding `ticksElapsed` from wall-clock once; never per-tick. (follow-up)
   - Tray:
     - [x] If `setTrayTitle` provided (via Electron preload), format `mm:ss` or `h:mm:ss` and update on every tick, blank when idle.
   - Persistence:
@@ -202,38 +202,36 @@ Timer should be very accurate
 ---
 
 ### Server Cleanup and Simplification
-- [ ] Remove timer routes and controllers from `server/routes.ts`, `server/index.ts`, services, and tests under `server/__tests__/` that reference sessions.
-- [ ] Keep/implement `PUT /api/tasks/:id/time-logged`.
+- [x] Remove timer routes and controllers from `server/routes.ts`, `server/index.ts`, services, and tests under `server/__tests__/` that reference sessions.
+- [x] Keep/implement `PUT /api/tasks/:id/time-logged`.
 - [ ] Ensure CORS/proxy still support `/api` calls.
 
 ---
 
-### Testing Plan
-- Unit tests (shared)
-  - [ ] `TimerStore` start/pause/resume/stop flows.
-  - [ ] Restore from persisted state after simulated app restart with downtime.
-  - [ ] Drift correction on visibility change.
-- Client tests
-  - [ ] `task-timer-button` integration with store.
-  - [ ] `selectable-todo-item` displays running vs paused values correctly.
-  - [ ] `todo-detail-pane` shows the single source value and updates after pause.
-  - [ ] Worker tick behavior in background (mocked).
-- Server tests
-  - [ ] `PUT /api/tasks/:id/time-logged` validation and update behavior.
-  - [ ] Remove legacy timer route tests.
 
 ---
 
 ### Rollout / Migration Steps
 - [x] Create migration `0009_timer_rewrite.sql` and run locally.
-- [ ] Remove legacy files and imports. Build should compile with the new store.
-- [ ] Update component code and tests to use `TimerStore`.
-- [ ] Manual QA scenarios:
-  - Start → tick for N seconds → pause → confirm DB shows N seconds and UI matches.
+- [x] Wire new store at app bootstrap: call `TimerStore.init(...)` and `TimerStore.restoreActiveState()` in `client/src/App.tsx`.
+- [x] Update components to read from the single source of truth (`use-timer-store`): list items, detail pane, and timer controls use `TimerStore` APIs.
+- [x] Remove legacy files/imports (timer context, API client, legacy timer-service) and replace usages. Ensure TypeScript build passes.
+- [x] Server exposes only sessionless timer endpoints: `PUT /api/tasks/:id/time-logged` and `GET /api/tasks/:id/time-logged`; legacy session routes removed. Daily summary remains at `GET /api/timers/daily` for reports.
+- [ ] Database cleanup in production:
+  - [ ] Backfill `tasks.time_logged_seconds` from legacy session tables (sum per task), if needed.
+  - [ ] Drop legacy timer session tables/indexes once backfill is verified.
+- [ ] Staged rollout plan:
+  - [ ] Ship server first (new endpoints available; legacy session routes removed except daily summary).
+  - [ ] Ship client with `TimerStore` enabled by default.
+  - [ ] Monitor errors (PUT failure rate, offline queue length) and UI consistency for 24–48h.
+- [ ] Manual QA scenarios (pre/post deploy):
+  - Start → tick for N seconds → pause → DB shows N seconds; UI matches everywhere.
   - Resume → run M seconds → pause → DB shows N+M.
-  - Start → quit app for K minutes → reopen → UI immediately shows N+K running; then pause → DB shows N+K.
-  - Tray reflects the same value and responds to pause/resume/stop.
-- [ ] Remove `/timers/*` endpoints from production environments.
+  - Start → quit app for K minutes → reopen → UI shows N+K running; then pause → DB shows N+K.
+  - Tray title matches UI; responds to pause/resume/stop.
+  - Offline pause → enqueue update → reconnect → queued PUTs flush in order; server never regresses.
+- [ ] Remove all remaining `/timers/*` routes from production (except daily summary if still required for reports), update any clients that referenced them.
+- [ ] Post-deploy cleanup: mark session codepaths and types as deprecated in `shared/*` and schedule removal.
 
 ---
 
@@ -273,6 +271,7 @@ Timer should be very accurate
   - [ ] Remove/replace `timer-context` and session tests.
   - [ ] Add `TimerStore` unit tests.
   - [ ] Update component tests for new display logic.
+  - [ ] Remove or update `client/src/services/__tests__/background-timer-service.test.ts` (legacy worker wrapper test references deleted file).
 
 ---
 

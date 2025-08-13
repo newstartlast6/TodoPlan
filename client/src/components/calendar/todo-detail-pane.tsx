@@ -209,6 +209,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     }
   };
 
+  // If a review is selected, render ReviewForm in-place
   // Empty state when no task is selected
   if (!selectedTodoId) {
     return (

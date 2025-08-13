@@ -1,4 +1,4 @@
-import { CalendarIcon, Calendar, CalendarDays, CalendarRange, CalendarCheck, List, Kanban } from "lucide-react";
+import { CalendarIcon, Calendar, CalendarDays, CalendarRange, CalendarCheck, List, Kanban, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
@@ -41,6 +41,7 @@ export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPan
   
   const isCalendarPage = location === '/';
   const isListsPage = location === '/lists';
+  const isStreakPage = location === '/streak';
 
   return (
     <div className="w-16 bg-surface border-r border-border flex flex-col items-center py-4" data-testid="minimalistic-sidebar">
@@ -103,6 +104,33 @@ export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPan
             <div>
               <div className="font-medium">Lists</div>
               <div className="text-xs text-muted-foreground">Organize tasks in custom lists</div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Streak */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isStreakPage ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setLocation('/streak')}
+              className={cn(
+                "w-10 h-10 transition-colors",
+                isStreakPage
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              )}
+              data-testid="nav-button-streak"
+              aria-label="Streak"
+            >
+              <Flame className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="ml-2">
+            <div>
+              <div className="font-medium">Streak</div>
+              <div className="text-xs text-muted-foreground">Your daily 8h target streak</div>
             </div>
           </TooltipContent>
         </Tooltip>

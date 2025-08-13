@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
 import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
+import { ReviewDetailPane } from "@/components/calendar/review-detail-pane";
 import { DayView } from "@/components/calendar/day-view";
 import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
@@ -35,7 +36,7 @@ export default function Calendar() {
  
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectedTodoId, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+  const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
 
   // No goal chips in tabs; goals are displayed within each view
 
@@ -358,9 +359,18 @@ export default function Calendar() {
   );
 
   // Render detail pane
-  const renderDetailPane = () => (
-    <TodoDetailPane onClose={closeDetailPane} />
-  );
+  const renderDetailPane = () => {
+    if (selectedReviewType && selectedReviewAnchorDate && !selectedTodoId) {
+      return (
+        <ReviewDetailPane
+          type={selectedReviewType}
+          anchorDate={new Date(selectedReviewAnchorDate)}
+          onClose={closeDetailPane}
+        />
+      );
+    }
+    return <TodoDetailPane onClose={closeDetailPane} />;
+  };
 
   return (
     <>
@@ -371,6 +381,7 @@ export default function Calendar() {
           detail={renderDetailPane()}
           isDetailOpen={isDetailPaneOpen}
           onDetailClose={closeDetailPane}
+          detailWidthClass={selectedReviewType ? 'w-[500px]' : undefined}
         />
       </DndProvider>
 
