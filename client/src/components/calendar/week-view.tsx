@@ -63,12 +63,14 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTas
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(t);
     }
-    // Stable ordering by creation time (fallback to startTime)
+    // Always sort by priority (high → low), then by title
     for (const [, list] of map) {
+      const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
       list.sort((a, b) => {
-        const aKey = (a.createdAt ?? a.startTime) as unknown as string;
-        const bKey = (b.createdAt ?? b.startTime) as unknown as string;
-        return new Date(aKey).getTime() - new Date(bKey).getTime();
+        const aPrio = priorityOrder[a.priority as string] ?? 0;
+        const bPrio = priorityOrder[b.priority as string] ?? 0;
+        if (aPrio !== bPrio) return bPrio - aPrio;
+        return a.title.localeCompare(b.title);
       });
     }
     return map;

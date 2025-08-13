@@ -358,7 +358,7 @@ export default function Calendar() {
     <div className="flex-1 flex flex-col">
       {timer.isRunning && timer.activeTaskId && (
         <div
-          className="sticky top-0 z-40 bg-accent/95 text-accent-foreground backdrop-blur supports-[backdrop-filter]:bg-accent/80 border-b border-accent"
+          className="sticky top-0 z-40 bg-accent text-accent-foreground backdrop-blur supports-[backdrop-filter]:bg-accent border-b border-accent"
           onClick={() => {
             const targetDate = activeTaskDate ?? new Date();
             setCurrentDate(targetDate);
@@ -382,7 +382,7 @@ export default function Calendar() {
                 <span className="text-[13px] font-medium truncate max-w-[40vw]">
                   {activeTaskTitle}
                 </span>
-                <span className="text-accent-foreground/50">•</span>
+                <span className="text-accent-foreground opacity-60">•</span>
                 <span className="inline-flex items-center rounded-full bg-accent text-accent-foreground ring-1 ring-accent px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
                   {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
                 </span>
@@ -403,7 +403,7 @@ export default function Calendar() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="bg-background text-accent-foreground border-accent hover:bg-accent/10"
+                  className="bg-background text-accent-foreground border-accent hover:bg-accent"
                   onClick={async () => {
                     const id = timer.activeTaskId!;
                     try { await timer.pause(); } catch {}
