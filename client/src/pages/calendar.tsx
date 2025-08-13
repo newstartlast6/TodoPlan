@@ -72,7 +72,42 @@ export default function Calendar() {
       const response = await apiRequest('POST', '/api/tasks', newTask);
       return response.json();
     },
-    onSuccess: (created: Task) => {
+    onMutate: async (newTask: InsertTask) => {
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks'] });
+
+      const previousLists = queryClient.getQueriesData<Task[]>({ queryKey: ['/api/tasks'] });
+
+      const tempId = `temp-${Date.now()}`;
+      const tempTask: Task = {
+        id: tempId as any,
+        title: newTask.title,
+        description: (newTask as any).description,
+        notes: (newTask as any).notes,
+        startTime: new Date(newTask.startTime) as any,
+        endTime: new Date(newTask.endTime) as any,
+        completed: Boolean(newTask.completed),
+        priority: newTask.priority ?? 'medium',
+        listId: (newTask as any).listId as any,
+        scheduledDate: (newTask as any).scheduledDate ? new Date((newTask as any).scheduledDate) as any : null as any,
+        timeLoggedSeconds: 0 as any,
+        createdAt: new Date() as any,
+      } as Task;
+
+      queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+        if (!old) return [tempTask];
+        return [tempTask, ...old];
+      });
+
+      return { previousLists, tempId } as const;
+    },
+    onSuccess: (created: Task, _vars, context) => {
+      // Replace temp task with the created one
+      if (context?.tempId) {
+        queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+          if (!old) return old;
+          return old.map((t) => (t.id === (context.tempId as any) ? created : t));
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       // Select the newly created task so it highlights and opens details
       // and triggers inline edit in the list
@@ -82,7 +117,13 @@ export default function Calendar() {
         description: "Your task has been added successfully.",
       });
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      // Rollback optimistic insert
+      if (context?.previousLists) {
+        for (const [key, data] of context.previousLists) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       toast({
         title: "Error",
         description: "Failed to create task. Please try again.",
@@ -239,6 +280,7 @@ export default function Calendar() {
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
+            onTaskCreate={handleCreateTask}
           />
         );
       case 'month':
@@ -266,14 +308,7 @@ export default function Calendar() {
   // Render sidebar
   const renderSidebar = () => (
     <div className="space-y-4">
-      <MinimalisticSidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onTogglePlanPanel={() => {
-          setIsPlanPanelOpen((v) => !v);
-        }}
-        isPlanPanelOpen={isPlanPanelOpen}
-      />
+      <MinimalisticSidebar />
     </div>
   );
 

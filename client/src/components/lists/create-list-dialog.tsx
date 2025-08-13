@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { EmojiPicker } from './emoji-picker';
 import { validateCreateListRequest } from '../../lib/list-validation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { EMOJI_CATEGORIES } from '@shared/list-types';
 
 interface CreateListDialogProps {
-  onCreateList: (list: { name: string; emoji: string; color?: string }) => void;
+  onCreateList: (list: { name: string; emoji: string }) => void;
   onClose: () => void;
 }
 
 export function CreateListDialog({ onCreateList, onClose }: CreateListDialogProps) {
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('📋');
-  const [color, setColor] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +24,6 @@ export function CreateListDialog({ onCreateList, onClose }: CreateListDialogProp
     const validation = validateCreateListRequest({
       name: name.trim(),
       emoji,
-      color: color || undefined,
     });
 
     if (!validation.success) {
@@ -47,16 +46,7 @@ export function CreateListDialog({ onCreateList, onClose }: CreateListDialogProp
     setShowEmojiPicker(false);
   };
 
-  const predefinedColors = [
-    '#f97316', // orange
-    '#ef4444', // red
-    '#10b981', // green
-    '#3b82f6', // blue
-    '#8b5cf6', // purple
-    '#f59e0b', // yellow
-    '#ec4899', // pink
-    '#06b6d4', // cyan
-  ];
+  // Emoji-mart handler removed (we now only show quick picks)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -90,25 +80,35 @@ export function CreateListDialog({ onCreateList, onClose }: CreateListDialogProp
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Icon
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="flex items-center justify-center w-12 h-12 text-2xl bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
-              >
-                {emoji}
-              </button>
-              
-              {showEmojiPicker && (
-                <div className="absolute top-full left-0 z-10 mt-1">
-                  <EmojiPicker
-                    selectedEmoji={emoji}
-                    onEmojiSelect={handleEmojiSelect}
-                    onClose={() => setShowEmojiPicker(false)}
-                  />
+            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="flex items-center justify-center w-12 h-12 text-2xl bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                >
+                  {emoji}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" sideOffset={8} className="p-0 border-none shadow-none bg-transparent">
+                <div className="bg-white rounded-md border border-gray-200 p-3 w-[340px]">
+                  <div className="text-[11px] font-medium text-gray-600 mb-2">Quick picks</div>
+                  <div className="grid grid-cols-8 gap-2">
+                    {Array.from(new Set(Object.values(EMOJI_CATEGORIES).flatMap(c => c.emojis))).slice(0, 48).map((e) => (
+                      <button
+                        key={e}
+                        onClick={() => handleEmojiSelect(e)}
+                        className={`w-8 h-8 flex items-center justify-center text-xl rounded-md transition-colors hover:bg-gray-100 ${emoji === e ? 'bg-orange-100 ring-2 ring-orange-500' : ''}`}
+                        title={e}
+                        type="button"
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Name Input */}
@@ -131,49 +131,7 @@ export function CreateListDialog({ onCreateList, onClose }: CreateListDialogProp
             </div>
           </div>
 
-          {/* Color Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Color (optional)
-            </label>
-            <div className="flex items-center gap-2 flex-wrap">
-              {predefinedColors.map((predefinedColor) => (
-                <button
-                  key={predefinedColor}
-                  type="button"
-                  onClick={() => setColor(predefinedColor)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    color === predefinedColor
-                      ? 'border-gray-400 scale-110'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  style={{ backgroundColor: predefinedColor }}
-                  title={predefinedColor}
-                />
-              ))}
-              
-              {/* Custom Color Input */}
-              <div className="relative">
-                <input
-                  type="color"
-                  value={color || '#f97316'}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer"
-                  title="Custom color"
-                />
-              </div>
-            </div>
-            
-            {color && (
-              <button
-                type="button"
-                onClick={() => setColor('')}
-                className="text-xs text-gray-500 hover:text-gray-700 mt-2"
-              >
-                Clear color
-              </button>
-            )}
-          </div>
+          {/* Color option removed */}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3">

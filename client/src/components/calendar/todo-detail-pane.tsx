@@ -1,37 +1,34 @@
-import { X, Calendar, Clock, Timer } from "lucide-react";
+import { X, Calendar, Timer, StickyNote, Target, Clock, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 import { NotesEditor } from "@/components/calendar/notes-editor";
-import { TimePicker } from "@/components/calendar/time-picker";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimation } from "@/components/timer/task-estimation";
 import { useTimerStore } from "@/hooks/use-timer-store";
 import { Task, UpdateTask } from "@shared/schema";
 import { format, isBefore } from "date-fns";
-import { formatTimeRange } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { listsKeys } from "@/hooks/use-lists";
 import { TimerCalculator } from "@shared/services/timer-store";
-
+  
 interface TodoDetailPaneProps {
   onClose?: () => void;
   className?: string;
 }
-
+  
 export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { selectedTodoId, closeDetailPane } = useSelectedTodo();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
+  
   // Timer integration (sessionless)
   const timer = useTimerStore();
   const isActiveTask = timer.activeTaskId === selectedTodoId && timer.isRunning;
   const isTimerRunning = timer.isRunning;
-
+  
   // Fetch the selected task details
   const { data: selectedTask, isLoading, error } = useQuery<Task>({
     queryKey: ['task', selectedTodoId],
@@ -51,7 +48,7 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
     refetchOnReconnect: true,
     refetchOnMount: false,
   });
-
+  
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async (updates: UpdateTask): Promise<Task> => {
@@ -63,11 +60,11 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
         },
         body: JSON.stringify(updates),
       });
-
+  
       if (!response.ok) {
         throw new Error(`Failed to update task: ${response.statusText}`);
       }
-
+  
       return response.json();
     },
     onMutate: async (updates) => {
@@ -266,11 +263,16 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   return (
     <div className={cn("h-full flex flex-col bg-surface", className)} data-testid="todo-detail-pane">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-b from-muted/20 to-transparent">
+      <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-b from-muted/30 to-transparent">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-foreground truncate" data-testid="todo-detail-title">
+            <h2 className="text-xl font-semibold text-foreground break-words flex items-center gap-2" data-testid="todo-detail-title">
               {selectedTask.title}
+              {isActiveTask && isTimerRunning ? (
+                <span className="inline-flex items-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_0_3px_rgba(251,146,60,0.25)] animate-pulse" />
+                </span>
+              ) : null}
             </h2>
             <div className="flex items-center space-x-2 mt-1">
               {isActiveTask && isTimerRunning ? (
@@ -296,15 +298,21 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
       {/* Content - Single scroll container */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6">
-          {/* Notes Section - moved to top under title */}
-          <div className="rounded-xl border border-border/50 bg-card/50 p-4">
-            <h4 className="text-xs tracking-wide uppercase text-muted-foreground mb-3">Notes</h4>
+        <div className="p-6 space-y-12">
+          {/* Notes - clean, divider-based */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-yellow-100">
+                <StickyNote className="w-4 h-4 text-yellow-600" />
+              </div>
+              <h4 className="text-sm font-medium text-foreground">Notes</h4>
+            </div>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-yellow-300/60 to-transparent" />
             <NotesEditor
               taskId={selectedTask.id}
               initialNotes={selectedTask.notes || ""}
               placeholder="Jot quick notes..."
-              className="min-h-[120px]"
+              className="min-h-[140px] bg-transparent"
             />
           </div>
 
@@ -312,51 +320,68 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
           {/* Time Tracking */}
           {!selectedTask.completed && (
-            <div className="rounded-xl border border-border/50 bg-card/50 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs tracking-wide uppercase text-muted-foreground flex items-center gap-2">
-                  <Timer className="w-4 h-4" />
-                  Time Tracking
-                </h4>
+            <div className="rounded-xl bg-card/40 p-4 space-y-4 shadow-sm backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-orange-100">
+                    <Timer className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <h4 className="text-sm font-medium text-foreground">Time Tracking</h4>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={handleResetLoggedTime}
-                    className="h-8"
+                    className="h-10 border-red-200 text-red-600 hover:bg-red-50"
                   >
                     Reset to 0:00
                   </Button>
-                   <TaskTimerButton
+                  <TaskTimerButton
                     taskId={selectedTask.id}
                     taskTitle={selectedTask.title}
                     variant="default"
                   />
                 </div>
               </div>
-
-              {/* Remove separate session display to avoid dual values */}
-
-              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <div className="text-xs font-medium text-muted-foreground mb-1">
-                  Time Logged
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-orange-300/60 to-transparent" />
+              <div className="rounded-xl bg-muted/20 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center p-1.5 rounded-md bg-orange-100">
+                    <Clock className="w-4 h-4 text-orange-600" />
+                  </span>
+                  <div>
+                    <div className="text-xs font-medium text-muted-foreground">Time Logged</div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <div className="text-3xl font-mono font-semibold tabular-nums text-foreground">
+                        {(() => {
+                          const persisted = (selectedTask as any).timeLoggedSeconds || 0;
+                          if (isActiveTask) {
+                            return TimerCalculator.formatDuration(timer.displaySeconds || 0);
+                          }
+                          return TimerCalculator.formatDuration(persisted);
+                        })()}
+                      </div>
+                      {isActiveTask && isTimerRunning ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-semibold uppercase tracking-wide animate-pulse">
+                          Live
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-lg font-mono font-semibold text-foreground">
-                  {(() => {
-                     const persisted = (selectedTask as any).timeLoggedSeconds || 0;
-                     if (isActiveTask) {
-                       return TimerCalculator.formatDuration(timer.displaySeconds || 0);
-                     }
-                     return TimerCalculator.formatDuration(persisted);
-                  })()}
-                </div>
-                {/* Session counts removed in sessionless design */}
               </div>
             </div>
           )}
 
           {/* Estimation & Properties */}
-          <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-4">
+          <div className="rounded-xl bg-card/40 p-4 space-y-4 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-sky-100">
+                <Target className="w-4 h-4 text-sky-600" />
+              </div>
+              <h4 className="text-sm font-medium text-foreground">Estimate & Details</h4>
+            </div>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-sky-300/60 to-transparent" />
             {!selectedTask.completed && (
               <TaskEstimation
                 taskId={selectedTask.id}
@@ -364,26 +389,49 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 compact
               />
             )}
-
-            <Separator />
-
-            <div className="grid gap-4">
-              {/* Time pickers removed from UI */}
-
-              <Separator />
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  {isActiveTask && isTimerRunning ? (
-                    <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
-                  ) : null}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Created</span>
-                  <span className="text-xs text-muted-foreground">
-                    {selectedTask.createdAt && format(new Date(selectedTask.createdAt), "MMM d, yyyy")}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {/* Priority */}
+              <div className="flex items-center justify-between rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-amber-100">
+                    <Flag className="w-3.5 h-3.5 text-amber-600" />
                   </span>
+                  Priority
+                </div>
+                <span className={cn(
+                  "text-xs px-2 py-0.5 rounded-full ring-1",
+                  selectedTask.priority === 'high' && "bg-red-100 text-red-700 ring-red-600/20",
+                  selectedTask.priority === 'medium' && "bg-amber-100 text-amber-700 ring-amber-600/20",
+                  selectedTask.priority === 'low' && "bg-emerald-100 text-emerald-700 ring-emerald-600/20",
+                )}>
+                  {selectedTask.priority.charAt(0).toUpperCase() + selectedTask.priority.slice(1)}
+                </span>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center justify-between rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-orange-100">
+                    <Timer className="w-3.5 h-3.5 text-orange-600" />
+                  </span>
+                  Status
+                </div>
+                {isActiveTask && isTimerRunning ? (
+                  <Badge className="text-xs bg-orange-500 text-white ring-1 ring-orange-600/20">In Progress</Badge>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Idle</span>
+                )}
+              </div>
+              {/* Created - stacked */}
+              <div className="rounded-lg bg-muted/20 p-3 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center justify-center p-1 rounded-md bg-sky-100">
+                    <Calendar className="w-3.5 h-3.5 text-sky-600" />
+                  </span>
+                  Created
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {selectedTask.createdAt && format(new Date(selectedTask.createdAt), "MMM d, yyyy")}
                 </div>
               </div>
             </div>

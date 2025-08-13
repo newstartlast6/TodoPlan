@@ -31,7 +31,7 @@ export function useLists() {
             id: list.id,
             name: list.name,
             emoji: list.emoji,
-            color: ((list as any).color ?? null) as string | null,
+            color: null as string | null,
             createdAt: (list.createdAt as any) ?? new Date(),
             updatedAt: (list.updatedAt as any) ?? new Date(),
             taskCount: tasks.length,
@@ -123,11 +123,11 @@ export function useCreateList() {
       // Optimistically update to the new value
       queryClient.setQueryData(listsKeys.lists(), (old: ListWithTaskCount[] | undefined) => {
         if (!old) return old;
-        const optimisticList: ListWithTaskCount = {
+         const optimisticList: ListWithTaskCount = {
           id: `temp-${Date.now()}`,
           name: newList.name,
           emoji: newList.emoji,
-          color: (newList as any).color ?? null,
+           color: null,
           taskCount: 0,
           completedTaskCount: 0,
           createdAt: new Date() as any,

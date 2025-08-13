@@ -1,42 +1,12 @@
-import { CalendarIcon, Calendar, CalendarDays, CalendarRange, CalendarCheck, List, Kanban, Flame } from "lucide-react";
+import { CalendarIcon, Calendar, List, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
-type CalendarView = 'day' | 'week' | 'month' | 'year';
+interface MinimalisticSidebarProps {}
 
-interface MinimalisticSidebarProps {
-  currentView?: CalendarView;
-  onViewChange?: (view: CalendarView) => void;
-  onTogglePlanPanel?: () => void;
-  isPlanPanelOpen?: boolean;
-}
-
-const viewConfig = {
-  day: {
-    icon: Calendar,
-    label: 'Day View',
-    description: 'View tasks for a single day',
-  },
-  week: {
-    icon: CalendarDays,
-    label: 'Week View',
-    description: 'View tasks for the current week',
-  },
-  month: {
-    icon: CalendarRange,
-    label: 'Month View',
-    description: 'View tasks for the entire month',
-  },
-  year: {
-    icon: CalendarCheck,
-    label: 'Year View',
-    description: 'View tasks for the entire year',
-  },
-} as const;
-
-export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPanel, isPlanPanelOpen }: MinimalisticSidebarProps) {
+export function MinimalisticSidebar({}: MinimalisticSidebarProps) {
   const [location, setLocation] = useLocation();
   
   const isCalendarPage = location === '/';
@@ -44,7 +14,7 @@ export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPan
   const isStreakPage = location === '/streak';
 
   return (
-    <div className="w-16 bg-surface border-r border-border flex flex-col items-center py-4" data-testid="minimalistic-sidebar">
+    <div className="w-16 h-full bg-surface border-r border-border flex flex-col items-center py-4" data-testid="minimalistic-sidebar">
       {/* App Logo/Icon */}
       <div className="mb-8">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
@@ -135,76 +105,6 @@ export function MinimalisticSidebar({ currentView, onViewChange, onTogglePlanPan
           </TooltipContent>
         </Tooltip>
       </nav>
-
-      {/* Calendar View Navigation (only show on calendar page) */}
-      {isCalendarPage && currentView && onViewChange && (
-        <nav className="flex flex-col space-y-2" data-testid="view-navigation">
-          {(Object.keys(viewConfig) as CalendarView[]).map((view) => {
-            const config = viewConfig[view];
-            const Icon = config.icon;
-            const isActive = currentView === view;
-
-            return (
-              <Tooltip key={view}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    size="icon"
-                    onClick={() => onViewChange(view)}
-                    className={cn(
-                      "w-10 h-10 transition-colors",
-                      isActive
-                        ? "bg-orange-500 text-white shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    )}
-                    data-testid={`view-button-${view}`}
-                    aria-label={config.label}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="ml-2">
-                  <div>
-                    <div className="font-medium">{config.label}</div>
-                    <div className="text-xs text-muted-foreground">{config.description}</div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </nav>
-      )}
-
-      {/* Plan Panel Toggle (shown when handler provided) */}
-      {onTogglePlanPanel && (
-        <div className="mt-auto pt-6">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={isPlanPanelOpen ? "default" : "ghost"}
-                size="icon"
-                onClick={onTogglePlanPanel}
-                className={cn(
-                  "w-10 h-10 transition-colors",
-                  isPlanPanelOpen
-                    ? "bg-orange-500 text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                )}
-                data-testid="toggle-plan-panel"
-                aria-label="Toggle Plan Panel"
-              >
-                <Kanban className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="ml-2">
-              <div>
-                <div className="font-medium">Plan</div>
-                <div className="text-xs text-muted-foreground">Show lists to plan your week</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      )}
     </div>
   );
 }

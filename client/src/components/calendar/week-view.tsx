@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { UrgencyViewSimple } from "@/components/ui/urgency-view-simple";
 import { SelectableTodoItem } from "@/components/calendar/selectable-todo-item";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { Task } from "@shared/schema";
+import { Task, InsertTask } from "@shared/schema";
 import { calculateWeekProgress, getUrgencyClass } from "@/lib/time-utils";
 import { cn } from "@/lib/utils";
 import { GoalInline } from "@/components/calendar/goal-inline";
@@ -22,9 +22,10 @@ interface WeekViewProps {
   currentDate: Date;
   onTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   onTaskDelete?: (taskId: string) => void;
+  onTaskCreate: (newTask: InsertTask) => void;
 }
 
-export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: WeekViewProps) {
+export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete, onTaskCreate }: WeekViewProps) {
   const DAILY_TARGET_SECONDS = 8 * 60 * 60; // 8 hours target per day
   const [goalsRefresh, setGoalsRefresh] = useState(0);
   const { toast } = useToast();
@@ -42,6 +43,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
   const isTimerRunning = timer.isRunning;
   const currentTaskId = timer.activeTaskId;
   const currentElapsedSeconds = timer.displaySeconds;
+  const [newTitleByDay, setNewTitleByDay] = useState<Record<string, string>>({});
   
   const completedTasks = tasks.filter(task => task.completed);
   const totalTasks = tasks.length;
@@ -126,6 +128,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
       <div className="space-y-6">
         {weekDays.map((day, dayIndex) => {
           const dayTasks = getTasksForDay(day);
+          const dayKey = format(day, 'yyyy-MM-dd');
+          const newTitle = newTitleByDay[dayKey] || "";
           // Total Time for this day: for the active task use live session total; others use persisted
           const dayTotalSeconds = dayTasks.reduce((sum, t) => {
             if (isTimerRunning && currentTaskId === t.id) {
@@ -196,12 +200,8 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                 });
               }}>
               <CardContent className="p-6 space-y-4">
-                {dayTasks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground" data-testid={`no-tasks-${dayIndex}`}>
-                    No tasks scheduled for this day
-                  </div>
-                ) : (
-                  <div className="space-y-2">
+                {dayTasks.length > 0 && (
+                  <div className="space-y-3">
                     {dayTasks.map((task) => (
                       <SelectableTodoItem
                         key={task.id}
@@ -211,7 +211,7 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                         onToggleComplete={toggleTaskCompletion}
                         onUpdate={(id, updates) => onTaskUpdate(id, updates)}
                         onDelete={onTaskDelete}
-                        variant="compact"
+                        variant="list"
                         showTime={false}
                         showLoggedTime={true}
                         startEditing={task.title === ""}
@@ -219,18 +219,59 @@ export function WeekView({ tasks, currentDate, onTaskUpdate, onTaskDelete }: Wee
                     ))}
                   </div>
                 )}
-                {/* Daily Review row (click to open review in detail pane) */}
-                <button
-                  className="w-full mt-3 group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-3 flex items-center justify-between"
-                  onClick={() => selectReview('daily', day)}
-                  aria-label="Open Daily Review"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex h-6 w-6 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">DR</span>
-                    <span className="text-sm font-medium text-foreground">Daily Review</span>
+
+                <div className="space-y-6">
+                  {/* Add New Todo Input */}
+                  <div
+                    className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-500 transition-colors duration-200 cursor-pointer"
+                    onClick={(e) => {
+                      const input = (e.currentTarget.querySelector('input') as HTMLInputElement | null);
+                      input?.focus();
+                    }}
+                    data-testid={`add-input-${dayIndex}`}
+                  >
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
+                    <input
+                      type="text"
+                      placeholder="Add a new task..."
+                      className="flex-1 bg-transparent outline-none text-muted-foreground placeholder-gray-400"
+                      value={newTitle}
+                      onChange={(e) => setNewTitleByDay((prev) => ({ ...prev, [dayKey]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const title = newTitle.trim();
+                          if (!title) return;
+                          const start = new Date(day);
+                          start.setHours(9, 0, 0, 0);
+                          const end = new Date(start.getTime() + 60 * 60 * 1000);
+                          const payload: InsertTask = {
+                            title,
+                            startTime: start,
+                            endTime: end,
+                            completed: false,
+                            priority: 'medium',
+                            scheduledDate: day,
+                          };
+                          onTaskCreate(payload);
+                          setNewTitleByDay((prev) => ({ ...prev, [dayKey]: '' }));
+                        }
+                      }}
+                    />
                   </div>
-                  <span className="text-xs text-muted-foreground">Click to reflect</span>
-                </button>
+
+                  {/* Daily Review row (click to open review in detail pane) */}
+                  <button
+                    className="w-full group rounded-lg border border-dashed border-orange-300 hover:border-orange-400 hover:bg-orange-50/40 transition-colors p-3 flex items-center justify-between"
+                    onClick={() => selectReview('daily', day)}
+                    aria-label="Open Daily Review"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-6 w-6 rounded-full bg-orange-100 text-orange-600 items-center justify-center text-xs font-semibold group-hover:bg-orange-200">DR</span>
+                      <span className="text-sm font-medium text-foreground">Daily Review</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">Click to reflect</span>
+                  </button>
+                </div>
               </CardContent>
               </DroppableDay>
             </Card>
