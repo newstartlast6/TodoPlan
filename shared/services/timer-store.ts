@@ -420,7 +420,6 @@ class TimerStoreImpl {
     try {
       const serverBase = await this.params.loadTaskBaseSeconds(taskId);
       if (serverBase > this.state.baseSecondsAtStart) {
-        const delta = serverBase - this.state.baseSecondsAtStart;
         this.state.baseSecondsAtStart = serverBase;
         if (this.state.startedAtMs) {
           // Keep current ticking, just adjust currentSeconds upward
