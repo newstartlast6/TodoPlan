@@ -3,6 +3,24 @@ import { pgTable, text, varchar, timestamp, boolean, integer, date } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// App-managed profiles table (identity lives in auth.users)
+export const profiles = pgTable("profiles", {
+  userId: varchar("user_id").primaryKey(),
+  displayName: text("display_name"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProfileSchema = createInsertSchema(profiles).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+export const updateProfileSchema = insertProfileSchema.partial().omit({ userId: true });
+export type InsertProfile = z.infer<typeof insertProfileSchema>;
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type Profile = typeof profiles.$inferSelect;
+
 export const lists = pgTable("lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),

@@ -11,12 +11,14 @@ import Calendar from "@/pages/calendar";
 import { Lists } from "@/pages/lists";
 import Streak from "@/pages/streak";
 import Login from "@/pages/login";
+import ResetPassword from "@/pages/reset-password";
 import { AuthProvider, RequireAuth } from "@/contexts/AuthProvider";
 
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/">
         <RequireAuth>
           <Calendar />

@@ -91,11 +91,12 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 - **Login flows**:
   - Google OAuth: popup/redirect flow; handle errors (popup blocked, denied consent)
   - Email/Password: sign up (with optional email confirmation), sign in, error states (invalid creds, rate limiting)
-  - Password reset: request reset email; handle redirect route to set a new password using the provided access token
+  - Password reset: request reset email; handle redirect route to set a new password using the provided access token (`/reset-password` implemented)
 - **API calls**:
   - Implemented token injection and 401 retry in `client/src/lib/queryClient.ts`
 - **Routing/UX**:
   - Add a `/login` page; gate app routes (`/lists`, `/calendar`, etc.) behind auth
+  - Add `/reset-password` route for Supabase password recovery
   - Show loading and error states; surface email verification pending if required
   - Provide a visible Sign out option
 
@@ -137,14 +138,14 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 ## Deliverables checklist (what to build)
 - [ ] Supabase project configured with Google + Email/Password + Reset Password
 - [ ] Env files for server and client with Supabase config
-- [ ] Database migrations: `profiles` table
+- [x] Database migrations: `profiles` table
 - [x] Database migrations: `user_id` added to per-user tables; indexes created
 - [ ] Database migrations: Optional RLS enabled and policies written
 - [x] Express middleware verifying Supabase JWT and attaching `userId`
 - [x] All `/api` routes protected and scoped by `userId`
 - [x] Frontend auth provider
 - [x] Frontend login page (Google + Email/Password)
-- [ ] Frontend password reset page
+- [x] Frontend password reset page
 - [x] Token injection on API calls (with one retry on 401)
 - [ ] Tests: unit, integration, and basic E2E
 

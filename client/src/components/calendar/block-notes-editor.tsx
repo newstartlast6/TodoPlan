@@ -3,7 +3,8 @@ import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
-import { useCreateBlockNote } from "@blocknote/react";
+import { useCreateBlockNote, SuggestionMenuController } from "@blocknote/react";
+import { getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesAutoSave } from "@/hooks/use-notes-auto-save";
@@ -131,7 +132,32 @@ export function BlockNotesEditor({
           filePanel={false}
           comments={false}
           emojiPicker={false}
-        />
+          formattingToolbar={false}
+          linkToolbar={false}
+          slashMenu={false}
+        >
+          <SuggestionMenuController
+            triggerCharacter="/"
+            getItems={async (query: string) => {
+              const items = getDefaultReactSlashMenuItems(editor as any);
+              const allowed = new Set([
+                "paragraph",
+                "heading",
+                "heading_2",
+                "heading_3",
+                "bullet_list",
+                "numbered_list",
+                "check_list",
+                "quote",
+                "page_break",
+              ]);
+              const filtered = (items as any[]).filter((i) => allowed.has(i.key));
+              if (!query) return filtered;
+              const q = query.toLowerCase();
+              return filtered.filter((i) => (i.title || "").toLowerCase().includes(q));
+            }}
+          />
+        </BlockNoteView>
       </div>
 
       <div className="flex items-center justify-between text-xs">
