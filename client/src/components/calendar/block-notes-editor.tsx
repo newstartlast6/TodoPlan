@@ -281,7 +281,7 @@ export function BlockNotesEditor({
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        style={{ minHeight: 300 }}
+        style={{ minHeight: 300 }}       
       >
         <BlockNoteView
           editor={editor as unknown as BlockNoteEditor}
