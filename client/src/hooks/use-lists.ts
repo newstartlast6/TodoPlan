@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { type ListWithTaskCount, type CreateListRequest, type UpdateListRequest } from '@shared/list-types';
 import { type Task } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
 
 // Query keys
 export const listsKeys = {
@@ -16,17 +17,14 @@ export function useLists() {
   return useQuery<ListWithTaskCount[]>({
     queryKey: listsKeys.lists(),
     queryFn: async () => {
-      const response = await fetch('/api/lists');
-      if (!response.ok) {
-        throw new Error('Failed to fetch lists');
-      }
+      const response = await apiRequest('GET', '/api/lists');
       const listsData = await response.json();
       
       // Enhance with task counts
       const listsWithCounts = await Promise.all(
         listsData.map(async (list: any) => {
-          const tasksResponse = await fetch(`/api/lists/${list.id}/tasks`);
-          const tasks = tasksResponse.ok ? await tasksResponse.json() : [];
+          const tasksResponse = await apiRequest('GET', `/api/lists/${list.id}/tasks`);
+          const tasks = await tasksResponse.json();
           const normalized: ListWithTaskCount = {
             id: list.id,
             name: list.name,
@@ -100,18 +98,7 @@ export function useCreateList() {
 
   return useMutation({
     mutationFn: async (listData: CreateListRequest) => {
-      const response = await fetch('/api/lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(listData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create list');
-      }
-
+      const response = await apiRequest('POST', '/api/lists', listData);
       return response.json();
     },
     onMutate: async (newList) => {
@@ -170,18 +157,7 @@ export function useUpdateList() {
 
   return useMutation({
     mutationFn: async ({ listId, updates }: { listId: string; updates: UpdateListRequest }) => {
-      const response = await fetch(`/api/lists/${listId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update list');
-      }
-
+      const response = await apiRequest('PUT', `/api/lists/${listId}`, updates);
       return response.json();
     },
     onMutate: async ({ listId, updates }) => {
@@ -244,13 +220,7 @@ export function useDeleteList() {
 
   return useMutation({
     mutationFn: async (listId: string) => {
-      const response = await fetch(`/api/lists/${listId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete list');
-      }
+      const response = await apiRequest('DELETE', `/api/lists/${listId}`);
     },
     onMutate: async (listId) => {
       // Cancel outgoing refetches

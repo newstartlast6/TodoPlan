@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { apiRequest } from '@/lib/queryClient';
 import { useDailyTimerStats } from './use-timer-state';
 // Legacy TimerApiClient removed; use direct fetches or TimerStore if needed
 
@@ -52,8 +53,8 @@ export function useProgressAnalytics(days: number = 7) {
           
           try {
             const params = new URLSearchParams({ date: date.toISOString().split('T')[0] });
-            const res = await fetch(`/api/timers/daily?${params}`);
-            const summary = res.ok ? await res.json() : { totalSeconds: 0, taskBreakdown: [] };
+            const res = await apiRequest('GET', `/api/timers/daily?${params}`);
+            const summary = await res.json();
             data.push({
               date: date.toISOString().split('T')[0],
               totalSeconds: summary.totalSeconds,

@@ -6,7 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 // import { NotesEditor } from "@/components/calendar/notes-editor";
-// import { EnhancedNotesEditor } from "@/components/calendar/enhanced-notes-editor";
+import { EnhancedNotesEditor } from "@/components/calendar/enhanced-notes-editor";
+import { BlockNotesEditor } from "@/components/calendar/block-notes-editor";
 
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
@@ -384,6 +385,22 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
                 <StickyNote className="w-4 h-4 text-accent-foreground" />
               </div>
               <h4 className="text-xs font-medium text-foreground">Notes</h4>
+            </div>
+            <div>
+              <EnhancedNotesEditor
+                taskId={selectedTask.id}
+                initialNotes={selectedTask.notes || ""}
+                placeholder="Capture thoughts, plans, or links..."
+                className="min-h-[180px] bg-transparent"
+              />
+            </div>
+            <div>
+            <BlockNotesEditor
+              taskId={selectedTask.id}
+              initialNotes={selectedTask.notes || ""}
+              placeholder="Capture thoughts, plans, or links..."
+              className="min-h-[180px] bg-transparent"
+            />
             </div>
             <div className="relative rounded-lg border bg-background border-border" style={{ minHeight: 280 }}>
               <BlockNoteView

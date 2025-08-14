@@ -3,11 +3,15 @@ import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
-import { useCreateBlockNote, SuggestionMenuController } from "@blocknote/react";
+import { useCreateBlockNote, SuggestionMenuController, DefaultReactSuggestionItem, SuggestionMenuProps } from "@blocknote/react";
 import { getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesAutoSave } from "@/hooks/use-notes-auto-save";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Toggle } from "@/components/ui/toggle";
+import { Type, List, CheckSquare, Bold, Italic, Strikethrough, Quote, Code, Undo, Redo } from "lucide-react";
 
 interface BlockNotesEditorProps {
   taskId: string;
@@ -27,6 +31,7 @@ export function BlockNotesEditor({
   onSaveError,
 }: BlockNotesEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [, setSelectionVersion] = useState(0);
 
   const { isDirty, isSaving, lastSaved, error, updateNotes, forceSave, retrySave } =
     useNotesAutoSave({ taskId, initialNotes, debounceMs: 800, onSaveSuccess, onSaveError });
@@ -69,6 +74,7 @@ export function BlockNotesEditor({
       const html = await editor.blocksToFullHTML(editor.document);
       updateNotes(html);
     });
+    const offSel = editor.onSelectionChange?.(() => setSelectionVersion((v) => v + 1));
     return () => { (unsubscribe as any)?.(); };
   }, [editor, updateNotes]);
 
@@ -110,8 +116,124 @@ export function BlockNotesEditor({
     );
   }
 
+  // Helpers reflecting pressed/active states
+  const styles = editor.getActiveStyles?.() || {} as any;
+  const currentBlock = editor.getTextCursorPosition().block as any;
+  const currentType: string | undefined = currentBlock?.type;
+  const currentLevel: number | undefined = currentBlock?.props?.level;
+
+  const setBlockType = (type: string, props?: Record<string, any>) => {
+    const block = editor.getTextCursorPosition().block;
+    if (!block) return;
+    editor.updateBlock(block, { type: type as any, props: props as any });
+  };
+
+  const toggleBlockType = (type: string, props?: Record<string, any>) => {
+    if (currentType === type) {
+      setBlockType("paragraph");
+    } else {
+      setBlockType(type, props);
+    }
+  };
+
+  const toggleHeading = (level: 1 | 2 | 3) => {
+    if (currentType === "heading" && currentLevel === level) {
+      setBlockType("paragraph");
+    } else {
+      setBlockType("heading", { level });
+    }
+  };
+
+  const insertTaskList = () => toggleBlockType("checkListItem");
+
+  // Custom Slash Menu component (white menu with selection highlight and arrow)
+  function CustomSlashMenu(props: SuggestionMenuProps<DefaultReactSuggestionItem>) {
+    return (
+      <div className="slash-menu bn-custom-slash">
+        {props.items.map((item, index) => (
+          <div
+            key={item.title + index}
+            className={cn("slash-menu-item", props.selectedIndex === index && "selected")}
+            onClick={() => props.onItemClick?.(item)}
+            role="option"
+            aria-selected={props.selectedIndex === index}
+          >
+            {item.title}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className={cn("flex flex-col space-y-3", className)}>
+      {/* Toolbar - mirrors EnhancedNotesEditor */}
+      <style>{`
+        .bn-custom-slash { position: relative; }
+        .slash-menu { background-color: #fff; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 6px; height: fit-content; max-height: inherit; overflow: auto; padding: 6px; }
+        .slash-menu::before { content: ""; position: absolute; top: -6px; left: 16px; width: 10px; height: 10px; background: #fff; border-left: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; transform: rotate(45deg); }
+        .slash-menu-item { background-color: #fff; border: 1px solid #f3f4f6; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); cursor: pointer; font-size: 14px; display: flex; align-items: center; padding: 8px 10px; }
+        .slash-menu-item:hover, .slash-menu-item.selected { background-color: #f8fafc; }
+      `}</style>
+      <div className="flex items-center gap-1 p-2 border rounded-lg bg-muted/30">
+        <div className="flex items-center gap-1">
+          <Toggle size="sm" pressed={!!styles.bold} onPressedChange={() => editor.toggleStyles({ bold: true } as any)} aria-label="Bold">
+            <Bold className="w-4 h-4" />
+          </Toggle>
+          <Toggle size="sm" pressed={!!styles.italic} onPressedChange={() => editor.toggleStyles({ italic: true } as any)} aria-label="Italic">
+            <Italic className="w-4 h-4" />
+          </Toggle>
+          <Toggle size="sm" pressed={!!styles.strike} onPressedChange={() => editor.toggleStyles({ strike: true } as any)} aria-label="Strikethrough">
+            <Strikethrough className="w-4 h-4" />
+          </Toggle>
+          <Toggle size="sm" pressed={!!styles.code} onPressedChange={() => editor.toggleStyles({ code: true } as any)} aria-label="Inline code">
+            <Code className="w-4 h-4" />
+          </Toggle>
+        </div>
+
+        <Separator orientation="vertical" className="h-6" />
+
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={insertTaskList} className={cn("h-8 px-2", currentType === "checkListItem" && "bg-accent text-accent-foreground")} title="Add task list">
+            <CheckSquare className="w-4 h-4" />
+          </Button>
+          <Toggle size="sm" pressed={currentType === "bulletListItem"} onPressedChange={() => toggleBlockType("bulletListItem")} aria-label="Bullet list">
+            <List className="w-4 h-4" />
+          </Toggle>
+          <Toggle size="sm" pressed={currentType === "quote"} onPressedChange={() => toggleBlockType("quote")} aria-label="Quote">
+            <Quote className="w-4 h-4" />
+          </Toggle>
+        </div>
+
+        <Separator orientation="vertical" className="h-6" />
+
+        <div className="flex items-center gap-1">
+          <Toggle size="sm" pressed={currentType === "heading" && currentLevel === 1} onPressedChange={() => toggleHeading(1)} aria-label="Heading 1">
+            <Type className="w-4 h-4" />
+            <span className="text-xs ml-1">1</span>
+          </Toggle>
+          <Toggle size="sm" pressed={currentType === "heading" && currentLevel === 2} onPressedChange={() => toggleHeading(2)} aria-label="Heading 2">
+            <Type className="w-4 h-4" />
+            <span className="text-xs ml-1">2</span>
+          </Toggle>
+          <Toggle size="sm" pressed={currentType === "heading" && currentLevel === 3} onPressedChange={() => toggleHeading(3)} aria-label="Heading 3">
+            <Type className="w-4 h-4" />
+            <span className="text-xs ml-1">3</span>
+          </Toggle>
+        </div>
+
+        <Separator orientation="vertical" className="h-6" />
+
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => editor.undo()} className="h-8 px-2" title="Undo">
+            <Undo className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => editor.redo()} className="h-8 px-2" title="Redo">
+            <Redo className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
       <div
         className={cn(
           "relative rounded-lg border transition-all bg-background",
@@ -156,6 +278,7 @@ export function BlockNotesEditor({
               const q = query.toLowerCase();
               return filtered.filter((i) => (i.title || "").toLowerCase().includes(q));
             }}
+            suggestionMenuComponent={CustomSlashMenu}
           />
         </BlockNoteView>
       </div>

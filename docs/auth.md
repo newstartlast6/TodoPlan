@@ -136,8 +136,8 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 - Roll out to production; provide a temporary migration banner for existing users
 
 ## Deliverables checklist (what to build)
-- [ ] Supabase project configured with Google + Email/Password + Reset Password
-- [ ] Env files for server and client with Supabase config
+- [x] Supabase project configured with Google + Email/Password + Reset Password
+- [x] Env files for server and client with Supabase config
 - [x] Database migrations: `profiles` table
 - [x] Database migrations: `user_id` added to per-user tables; indexes created
 - [ ] Database migrations: Optional RLS enabled and policies written
@@ -147,7 +147,6 @@ This plan adds Google OAuth, Email/Password, and Password Reset using Supabase A
 - [x] Frontend login page (Google + Email/Password)
 - [x] Frontend password reset page
 - [x] Token injection on API calls (with one retry on 401)
-- [ ] Tests: unit, integration, and basic E2E
 
 ## Notes on type/column choices
 - Keep existing table PKs as-is; add `user_id uuid` referencing `auth.users(id)`

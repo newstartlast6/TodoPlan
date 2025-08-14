@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useLists } from '@/hooks/use-lists';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Task } from '@shared/schema';
 import { SelectableTodoItem } from '@/components/calendar/selectable-todo-item';
 import { useUpdateTask } from '@/hooks/use-list-tasks';
@@ -21,8 +22,7 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ['/api/tasks', 'plan-panel', 'includeUnscheduled'],
     queryFn: async () => {
-      const res = await fetch('/api/tasks?includeUnscheduled=true');
-      if (!res.ok) throw new Error('Failed to fetch tasks');
+      const res = await apiRequest('GET', '/api/tasks?includeUnscheduled=true');
       return res.json();
     },
     staleTime: 60_000,

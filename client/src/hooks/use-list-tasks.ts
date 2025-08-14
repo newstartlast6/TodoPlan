@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { type Task, type InsertTask, type UpdateTask } from '@shared/schema';
 import { listsKeys } from './use-lists';
+import { apiRequest } from '@/lib/queryClient';
 
 // Create task in list mutation
 export function useCreateTaskInList() {
@@ -10,18 +11,7 @@ export function useCreateTaskInList() {
 
   return useMutation({
     mutationFn: async (taskData: InsertTask) => {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(taskData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create task');
-      }
-
+      const response = await apiRequest('POST', '/api/tasks', taskData);
       return response.json();
     },
     onMutate: async (newTask) => {
@@ -100,18 +90,7 @@ export function useUpdateTask() {
 
   return useMutation({
     mutationFn: async ({ taskId, updates }: { taskId: string; updates: UpdateTask }) => {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update task');
-      }
-
+      const response = await apiRequest('PUT', `/api/tasks/${taskId}`, updates);
       return response.json();
     },
     onMutate: async ({ taskId, updates }) => {
@@ -173,13 +152,7 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (taskId: string) => {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete task');
-      }
+      const response = await apiRequest('DELETE', `/api/tasks/${taskId}`);
     },
     onMutate: async (taskId) => {
       // Find the task to delete

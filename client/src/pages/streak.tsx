@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sparkles, Flame } from "lucide-react";
 import { Task } from "@shared/schema";
+import { apiRequest } from '@/lib/queryClient';
 
 type DailySummary = {
   date: string;
@@ -60,10 +61,7 @@ export default function Streak() {
           endDate: endDate.toISOString(),
           includeUnscheduled: 'true',
         });
-        const res = await fetch(`/api/tasks?${searchParams}`);
-        if (!res.ok) {
-          throw new Error('Failed to fetch tasks');
-        }
+        const res = await apiRequest('GET', `/api/tasks?${searchParams}`);
         const tasks: Task[] = await res.json();
         if (isCancelled) return;
         // Aggregate by day using startTime or scheduledDate (mirrors week view logic)
