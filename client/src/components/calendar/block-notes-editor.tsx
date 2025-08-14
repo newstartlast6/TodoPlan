@@ -264,9 +264,10 @@ export function BlockNotesEditor({
         .slash-menu-item.selected {
           background-color: var(--bn-colors-hovered-background);
         }
-        /* Remove any default left gutter and ensure full width */
-        .bn-container .bn-editor { padding-left: 12px !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; }
-        .bn-container .bn-block-group { margin-left: 0 !important; }
+        /* Remove any default left gutter and ensure full width and height */
+        .bn-container { height: 100% !important; }
+        .bn-container .bn-editor { padding-left: 12px !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; height: 100% !important; min-height: 300px !important; }
+        .bn-container .bn-block-group { margin-left: 0 !important; height: 100% !important; }
         .bn-container .bn-block-group .bn-block-group > .bn-block-outer:not([data-prev-depth-changed])::before { display: none !important; }
         /* Force inline content to flow normally (fix accidental vertical stacking) */
         .bn-container .bn-block-content { flex-direction: row !important; align-items: flex-start !important; }
@@ -276,12 +277,11 @@ export function BlockNotesEditor({
 
       <div
         className={cn(
-          "relative rounded-lg border transition-all bg-background flex-1 min-h-0",
+          "relative rounded-lg border transition-all bg-background flex-1 min-h-0 h-full",
           isFocused ? "ring-2 ring-primary/20 border-primary/30" : "border-border"
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        style={{ minHeight: 300 }}       
       >
         <BlockNoteView
           editor={editor as unknown as BlockNoteEditor}
@@ -297,7 +297,7 @@ export function BlockNotesEditor({
           formattingToolbar={true}
           linkToolbar={false}
            slashMenu={false}
-           className="px-0"
+           className="px-0 h-full"
         >
           <SuggestionMenuController
             triggerCharacter="/"
