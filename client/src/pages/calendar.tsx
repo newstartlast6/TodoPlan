@@ -25,7 +25,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useTimerStore } from "@/hooks/use-timer-store";
 import { TimerCalculator } from "@shared/services/timer-store";
- 
+
 
 type CalendarView = 'day' | 'week' | 'month' | 'year';
 
@@ -35,7 +35,7 @@ export default function Calendar() {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(false);
   const [scrollTargetTaskId, setScrollTargetTaskId] = useState<string | null>(null);
- 
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, selectedNotesType, selectedNotesAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
@@ -55,7 +55,7 @@ export default function Calendar() {
       if (planParam === 'open') {
         setIsPlanPanelOpen(true);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Get date range for current view
@@ -139,6 +139,7 @@ export default function Calendar() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+
       // Select the newly created task so it highlights and opens details
       // and triggers inline edit in the list
       window.dispatchEvent(new CustomEvent('tasks:select', { detail: created.id }));
@@ -192,6 +193,7 @@ export default function Calendar() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+
       toast({
         title: "Task updated",
         description: "Your task has been updated successfully.",
@@ -229,6 +231,7 @@ export default function Calendar() {
       if (selectedTodoId === id) {
         closeDetailPane();
       }
+
       toast({
         title: 'Task deleted',
         description: 'The task has been removed.',
@@ -418,7 +421,7 @@ export default function Calendar() {
                   className="bg-white text-orange-700 border-orange-300 hover:bg-orange-50"
                   onClick={async () => {
                     const id = timer.activeTaskId!;
-                    try { await timer.pause(); } catch {}
+                    try { await timer.pause(); } catch { }
                     updateTaskMutation.mutate({ id, updates: { completed: true } });
                   }}
                 >

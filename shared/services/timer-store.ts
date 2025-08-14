@@ -156,9 +156,9 @@ class TimerStoreImpl {
         }
       });
       window?.addEventListener('online', () => { void this.flushPendingUpdates(); });
-    } catch {}
+    } catch { }
     // Attempt to flush any pending updates on init if online
-    try { if (navigator.onLine) { void this.flushPendingUpdates(); } } catch {}
+    try { if (navigator.onLine) { void this.flushPendingUpdates(); } } catch { }
   }
 
   async start(taskId: string): Promise<void> {
@@ -238,7 +238,7 @@ class TimerStoreImpl {
 
     // If save was not successful, best-effort flush in background if/when online
     if (!saved) {
-      try { if (navigator.onLine) { void this.flushPendingUpdates(); } } catch {}
+      try { if (navigator.onLine) { void this.flushPendingUpdates(); } } catch { }
     }
   }
 
@@ -265,8 +265,8 @@ class TimerStoreImpl {
 
     // Clear session and reset to base time
     this.state = {
-      activeTaskId: null,
-      activeTaskName: null,
+      activeTaskId: this.state.activeTaskId,
+      activeTaskName: this.state.activeTaskName,
       startedAtMs: null,
       baseSecondsAtStart: 0,
       currentSeconds: baseSeconds,
@@ -275,10 +275,10 @@ class TimerStoreImpl {
     };
     this.ticksElapsedSeconds = 0;
     this.clearPersistedActive();
-    
+
     // Update tray title immediately to reflect the discarded time
     this.updateTrayTitle();
-    
+
     this.emitChange();
   }
 
@@ -299,7 +299,7 @@ class TimerStoreImpl {
     if (this.state.activeTaskId) {
       return this.state.activeTaskId;
     }
-    
+
     // Then check persisted active state
     try {
       const raw = localStorage.getItem('timer.active');
@@ -307,8 +307,8 @@ class TimerStoreImpl {
         const data = JSON.parse(raw) as PersistedActive;
         return data?.activeTaskId || null;
       }
-    } catch {}
-    
+    } catch { }
+
     return null;
   }
 
@@ -319,7 +319,7 @@ class TimerStoreImpl {
       if (taskName && this.state.activeTaskId) {
         // Truncate task name to fit within reasonable limit
         const maxTaskNameLength = 100 - timeStr.length - 3; // 3 for " - "
-        const truncatedName = taskName.length > maxTaskNameLength 
+        const truncatedName = taskName.length > maxTaskNameLength
           ? taskName.substring(0, maxTaskNameLength - 1) + '…'
           : taskName;
         this.params.setTrayTitle(`${timeStr} - ${truncatedName}`);
@@ -341,11 +341,11 @@ class TimerStoreImpl {
         };
         localStorage.setItem('timer.active', JSON.stringify(data));
       }
-    } catch {}
+    } catch { }
   }
 
   clearPersistedActive(): void {
-    try { localStorage.removeItem('timer.active'); } catch {}
+    try { localStorage.removeItem('timer.active'); } catch { }
   }
 
   async restoreActiveState(): Promise<void> {
@@ -375,7 +375,7 @@ class TimerStoreImpl {
       this.emitChange();
       // Optional: rebase from server if server is ahead
       void this.rebaseFromServerIfAhead(this.state.activeTaskId!);
-    } catch {}
+    } catch { }
   }
 
   // Internal
@@ -396,7 +396,7 @@ class TimerStoreImpl {
         // Use configurable max length (default 25)
         const maxTotalLength = this.params.maxTrayTitleLength ?? 25;
         const maxTaskNameLength = maxTotalLength - timeStr.length - 3; // 3 for " - "
-        const truncatedName = taskName.length > maxTaskNameLength 
+        const truncatedName = taskName.length > maxTaskNameLength
           ? taskName.substring(0, maxTaskNameLength - 1) + '…'
           : taskName;
         this.params.setTrayTitle(`${timeStr} - ${truncatedName}`);
@@ -411,7 +411,7 @@ class TimerStoreImpl {
     this.params?.onChange?.({ ...this.state });
     const snapshot = { ...this.state };
     this.listeners.forEach((cb) => {
-      try { cb(snapshot); } catch {}
+      try { cb(snapshot); } catch { }
     });
   }
 
@@ -433,7 +433,7 @@ class TimerStoreImpl {
         this.persistActiveState();
         this.emitChange();
       }
-    } catch {}
+    } catch { }
   }
 
   // Pending updates queue management (offline handling)
@@ -446,7 +446,7 @@ class TimerStoreImpl {
     } catch { return []; }
   }
   private writePendingUpdates(items: PendingUpdate[]): void {
-    try { localStorage.setItem('timer.pending', JSON.stringify(items)); } catch {}
+    try { localStorage.setItem('timer.pending', JSON.stringify(items)); } catch { }
   }
   private enqueuePendingUpdate(update: PendingUpdate): void {
     const items = this.readPendingUpdates();
@@ -482,7 +482,7 @@ class TimerStoreImpl {
           break;
         }
       }
-    } catch {}
+    } catch { }
   }
   private peekPendingUpdate(): PendingUpdate | undefined {
     const items = this.readPendingUpdates();
@@ -492,7 +492,7 @@ class TimerStoreImpl {
   subscribe(cb: (state: TimerStoreState) => void): () => void {
     this.listeners.add(cb);
     // emit current immediately
-    try { cb({ ...this.state }); } catch {}
+    try { cb({ ...this.state }); } catch { }
     return () => { this.listeners.delete(cb); };
   }
 }

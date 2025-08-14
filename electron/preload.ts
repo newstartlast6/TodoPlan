@@ -41,6 +41,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('tray:action', handler);
     return () => ipcRenderer.off('tray:action', handler);
   },
+  onTrayStartTask: (callback: (taskData: { taskId: string; taskTitle: string }) => void) => {
+    const handler = (_event: any, taskData: any) => callback(taskData);
+    ipcRenderer.on('tray:startTask', handler);
+    return () => ipcRenderer.off('tray:startTask', handler);
+  },
+  notifyTasksUpdated: (tasks?: any[]): void => {
+    ipcRenderer.send('tasks:updated', tasks || []);
+  },
     setTrayTitle: (title: string) => {
       ipcRenderer.send('tray:setTitle', { title });
     },

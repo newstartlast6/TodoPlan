@@ -18,6 +18,22 @@ function formatDuration(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+// Update today's tasks and refresh tray menu
+function updateTodaysTasks(tasks?: any[]) {
+  try {
+    if (tasks) {
+      // Use tasks provided by renderer
+      todaysTasks = tasks.slice(0, 5); // Limit to top 5
+    }
+    console.log(`Updated tray menu with ${todaysTasks.length} tasks for today`);
+    if (tray) {
+      refreshTrayMenu();
+    }
+  } catch (error) {
+    console.error('Failed to update today\'s tasks:', error);
+  }
+}
+
 // Keep the tray title compact; allow override via env if desired
 const TRAY_TITLE_MAX_CHARS = parseInt(process.env.TRAY_TITLE_MAX_CHARS || '20', 10);
 function truncateTrayTitle(raw: string): string {
@@ -42,6 +58,7 @@ let isQuitting = false;
 let isQuitConfirmed = false;
 let openAtLoginEnabled = false;
 let preferRendererTrayTitle = false;
+let todaysTasks: any[] = [];
 
 async function startExpressServer(port: number): Promise<Server> {
   const exp: Express = express();
@@ -145,6 +162,21 @@ function createTray() {
   tray.setTitle(truncateTrayTitle('00:00'));
   tray.setToolTip('TodoPlan Timer');
 
+  refreshTrayMenu();
+
+  // Click toggles show/hide
+  tray.on('click', () => {
+    if (!mainWindow) return;
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('tray:action', 'show');
+    setTimeout(() => refreshTrayMenu(), 0);
+  });
+}
+
+function refreshTrayMenu() {
+  if (!tray) return;
+
   const buildMenu = () => {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
@@ -159,7 +191,7 @@ function createTray() {
             mainWindow.focus();
             mainWindow.webContents.send('tray:action', 'show');
           }
-          setTimeout(() => tray?.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         },
       },
       { type: 'separator' },
@@ -185,6 +217,50 @@ function createTray() {
           mainWindow.webContents.send('tray:action', 'discardLastSession');
         },
       },
+    ];
+
+    // Add today's top 5 tasks section
+    if (todaysTasks.length > 0) {
+      template.push({ type: 'separator' });
+      template.push({
+        label: "⏱️ Start Task",
+        enabled: false,
+      });
+
+      todaysTasks.forEach((task, index) => {
+        const priorityIcon = task.priority === 'high' ? '🔴' : task.priority === 'medium' ? '🟡' : '🟢';
+        const statusIcon = task.completed ? '✅' : '⏱️';
+        const truncatedTitle = task.title.length > 25 ? task.title.substring(0, 22) + '...' : task.title;
+
+        template.push({
+          label: `${statusIcon} ${priorityIcon} ${truncatedTitle}`,
+          click: () => {
+            console.log(`Starting task from tray: ${task.title} (${task.id})`);
+            if (!mainWindow) return;
+            // Send task info to renderer to start/resume timer
+            mainWindow.webContents.send('tray:startTask', { taskId: task.id, taskTitle: task.title });
+            mainWindow.show();
+            mainWindow.focus();
+          },
+        });
+      });
+    } else {
+      // Show a message when no tasks are available
+      template.push({ type: 'separator' });
+      template.push({
+        label: "No tasks for today",
+        enabled: false,
+      });
+    }
+
+    template.push(
+      { type: 'separator' },
+      {
+        label: 'Refresh Tasks',
+        click: async () => {
+          await updateTodaysTasks();
+        },
+      },
       { type: 'separator' },
       {
         label: 'Open at Login',
@@ -194,25 +270,17 @@ function createTray() {
           const enabled = Boolean((item as any).checked);
           app.setLoginItemSettings({ openAtLogin: enabled });
           openAtLoginEnabled = enabled;
-          setTimeout(() => tray?.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         },
       },
       { type: 'separator' },
-      { role: 'quit', label: 'Quit' },
-    ];
+      { role: 'quit', label: 'Quit' }
+    );
+
     return template;
   };
 
   tray.setContextMenu(Menu.buildFromTemplate(buildMenu()));
-
-  // Click toggles show/hide
-  tray.on('click', () => {
-    if (!mainWindow) return;
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send('tray:action', 'show');
-    setTimeout(() => tray?.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
-  });
 }
 
 function registerIpc() {
@@ -237,25 +305,7 @@ function registerIpc() {
     }
     // Refresh menu to reflect Pause/Resume toggle
     if (tray) {
-      // Rebuild menu to update Pause/Resume label
-      const template: Electron.MenuItemConstructorOptions[] = [];
-      const cm = Menu.buildFromTemplate(template);
-      tray.setContextMenu(cm);
-      // Immediately rebuild with our builder to reflect new state
-      tray.setContextMenu(Menu.buildFromTemplate((() => {
-        const label = isRunning ? 'Pause' : 'Resume';
-        return [
-          { label: mainWindow?.isVisible() ? 'Hide' : 'Show', click: () => { if (!mainWindow) return; if (mainWindow.isVisible()) { mainWindow.hide(); mainWindow.webContents.send('tray:action', 'hide'); } else { mainWindow.show(); mainWindow.focus(); mainWindow.webContents.send('tray:action', 'show'); } } },
-          { type: 'separator' },
-          { label, click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', isRunning ? 'pause' : 'resume'); } },
-          { label: 'Stop', click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', 'stop'); } },
-          { label: 'Discard Session', enabled: hasActiveSession, click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', 'discardLastSession'); } },
-          { type: 'separator' },
-          { label: 'Open at Login', type: 'checkbox', checked: openAtLoginEnabled, click: (item) => { const enabled = Boolean((item as any).checked); app.setLoginItemSettings({ openAtLogin: enabled }); openAtLoginEnabled = enabled; } },
-          { type: 'separator' },
-          { role: 'quit', label: 'Quit' },
-        ];
-      })()));
+      refreshTrayMenu();
     }
   });
 
@@ -300,6 +350,11 @@ function registerIpc() {
       return false;
     }
   });
+
+  // Handle task updates from renderer (to refresh tray menu)
+  ipcMain.on('tasks:updated', (_, tasks: any[]) => {
+    updateTodaysTasks(tasks);
+  });
 }
 
 // Single instance lock
@@ -327,7 +382,11 @@ app.whenReady().then(async () => {
     try { await waitForFile(resolvePreloadPath(), 5000); } catch { }
   }
   await createWindow();
-  if (isMac) createTray();
+  if (isMac) {
+    createTray();
+    // Initial empty state - tasks will be sent from renderer
+    updateTodaysTasks([]);
+  }
   registerIpc();
 
   // Optional: hide Dock icon when configured

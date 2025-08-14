@@ -24141,7 +24141,7 @@ var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
-var max$1 = Math.max;
+var max$2 = Math.max;
 var min$1 = Math.min;
 var pow$1 = Math.pow;
 var round$1 = Math.round;
@@ -24270,91 +24270,77 @@ function requireObject_getPrototypeOf() {
   Object_getPrototypeOf = $Object2.getPrototypeOf || null;
   return Object_getPrototypeOf;
 }
-var implementation;
-var hasRequiredImplementation;
-function requireImplementation() {
-  if (hasRequiredImplementation) return implementation;
-  hasRequiredImplementation = 1;
-  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
-  var toStr2 = Object.prototype.toString;
-  var max2 = Math.max;
-  var funcType = "[object Function]";
-  var concatty = function concatty2(a, b) {
-    var arr = [];
-    for (var i = 0; i < a.length; i += 1) {
-      arr[i] = a[i];
+var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+var toStr$1 = Object.prototype.toString;
+var max$1 = Math.max;
+var funcType = "[object Function]";
+var concatty = function concatty2(a, b) {
+  var arr = [];
+  for (var i = 0; i < a.length; i += 1) {
+    arr[i] = a[i];
+  }
+  for (var j = 0; j < b.length; j += 1) {
+    arr[j + a.length] = b[j];
+  }
+  return arr;
+};
+var slicy = function slicy2(arrLike, offset) {
+  var arr = [];
+  for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
+    arr[j] = arrLike[i];
+  }
+  return arr;
+};
+var joiny = function(arr, joiner) {
+  var str = "";
+  for (var i = 0; i < arr.length; i += 1) {
+    str += arr[i];
+    if (i + 1 < arr.length) {
+      str += joiner;
     }
-    for (var j = 0; j < b.length; j += 1) {
-      arr[j + a.length] = b[j];
-    }
-    return arr;
-  };
-  var slicy = function slicy2(arrLike, offset) {
-    var arr = [];
-    for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
-      arr[j] = arrLike[i];
-    }
-    return arr;
-  };
-  var joiny = function(arr, joiner) {
-    var str = "";
-    for (var i = 0; i < arr.length; i += 1) {
-      str += arr[i];
-      if (i + 1 < arr.length) {
-        str += joiner;
-      }
-    }
-    return str;
-  };
-  implementation = function bind2(that) {
-    var target = this;
-    if (typeof target !== "function" || toStr2.apply(target) !== funcType) {
-      throw new TypeError(ERROR_MESSAGE + target);
-    }
-    var args = slicy(arguments, 1);
-    var bound;
-    var binder = function() {
-      if (this instanceof bound) {
-        var result = target.apply(
-          this,
-          concatty(args, arguments)
-        );
-        if (Object(result) === result) {
-          return result;
-        }
-        return this;
-      }
-      return target.apply(
-        that,
+  }
+  return str;
+};
+var implementation$1 = function bind(that) {
+  var target = this;
+  if (typeof target !== "function" || toStr$1.apply(target) !== funcType) {
+    throw new TypeError(ERROR_MESSAGE + target);
+  }
+  var args = slicy(arguments, 1);
+  var bound;
+  var binder = function() {
+    if (this instanceof bound) {
+      var result = target.apply(
+        this,
         concatty(args, arguments)
       );
-    };
-    var boundLength = max2(0, target.length - args.length);
-    var boundArgs = [];
-    for (var i = 0; i < boundLength; i++) {
-      boundArgs[i] = "$" + i;
+      if (Object(result) === result) {
+        return result;
+      }
+      return this;
     }
-    bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
-    if (target.prototype) {
-      var Empty = function Empty2() {
-      };
-      Empty.prototype = target.prototype;
-      bound.prototype = new Empty();
-      Empty.prototype = null;
-    }
-    return bound;
+    return target.apply(
+      that,
+      concatty(args, arguments)
+    );
   };
-  return implementation;
-}
-var functionBind;
-var hasRequiredFunctionBind;
-function requireFunctionBind() {
-  if (hasRequiredFunctionBind) return functionBind;
-  hasRequiredFunctionBind = 1;
-  var implementation2 = requireImplementation();
-  functionBind = Function.prototype.bind || implementation2;
-  return functionBind;
-}
+  var boundLength = max$1(0, target.length - args.length);
+  var boundArgs = [];
+  for (var i = 0; i < boundLength; i++) {
+    boundArgs[i] = "$" + i;
+  }
+  bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
+  if (target.prototype) {
+    var Empty = function Empty2() {
+    };
+    Empty.prototype = target.prototype;
+    bound.prototype = new Empty();
+    Empty.prototype = null;
+  }
+  return bound;
+};
+var implementation = implementation$1;
+var functionBind = Function.prototype.bind || implementation;
 var functionCall;
 var hasRequiredFunctionCall;
 function requireFunctionCall() {
@@ -24384,11 +24370,11 @@ var hasRequiredActualApply;
 function requireActualApply() {
   if (hasRequiredActualApply) return actualApply;
   hasRequiredActualApply = 1;
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var $apply2 = requireFunctionApply();
   var $call2 = requireFunctionCall();
   var $reflectApply = requireReflectApply();
-  actualApply = $reflectApply || bind2.call($call2, $apply2);
+  actualApply = $reflectApply || bind3.call($call2, $apply2);
   return actualApply;
 }
 var callBindApplyHelpers;
@@ -24396,7 +24382,7 @@ var hasRequiredCallBindApplyHelpers;
 function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
@@ -24404,7 +24390,7 @@ function requireCallBindApplyHelpers() {
     if (args.length < 1 || typeof args[0] !== "function") {
       throw new $TypeError2("a function is required");
     }
-    return $actualApply(bind2, $call2, args);
+    return $actualApply(bind3, $call2, args);
   };
   return callBindApplyHelpers;
 }
@@ -24466,8 +24452,8 @@ function requireHasown() {
   hasRequiredHasown = 1;
   var call = Function.prototype.call;
   var $hasOwn = Object.prototype.hasOwnProperty;
-  var bind2 = requireFunctionBind();
-  hasown = bind2.call(call, $hasOwn);
+  var bind3 = functionBind;
+  hasown = bind3.call(call, $hasOwn);
   return hasown;
 }
 var undefined$1;
@@ -24481,7 +24467,7 @@ var $TypeError$3 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
-var max = max$1;
+var max = max$2;
 var min = min$1;
 var pow = pow$1;
 var round = round$1;
@@ -24686,13 +24672,13 @@ var LEGACY_ALIASES = {
   "%WeakMapPrototype%": ["WeakMap", "prototype"],
   "%WeakSetPrototype%": ["WeakSet", "prototype"]
 };
-var bind = requireFunctionBind();
+var bind2 = functionBind;
 var hasOwn$1 = requireHasown();
-var $concat$1 = bind.call($call, Array.prototype.concat);
-var $spliceApply = bind.call($apply, Array.prototype.splice);
-var $replace$1 = bind.call($call, String.prototype.replace);
-var $strSlice = bind.call($call, String.prototype.slice);
-var $exec = bind.call($call, RegExp.prototype.exec);
+var $concat$1 = bind2.call($call, Array.prototype.concat);
+var $spliceApply = bind2.call($apply, Array.prototype.splice);
+var $replace$1 = bind2.call($call, String.prototype.replace);
+var $strSlice = bind2.call($call, String.prototype.slice);
+var $exec = bind2.call($call, RegExp.prototype.exec);
 var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
 var reEscapeChar = /\\(\\)?/g;
 var stringToPath = function stringToPath2(string) {
@@ -24897,20 +24883,20 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
   return fn;
 };
 (function(module) {
-  var bind2 = requireFunctionBind();
+  var bind3 = functionBind;
   var GetIntrinsic3 = getIntrinsic;
   var setFunctionLength$1 = setFunctionLength;
   var $TypeError2 = type;
   var $apply2 = GetIntrinsic3("%Function.prototype.apply%");
   var $call2 = GetIntrinsic3("%Function.prototype.call%");
-  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind2.call($call2, $apply2);
+  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind3.call($call2, $apply2);
   var $defineProperty2 = esDefineProperty;
   var $max = GetIntrinsic3("%Math.max%");
   module.exports = function callBind2(originalFunction) {
     if (typeof originalFunction !== "function") {
       throw new $TypeError2("a function is required");
     }
-    var func = $reflectApply(bind2, $call2, arguments);
+    var func = $reflectApply(bind3, $call2, arguments);
     return setFunctionLength$1(
       func,
       1 + $max(0, originalFunction.length - (arguments.length - 1)),
@@ -24918,7 +24904,7 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
     );
   };
   var applyBind = function applyBind2() {
-    return $reflectApply(bind2, $apply2, arguments);
+    return $reflectApply(bind3, $apply2, arguments);
   };
   if ($defineProperty2) {
     $defineProperty2(module.exports, "apply", { value: applyBind });
@@ -49489,6 +49475,19 @@ function formatDuration(totalSeconds) {
   if (h2 > 0) return `${h2}:${m2.toString().padStart(2, "0")}:${s2.toString().padStart(2, "0")}`;
   return `${m2.toString().padStart(2, "0")}:${s2.toString().padStart(2, "0")}`;
 }
+function updateTodaysTasks(tasks2) {
+  try {
+    if (tasks2) {
+      todaysTasks = tasks2.slice(0, 5);
+    }
+    console.log(`Updated tray menu with ${todaysTasks.length} tasks for today`);
+    if (tray) {
+      refreshTrayMenu();
+    }
+  } catch (error2) {
+    console.error("Failed to update today's tasks:", error2);
+  }
+}
 const TRAY_TITLE_MAX_CHARS = parseInt(process.env.TRAY_TITLE_MAX_CHARS || "20", 10);
 function truncateTrayTitle(raw) {
   if (!raw) return "";
@@ -49508,6 +49507,7 @@ let isQuitting = false;
 let isQuitConfirmed = false;
 let openAtLoginEnabled = false;
 let preferRendererTrayTitle = false;
+let todaysTasks = [];
 async function startExpressServer(port) {
   const exp = express$1();
   exp.use(express$1.json());
@@ -49595,6 +49595,17 @@ function createTray() {
   tray = new Tray(icon);
   tray.setTitle(truncateTrayTitle("00:00"));
   tray.setToolTip("TodoPlan Timer");
+  refreshTrayMenu();
+  tray.on("click", () => {
+    if (!mainWindow) return;
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send("tray:action", "show");
+    setTimeout(() => refreshTrayMenu(), 0);
+  });
+}
+function refreshTrayMenu() {
+  if (!tray) return;
   const buildMenu = () => {
     const template = [
       {
@@ -49609,7 +49620,7 @@ function createTray() {
             mainWindow.focus();
             mainWindow.webContents.send("tray:action", "show");
           }
-          setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         }
       },
       { type: "separator" },
@@ -49634,6 +49645,43 @@ function createTray() {
           if (!mainWindow) return;
           mainWindow.webContents.send("tray:action", "discardLastSession");
         }
+      }
+    ];
+    if (todaysTasks.length > 0) {
+      template.push({ type: "separator" });
+      template.push({
+        label: "⏱️ Start Task",
+        enabled: false
+      });
+      todaysTasks.forEach((task, index2) => {
+        const priorityIcon = task.priority === "high" ? "🔴" : task.priority === "medium" ? "🟡" : "🟢";
+        const statusIcon = task.completed ? "✅" : "⏱️";
+        const truncatedTitle = task.title.length > 25 ? task.title.substring(0, 22) + "..." : task.title;
+        template.push({
+          label: `${statusIcon} ${priorityIcon} ${truncatedTitle}`,
+          click: () => {
+            console.log(`Starting task from tray: ${task.title} (${task.id})`);
+            if (!mainWindow) return;
+            mainWindow.webContents.send("tray:startTask", { taskId: task.id, taskTitle: task.title });
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        });
+      });
+    } else {
+      template.push({ type: "separator" });
+      template.push({
+        label: "No tasks for today",
+        enabled: false
+      });
+    }
+    template.push(
+      { type: "separator" },
+      {
+        label: "Refresh Tasks",
+        click: async () => {
+          await updateTodaysTasks();
+        }
       },
       { type: "separator" },
       {
@@ -49644,22 +49692,15 @@ function createTray() {
           const enabled = Boolean(item.checked);
           app.setLoginItemSettings({ openAtLogin: enabled });
           openAtLoginEnabled = enabled;
-          setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         }
       },
       { type: "separator" },
       { role: "quit", label: "Quit" }
-    ];
+    );
     return template;
   };
   tray.setContextMenu(Menu.buildFromTemplate(buildMenu()));
-  tray.on("click", () => {
-    if (!mainWindow) return;
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send("tray:action", "show");
-    setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
-  });
 }
 function registerIpc() {
   ipcMain.on("timer:tick", (_event, payload) => {
@@ -49677,46 +49718,7 @@ function registerIpc() {
       preferRendererTrayTitle = false;
     }
     if (tray) {
-      const template = [];
-      const cm = Menu.buildFromTemplate(template);
-      tray.setContextMenu(cm);
-      tray.setContextMenu(Menu.buildFromTemplate((() => {
-        const label = isRunning ? "Pause" : "Resume";
-        return [
-          { label: (mainWindow == null ? void 0 : mainWindow.isVisible()) ? "Hide" : "Show", click: () => {
-            if (!mainWindow) return;
-            if (mainWindow.isVisible()) {
-              mainWindow.hide();
-              mainWindow.webContents.send("tray:action", "hide");
-            } else {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("tray:action", "show");
-            }
-          } },
-          { type: "separator" },
-          { label, click: () => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("tray:action", isRunning ? "pause" : "resume");
-          } },
-          { label: "Stop", click: () => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("tray:action", "stop");
-          } },
-          { label: "Discard Session", enabled: hasActiveSession, click: () => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("tray:action", "discardLastSession");
-          } },
-          { type: "separator" },
-          { label: "Open at Login", type: "checkbox", checked: openAtLoginEnabled, click: (item) => {
-            const enabled = Boolean(item.checked);
-            app.setLoginItemSettings({ openAtLogin: enabled });
-            openAtLoginEnabled = enabled;
-          } },
-          { type: "separator" },
-          { role: "quit", label: "Quit" }
-        ];
-      })()));
+      refreshTrayMenu();
     }
   });
   ipcMain.on("show:mainWindow", () => {
@@ -49757,6 +49759,9 @@ function registerIpc() {
       return false;
     }
   });
+  ipcMain.on("tasks:updated", (_, tasks2) => {
+    updateTodaysTasks(tasks2);
+  });
 }
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -49781,7 +49786,10 @@ app.whenReady().then(async () => {
     }
   }
   await createWindow();
-  if (isMac) createTray();
+  if (isMac) {
+    createTray();
+    updateTodaysTasks([]);
+  }
   registerIpc();
   if (isMac && process.env.HIDE_DOCK === "1" && app.dock) {
     try {
