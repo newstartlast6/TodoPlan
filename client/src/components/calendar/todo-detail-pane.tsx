@@ -6,13 +6,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
 // import { NotesEditor } from "@/components/calendar/notes-editor";
-import { EnhancedNotesEditor } from "@/components/calendar/enhanced-notes-editor";
+//import { EnhancedNotesEditor } from "@/components/calendar/enhanced-notes-editor";
 import { BlockNotesEditor } from "@/components/calendar/block-notes-editor";
 
-import "@blocknote/core/fonts/inter.css";
-import { BlockNoteView } from "@blocknote/mantine";
-import "@blocknote/mantine/style.css";
-import { useCreateBlockNote, SuggestionMenuController } from "@blocknote/react";
+// import "@blocknote/core/fonts/inter.css";
+// import { BlockNoteView } from "@blocknote/mantine";
+// import "@blocknote/mantine/style.css";
+// import { useCreateBlockNote, SuggestionMenuController } from "@blocknote/react";
 import { getDefaultReactSlashMenuItems } from "@blocknote/react";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimation } from "@/components/timer/task-estimation";
@@ -39,15 +39,6 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
   const { selectedTodoId, closeDetailPane } = useSelectedTodo();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const editor = useCreateBlockNote({
-    domAttributes: {
-      editor: {
-        // Remove padding/margins and shrink font-size for compact appearance
-        class: "px-0 mx-0 text-[13px] leading-[1.45]",
-      },
-    },
-  });
-  
 
   
   // Timer integration (sessionless)
@@ -94,25 +85,9 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
 
   const estimateMinutes = estimateData?.estimate?.estimatedDurationMinutes;
 
-  // Notes autosave using the minimal BlockNoteView
-  const {
-    updateNotes,
-  } = useNotesAutoSave({
-    taskId: selectedTodoId || "",
-    initialNotes: selectedTask?.notes || "",
-    debounceMs: 800,
-  } as any);
+  // Notes autosave handled inside BlockNotesEditor
 
-  // Initialize editor content from existing HTML notes
-  useEffect(() => {
-    if (!editor || !selectedTask) return;
-    (async () => {
-      const html = selectedTask.notes || "";
-      const blocks = await editor.tryParseHTMLToBlocks(html || "<p></p>");
-      editor.replaceBlocks(editor.topLevelBlocks.map(b => b.id), blocks.length ? blocks : [{ type: "paragraph" }]);
-    })();
-  }, [editor, selectedTask?.id]);
-  
+
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async (updates: UpdateTask): Promise<Task> => {
@@ -386,62 +361,16 @@ export function TodoDetailPane({ onClose, className }: TodoDetailPaneProps) {
               </div>
               <h4 className="text-xs font-medium text-foreground">Notes</h4>
             </div>
-            <div>
-              <EnhancedNotesEditor
+
+            <div className="relative rounded-lg bg-background" style={{ minHeight: 280 }}>
+              <BlockNotesEditor
                 taskId={selectedTask.id}
                 initialNotes={selectedTask.notes || ""}
                 placeholder="Capture thoughts, plans, or links..."
                 className="min-h-[180px] bg-transparent"
               />
             </div>
-            <div>
-            <BlockNotesEditor
-              taskId={selectedTask.id}
-              initialNotes={selectedTask.notes || ""}
-              placeholder="Capture thoughts, plans, or links..."
-              className="min-h-[180px] bg-transparent"
-            />
-            </div>
-            <div className="relative rounded-lg border bg-background border-border" style={{ minHeight: 280 }}>
-              <BlockNoteView
-                editor={editor}
-                sideMenu={false}
-                tableHandles={false}
-                filePanel={false}
-                comments={false}
-                emojiPicker={false}
-                formattingToolbar={false}
-                linkToolbar={false}
-                slashMenu={false}
-                className="px-0"
-                onChange={async () => {
-                  const html = await editor.blocksToFullHTML(editor.document);
-                  updateNotes(html);
-                }}
-              >
-                <SuggestionMenuController
-                  triggerCharacter="/"
-                  getItems={async (query: string) => {
-                    const items = getDefaultReactSlashMenuItems(editor);
-                    const allowed = new Set([
-                      "paragraph",
-                      "heading",
-                      "heading_2",
-                      "heading_3",
-                      "bullet_list",
-                      "numbered_list",
-                      "check_list",
-                      "quote",
-                      "page_break",
-                    ]);
-                    const filtered = (items as any[]).filter((i) => allowed.has(i.key));
-                    if (!query) return filtered;
-                    const q = query.toLowerCase();
-                    return filtered.filter((i) => (i.title || "").toLowerCase().includes(q));
-                  }}
-                />
-              </BlockNoteView>
-            </div>
+     
           </div>
 
           {/* Time Tracking */}
