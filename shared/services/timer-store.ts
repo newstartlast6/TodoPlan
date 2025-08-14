@@ -5,6 +5,7 @@
 
 export type InitializeTimerStoreParams = {
   loadTaskBaseSeconds: (taskId: string) => Promise<number>;
+  loadTaskName: (taskId: string) => Promise<string>;
   saveTimeLogged: (taskId: string, absoluteSeconds: number) => Promise<void>;
   onTick?: (seconds: number) => void;
   onChange?: (state: TimerStoreState) => void;
@@ -13,6 +14,7 @@ export type InitializeTimerStoreParams = {
 
 export type TimerStoreState = {
   activeTaskId: string | null;
+  activeTaskName: string | null;
   startedAtMs: number | null;
   baseSecondsAtStart: number;
   currentSeconds: number; // authoritative display seconds
@@ -20,6 +22,7 @@ export type TimerStoreState = {
 
 type PersistedActive = {
   activeTaskId: string;
+  activeTaskName: string;
   startedAtMs: number;
   baseSecondsAtStart: number;
 };
@@ -107,6 +110,7 @@ class TimerStoreImpl {
   private params!: InitializeTimerStoreParams;
   private state: TimerStoreState = {
     activeTaskId: null,
+    activeTaskName: null,
     startedAtMs: null,
     baseSecondsAtStart: 0,
     currentSeconds: 0,
@@ -157,10 +161,14 @@ class TimerStoreImpl {
     if (this.state.activeTaskId && this.state.activeTaskId !== taskId) {
       await this.pause();
     }
-    const base = await this.params.loadTaskBaseSeconds(taskId);
+    const [base, taskName] = await Promise.all([
+      this.params.loadTaskBaseSeconds(taskId),
+      this.params.loadTaskName(taskId)
+    ]);
     const now = Date.now();
     this.state = {
       activeTaskId: taskId,
+      activeTaskName: taskName,
       startedAtMs: now,
       baseSecondsAtStart: Math.max(0, Math.floor(base || 0)),
       currentSeconds: Math.max(0, Math.floor(base || 0)),
@@ -210,6 +218,7 @@ class TimerStoreImpl {
     // Clear active
     this.state = {
       activeTaskId: null,
+      activeTaskName: null,
       startedAtMs: null,
       baseSecondsAtStart: 0,
       currentSeconds: absolute,
@@ -246,6 +255,7 @@ class TimerStoreImpl {
       if (this.state.activeTaskId && this.state.startedAtMs !== null) {
         const data: PersistedActive = {
           activeTaskId: this.state.activeTaskId,
+          activeTaskName: this.state.activeTaskName || '',
           startedAtMs: this.state.startedAtMs,
           baseSecondsAtStart: this.state.baseSecondsAtStart,
         };
@@ -269,6 +279,7 @@ class TimerStoreImpl {
       const downtimeElapsed = Math.max(0, Math.floor((Date.now() - data.startedAtMs) / 1000));
       this.state = {
         activeTaskId: data.activeTaskId,
+        activeTaskName: data.activeTaskName || null,
         startedAtMs: Date.now(),
         baseSecondsAtStart: Math.max(0, Math.floor(data.baseSecondsAtStart + downtimeElapsed)),
         currentSeconds: Math.max(0, Math.floor(data.baseSecondsAtStart + downtimeElapsed)),
@@ -295,7 +306,18 @@ class TimerStoreImpl {
     const seconds = this.state.currentSeconds;
     this.params.onTick?.(seconds);
     if (this.params.setTrayTitle) {
-      this.params.setTrayTitle(formatSeconds(seconds));
+      const timeStr = formatSeconds(seconds);
+      const taskName = this.state.activeTaskName;
+      if (taskName && this.state.activeTaskId) {
+        // Truncate task name to fit within 20-30 character limit
+        const maxTaskNameLength = 40 - timeStr.length - 3; // 3 for " - "
+        const truncatedName = taskName.length > maxTaskNameLength 
+          ? taskName.substring(0, maxTaskNameLength - 1) + '…'
+          : taskName;
+        this.params.setTrayTitle(`${timeStr} - ${truncatedName}`);
+      } else {
+        this.params.setTrayTitle(timeStr);
+      }
     }
     this.emitChange();
   }
