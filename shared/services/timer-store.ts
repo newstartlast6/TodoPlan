@@ -10,6 +10,7 @@ export type InitializeTimerStoreParams = {
   onTick?: (seconds: number) => void;
   onChange?: (state: TimerStoreState) => void;
   setTrayTitle?: (text: string) => void;
+  maxTrayTitleLength?: number; // Maximum characters for tray title (default: 25)
 };
 
 export type TimerStoreState = {
@@ -18,6 +19,8 @@ export type TimerStoreState = {
   startedAtMs: number | null;
   baseSecondsAtStart: number;
   currentSeconds: number; // authoritative display seconds
+  sessionSeconds: number; // seconds in current session only
+  hasActiveSession: boolean; // true if there's a session that can be discarded
 };
 
 type PersistedActive = {
@@ -114,6 +117,8 @@ class TimerStoreImpl {
     startedAtMs: null,
     baseSecondsAtStart: 0,
     currentSeconds: 0,
+    sessionSeconds: 0,
+    hasActiveSession: false,
   };
   private clock: WorkerClock | FallbackClock;
   private listeners: Set<(state: TimerStoreState) => void> = new Set();
@@ -172,6 +177,8 @@ class TimerStoreImpl {
       startedAtMs: now,
       baseSecondsAtStart: Math.max(0, Math.floor(base || 0)),
       currentSeconds: Math.max(0, Math.floor(base || 0)),
+      sessionSeconds: 0,
+      hasActiveSession: false, // Will become true when ticking starts
     };
     this.ticksElapsedSeconds = 0;
     this.persistActiveState();
@@ -215,13 +222,15 @@ class TimerStoreImpl {
       this.enqueuePendingUpdate({ taskId, absoluteSeconds: absolute, enqueuedAt: Date.now() });
     }
 
-    // Clear active
+    // Clear active but keep session info for potential discard
     this.state = {
-      activeTaskId: null,
-      activeTaskName: null,
+      activeTaskId: taskId, // Keep task ID for potential resume
+      activeTaskName: this.state.activeTaskName,
       startedAtMs: null,
-      baseSecondsAtStart: 0,
+      baseSecondsAtStart: this.state.baseSecondsAtStart,
       currentSeconds: absolute,
+      sessionSeconds: elapsed,
+      hasActiveSession: elapsed > 0, // Only if there was actual time logged
     };
     this.ticksElapsedSeconds = 0;
     this.clearPersistedActive();
@@ -237,6 +246,42 @@ class TimerStoreImpl {
     await this.pause();
   }
 
+  async discardLastSession(): Promise<void> {
+    if (!this.state.hasActiveSession) {
+      return;
+    }
+
+    // Stop ticking first if running
+    if (this.state.startedAtMs) {
+      if (this.clock instanceof WorkerClock) {
+        (this.clock as WorkerClock).pause();
+      } else {
+        (this.clock as FallbackClock).pause();
+      }
+    }
+
+    // Reset to the base seconds (discard current session)
+    const baseSeconds = this.state.baseSecondsAtStart;
+
+    // Clear session and reset to base time
+    this.state = {
+      activeTaskId: null,
+      activeTaskName: null,
+      startedAtMs: null,
+      baseSecondsAtStart: 0,
+      currentSeconds: baseSeconds,
+      sessionSeconds: 0,
+      hasActiveSession: false,
+    };
+    this.ticksElapsedSeconds = 0;
+    this.clearPersistedActive();
+    
+    // Update tray title immediately to reflect the discarded time
+    this.updateTrayTitle();
+    
+    this.emitChange();
+  }
+
   isRunning(): boolean {
     return Boolean(this.state.activeTaskId && this.state.startedAtMs);
   }
@@ -247,6 +292,41 @@ class TimerStoreImpl {
 
   getDisplaySeconds(): number {
     return this.state.currentSeconds;
+  }
+
+  getLastActiveTaskId(): string | null {
+    // First check current active task
+    if (this.state.activeTaskId) {
+      return this.state.activeTaskId;
+    }
+    
+    // Then check persisted active state
+    try {
+      const raw = localStorage.getItem('timer.active');
+      if (raw) {
+        const data = JSON.parse(raw) as PersistedActive;
+        return data?.activeTaskId || null;
+      }
+    } catch {}
+    
+    return null;
+  }
+
+  updateTrayTitle(): void {
+    if (this.params?.setTrayTitle) {
+      const timeStr = formatSeconds(this.state.currentSeconds);
+      const taskName = this.state.activeTaskName;
+      if (taskName && this.state.activeTaskId) {
+        // Truncate task name to fit within reasonable limit
+        const maxTaskNameLength = 100 - timeStr.length - 3; // 3 for " - "
+        const truncatedName = taskName.length > maxTaskNameLength 
+          ? taskName.substring(0, maxTaskNameLength - 1) + '…'
+          : taskName;
+        this.params.setTrayTitle(`${timeStr} - ${truncatedName}`);
+      } else {
+        this.params.setTrayTitle(timeStr);
+      }
+    }
   }
 
   // Persistence
@@ -283,6 +363,8 @@ class TimerStoreImpl {
         startedAtMs: Date.now(),
         baseSecondsAtStart: Math.max(0, Math.floor(data.baseSecondsAtStart + downtimeElapsed)),
         currentSeconds: Math.max(0, Math.floor(data.baseSecondsAtStart + downtimeElapsed)),
+        sessionSeconds: downtimeElapsed,
+        hasActiveSession: true,
       };
       this.ticksElapsedSeconds = 0;
       if (this.clock instanceof WorkerClock) {
@@ -302,6 +384,8 @@ class TimerStoreImpl {
       this.ticksElapsedSeconds += 1;
       const seconds = this.state.baseSecondsAtStart + this.ticksElapsedSeconds;
       this.state.currentSeconds = seconds;
+      this.state.sessionSeconds = this.ticksElapsedSeconds;
+      this.state.hasActiveSession = this.ticksElapsedSeconds > 0;
     }
     const seconds = this.state.currentSeconds;
     this.params.onTick?.(seconds);
@@ -309,8 +393,9 @@ class TimerStoreImpl {
       const timeStr = formatSeconds(seconds);
       const taskName = this.state.activeTaskName;
       if (taskName && this.state.activeTaskId) {
-        // Truncate task name to fit within 20-30 character limit
-        const maxTaskNameLength = 40 - timeStr.length - 3; // 3 for " - "
+        // Use configurable max length (default 25)
+        const maxTotalLength = this.params.maxTrayTitleLength ?? 25;
+        const maxTaskNameLength = maxTotalLength - timeStr.length - 3; // 3 for " - "
         const truncatedName = taskName.length > maxTaskNameLength 
           ? taskName.substring(0, maxTaskNameLength - 1) + '…'
           : taskName;
@@ -340,9 +425,12 @@ class TimerStoreImpl {
         if (this.state.startedAtMs) {
           // Keep current ticking, just adjust currentSeconds upward
           this.state.currentSeconds = serverBase + this.ticksElapsedSeconds;
+          this.state.sessionSeconds = this.ticksElapsedSeconds;
         } else {
           this.state.currentSeconds = serverBase;
+          this.state.sessionSeconds = 0;
         }
+        this.state.hasActiveSession = this.state.sessionSeconds > 0;
         this.persistActiveState();
         this.emitChange();
       }

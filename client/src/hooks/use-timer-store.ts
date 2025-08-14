@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { TimerStore, type TimerStoreState } from '@shared/services/timer-store';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 
+// Configuration
+const MAX_TRAY_TITLE_LENGTH = 100; // Change this value to adjust tray title length
+
 // Cache for task data to avoid duplicate API calls
 const taskCache = new Map<string, { task: any; timestamp: number }>();
 const CACHE_TTL = 30000; // 30 seconds
@@ -38,11 +41,36 @@ export function initTimerStore() {
       queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: any) => Array.isArray(old) ? old.map((t) => t.id === taskId ? { ...t, timeLoggedSeconds: updated?.timeLoggedSeconds ?? updated?.time_logged_seconds ?? 0 } : t) : old);
     },
     onTick: () => {},
-    onChange: () => {},
+    onChange: (state) => {
+      // Notify electron about timer state changes with session info
+      const anyWindow = window as any;
+      try {
+        const status = state.activeTaskId && state.startedAtMs ? 'RUNNING' : 
+                      state.activeTaskId ? 'PAUSED' : 'IDLE';
+        
+        // Send session info for menu updates
+        if (anyWindow?.electronAPI?.sendTimerStateWithSession) {
+          anyWindow.electronAPI.sendTimerStateWithSession({
+            status,
+            sessionSeconds: state.sessionSeconds || 0,
+            hasActiveSession: state.hasActiveSession || false
+          });
+        } else {
+          // Fallback to old method
+          anyWindow?.electronAPI?.notifyTimerState?.(status);
+        }
+        
+        // Also send timer tick to update tray title when state changes
+        if (status === 'IDLE') {
+          anyWindow?.electronAPI?.sendTimerTick?.(state.currentSeconds);
+        }
+      } catch {}
+    },
     setTrayTitle: (text: string) => {
       const anyWindow = window as any;
       try { anyWindow?.electronAPI?.setTrayTitle?.(text); } catch {}
     },
+    maxTrayTitleLength: MAX_TRAY_TITLE_LENGTH,
   });
   // Attempt to restore any active timer persisted locally
   try { void TimerStore.restoreActiveState(); } catch {}
@@ -55,6 +83,8 @@ export function useTimerStore() {
     startedAtMs: null,
     baseSecondsAtStart: 0,
     currentSeconds: 0,
+    sessionSeconds: 0,
+    hasActiveSession: false,
   });
 
   useEffect(() => {
@@ -68,11 +98,16 @@ export function useTimerStore() {
     activeTaskId: state.activeTaskId,
     activeTaskName: state.activeTaskName,
     displaySeconds: state.currentSeconds,
+    sessionSeconds: state.sessionSeconds,
+    hasActiveSession: state.hasActiveSession,
     start: TimerStore.start.bind(TimerStore),
     pause: TimerStore.pause.bind(TimerStore),
     resume: TimerStore.resume.bind(TimerStore),
     stop: TimerStore.stop.bind(TimerStore),
     restore: TimerStore.restoreActiveState.bind(TimerStore),
+    discardLastSession: TimerStore.discardLastSession.bind(TimerStore),
+    getLastActiveTaskId: TimerStore.getLastActiveTaskId.bind(TimerStore),
+    updateTrayTitle: TimerStore.updateTrayTitle.bind(TimerStore),
   } as const;
 }
 

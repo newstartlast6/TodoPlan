@@ -49502,6 +49502,7 @@ const API_PORT = parseInt(process.env.ELECTRON_API_PORT || "5002", 10);
 let mainWindow = null;
 let tray = null;
 let isRunning = false;
+let hasActiveSession = false;
 let httpServerRef = null;
 let isQuitting = false;
 let isQuitConfirmed = false;
@@ -49626,6 +49627,14 @@ function createTray() {
           mainWindow.webContents.send("tray:action", "stop");
         }
       },
+      {
+        label: "Discard Session",
+        enabled: hasActiveSession,
+        click: () => {
+          if (!mainWindow) return;
+          mainWindow.webContents.send("tray:action", "discardLastSession");
+        }
+      },
       { type: "separator" },
       {
         label: "Open at Login",
@@ -49661,7 +49670,12 @@ function registerIpc() {
   });
   ipcMain.on("timer:stateChanged", (_event, payload) => {
     isRunning = (payload == null ? void 0 : payload.status) === "RUNNING";
+    hasActiveSession = (payload == null ? void 0 : payload.hasActiveSession) ?? ((payload == null ? void 0 : payload.status) === "RUNNING" || (payload == null ? void 0 : payload.status) === "PAUSED");
+    (payload == null ? void 0 : payload.sessionSeconds) || 0;
     preferRendererTrayTitle = (payload == null ? void 0 : payload.status) !== "IDLE";
+    if ((payload == null ? void 0 : payload.status) === "IDLE" && tray) {
+      preferRendererTrayTitle = false;
+    }
     if (tray) {
       const template = [];
       const cm = Menu.buildFromTemplate(template);
@@ -49688,6 +49702,10 @@ function registerIpc() {
           { label: "Stop", click: () => {
             if (!mainWindow) return;
             mainWindow.webContents.send("tray:action", "stop");
+          } },
+          { label: "Discard Session", enabled: hasActiveSession, click: () => {
+            if (!mainWindow) return;
+            mainWindow.webContents.send("tray:action", "discardLastSession");
           } },
           { type: "separator" },
           { label: "Open at Login", type: "checkbox", checked: openAtLoginEnabled, click: (item) => {

@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   notifyTimerState: (status) => {
     ipcRenderer.send('timer:stateChanged', { status });
   },
+  sendTimerStateWithSession: (data) => {
+    ipcRenderer.send('timer:stateChanged', data);
+  },
   onTrayAction: (callback) => {
     const handler = (_event, action) => callback(action);
     ipcRenderer.on('tray:action', handler);

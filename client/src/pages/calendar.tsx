@@ -400,6 +400,17 @@ export default function Calendar() {
               >
                 <Pause className="h-4 w-4 mr-1" /> Pause
               </Button>
+              {timer.hasActiveSession && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => { void timer.discardLastSession(); }}
+                  title={`Discard Session`}
+                >
+                  Discard  Session
+                </Button>
+              )}
               {timer.activeTaskId && (
                 <Button
                   size="sm"

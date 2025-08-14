@@ -35,6 +35,8 @@ const API_PORT = parseInt(process.env.ELECTRON_API_PORT || '5002', 10);
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isRunning = false;
+let hasActiveSession = false;
+let sessionSeconds = 0;
 let httpServerRef: Server | null = null;
 let isQuitting = false;
 let isQuitConfirmed = false;
@@ -54,7 +56,7 @@ async function startExpressServer(port: number): Promise<Server> {
       exp.get(/^(?!\/api\/).*/, (_req, res) => {
         res.sendFile(path.join(staticDir, 'index.html'));
       });
-    } catch {}
+    } catch { }
   }
 
   const httpServer = await registerRoutes(exp);
@@ -94,7 +96,7 @@ async function waitForFile(filePath: string, timeoutMs = 5000): Promise<void> {
     try {
       fs.accessSync(filePath);
       return;
-    } catch {}
+    } catch { }
     await new Promise(r => setTimeout(r, 100));
   }
 }
@@ -175,6 +177,14 @@ function createTray() {
           mainWindow.webContents.send('tray:action', 'stop');
         },
       },
+      {
+        label: 'Discard Session',
+        enabled: hasActiveSession,
+        click: () => {
+          if (!mainWindow) return;
+          mainWindow.webContents.send('tray:action', 'discardLastSession');
+        },
+      },
       { type: 'separator' },
       {
         label: 'Open at Login',
@@ -213,10 +223,18 @@ function registerIpc() {
     tray.setTitle(truncateTrayTitle(text));
   });
 
-  ipcMain.on('timer:stateChanged', (_event, payload: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE' }) => {
+  ipcMain.on('timer:stateChanged', (_event, payload: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE'; sessionSeconds?: number; hasActiveSession?: boolean }) => {
     isRunning = payload?.status === 'RUNNING';
+    hasActiveSession = payload?.hasActiveSession ?? (payload?.status === 'RUNNING' || payload?.status === 'PAUSED');
+    sessionSeconds = payload?.sessionSeconds || 0;
     // Prefer renderer-provided combined title whenever not IDLE
     preferRendererTrayTitle = payload?.status !== 'IDLE';
+
+    // When status becomes IDLE, reset tray title to show current time
+    if (payload?.status === 'IDLE' && tray) {
+      // Reset to basic time display when idle
+      preferRendererTrayTitle = false;
+    }
     // Refresh menu to reflect Pause/Resume toggle
     if (tray) {
       // Rebuild menu to update Pause/Resume label
@@ -231,6 +249,7 @@ function registerIpc() {
           { type: 'separator' },
           { label, click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', isRunning ? 'pause' : 'resume'); } },
           { label: 'Stop', click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', 'stop'); } },
+          { label: 'Discard Session', enabled: hasActiveSession, click: () => { if (!mainWindow) return; mainWindow.webContents.send('tray:action', 'discardLastSession'); } },
           { type: 'separator' },
           { label: 'Open at Login', type: 'checkbox', checked: openAtLoginEnabled, click: (item) => { const enabled = Boolean((item as any).checked); app.setLoginItemSettings({ openAtLogin: enabled }); openAtLoginEnabled = enabled; } },
           { type: 'separator' },
@@ -254,9 +273,9 @@ function registerIpc() {
       // macOS supports text titles in the menu bar; set directly
       tray.setTitle(truncateTrayTitle(nextTitle));
       // Keep full value visible on hover
-      try { tray.setToolTip(nextTitle); } catch {}
+      try { tray.setToolTip(nextTitle); } catch { }
       preferRendererTrayTitle = true;
-    } catch {}
+    } catch { }
   });
 
   ipcMain.on('app:quit', () => {
@@ -305,7 +324,7 @@ app.whenReady().then(async () => {
   httpServerRef = await startExpressServer(API_PORT);
   // Ensure preload exists in dev before creating window
   if (!app.isPackaged) {
-    try { await waitForFile(resolvePreloadPath(), 5000); } catch {}
+    try { await waitForFile(resolvePreloadPath(), 5000); } catch { }
   }
   await createWindow();
   if (isMac) createTray();
@@ -313,7 +332,7 @@ app.whenReady().then(async () => {
 
   // Optional: hide Dock icon when configured
   if (isMac && process.env.HIDE_DOCK === '1' && app.dock) {
-    try { app.dock.hide(); } catch {}
+    try { app.dock.hide(); } catch { }
   }
 
   // Initialize "Open at Login" state for menu
@@ -354,14 +373,14 @@ app.on('before-quit', async (event) => {
         isQuitting = true;
         app.quit();
       }
-    } catch {}
+    } catch { }
     return;
   }
 
   // Perform shutdown cleanup only when confirmed
   isQuitting = true;
   if (httpServerRef) {
-    try { httpServerRef.close(); } catch {}
+    try { httpServerRef.close(); } catch { }
     httpServerRef = null;
   }
 });

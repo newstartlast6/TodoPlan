@@ -33,7 +33,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   notifyTimerState: (status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE') => {
     ipcRenderer.send('timer:stateChanged', { status });
   },
-  onTrayAction: (callback: (action: 'show' | 'hide' | 'pause' | 'resume' | 'stop') => void) => {
+  sendTimerStateWithSession: (data: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE'; sessionSeconds: number; hasActiveSession?: boolean }) => {
+    ipcRenderer.send('timer:stateChanged', data);
+  },
+  onTrayAction: (callback: (action: 'show' | 'hide' | 'pause' | 'resume' | 'stop' | 'discardLastSession') => void) => {
     const handler = (_event: any, action: any) => callback(action);
     ipcRenderer.on('tray:action', handler);
     return () => ipcRenderer.off('tray:action', handler);
