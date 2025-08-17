@@ -7,7 +7,8 @@ import {
   type List, type InsertList, type UpdateList,
   type Review, type InsertReview, type UpdateReview,
   type Note, type InsertNote, type UpdateNote,
-  tasks, users, timerSessions, taskEstimates, goals, lists, reviews, notes 
+  type ListNote, type InsertListNote, type UpdateListNote,
+  tasks, users, timerSessions, taskEstimates, goals, lists, reviews, notes, listNotes 
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getDb, isPostgresMode } from "./db";
@@ -76,6 +77,13 @@ export interface IStorage {
     anchorDate: Date,
     values: Omit<InsertNote, "type" | "anchorDate"> | UpdateNote
   ): Promise<Note>;
+
+  // List notes (scoped)
+  getListNotes(userId: string, listId: string): Promise<ListNote[]>;
+  getListNote(userId: string, id: string): Promise<ListNote | undefined>;
+  createListNote(userId: string, listNote: InsertListNote): Promise<ListNote>;
+  updateListNote(userId: string, id: string, listNote: UpdateListNote): Promise<ListNote | undefined>;
+  deleteListNote(userId: string, id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -87,6 +95,7 @@ export class MemStorage implements IStorage {
   private goals: Map<string, Goal>;
   private reviewsMap: Map<string, Review>;
   private notesMap: Map<string, Note>;
+  private listNotesMap: Map<string, ListNote>;
 
   constructor() {
     this.users = new Map();
@@ -97,6 +106,7 @@ export class MemStorage implements IStorage {
     this.goals = new Map();
     this.reviewsMap = new Map();
     this.notesMap = new Map();
+    this.listNotesMap = new Map();
     // Initialize with some sample tasks for demonstration
     this.initializeSampleData();
   }
@@ -282,6 +292,7 @@ export class MemStorage implements IStorage {
       id,
       emoji: insertList.emoji ?? '📋',
       color: insertList.color ?? null,
+      type: insertList.type ?? 'todo',
       userId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -670,6 +681,54 @@ export class MemStorage implements IStorage {
     const updated: Note = { ...base, ...values, updatedAt: new Date() } as Note;
     this.notesMap.set(key, updated);
     return updated;
+  }
+
+  // List notes operations
+  async getListNotes(userId: string, listId: string): Promise<ListNote[]> {
+    return Array.from(this.listNotesMap.values())
+      .filter(note => note.userId === userId && note.listId === listId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aTime - bTime;
+      });
+  }
+
+  async getListNote(userId: string, id: string): Promise<ListNote | undefined> {
+    const note = this.listNotesMap.get(id);
+    return note && note.userId === userId ? note : undefined;
+  }
+
+  async createListNote(userId: string, insertListNote: InsertListNote): Promise<ListNote> {
+    const id = randomUUID();
+    const note: ListNote = {
+      ...insertListNote,
+      id,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.listNotesMap.set(id, note);
+    return note;
+  }
+
+  async updateListNote(userId: string, id: string, updateListNote: UpdateListNote): Promise<ListNote | undefined> {
+    const existingNote = await this.getListNote(userId, id);
+    if (!existingNote) return undefined;
+    
+    const updatedNote: ListNote = { 
+      ...existingNote, 
+      ...updateListNote,
+      updatedAt: new Date()
+    };
+    this.listNotesMap.set(id, updatedNote);
+    return updatedNote;
+  }
+
+  async deleteListNote(userId: string, id: string): Promise<boolean> {
+    const note = this.listNotesMap.get(id);
+    if (!note || note.userId !== userId) return false;
+    return this.listNotesMap.delete(id);
   }
 }
 
@@ -1187,6 +1246,56 @@ class DbStorage implements IStorage {
         .values({ type, anchorDate, ...values, userId } as any)
         .returning();
       return inserted[0] as unknown as Note;
+    });
+  }
+
+  // List notes operations
+  async getListNotes(userId: string, listId: string): Promise<ListNote[]> {
+    return this.withPersistence("get_list_notes", { listId }, async () => {
+      return await this.db
+        .select()
+        .from(listNotes)
+        .where(and(eq(listNotes.listId, listId), eq(listNotes.userId, userId)))
+        .orderBy(listNotes.createdAt);
+    });
+  }
+
+  async getListNote(userId: string, id: string): Promise<ListNote | undefined> {
+    return this.withPersistence("get_list_note", { id }, async () => {
+      const result = await this.db
+        .select()
+        .from(listNotes)
+        .where(and(eq(listNotes.id, id), eq(listNotes.userId, userId)))
+        .limit(1);
+      return result[0];
+    });
+  }
+
+  async createListNote(userId: string, insertListNote: InsertListNote): Promise<ListNote> {
+    return this.withPersistence("create_list_note", { title: insertListNote.title }, async () => {
+      const result = await this.db.insert(listNotes).values({ ...insertListNote, userId }).returning();
+      return result[0];
+    });
+  }
+
+  async updateListNote(userId: string, id: string, updateListNote: UpdateListNote): Promise<ListNote | undefined> {
+    return this.withPersistence("update_list_note", { id }, async () => {
+      const result = await this.db
+        .update(listNotes)
+        .set({ ...updateListNote, updatedAt: new Date() })
+        .where(and(eq(listNotes.id, id), eq(listNotes.userId, userId)))
+        .returning();
+      return result[0];
+    });
+  }
+
+  async deleteListNote(userId: string, id: string): Promise<boolean> {
+    return this.withPersistence("delete_list_note", { id }, async () => {
+      const result = await this.db
+        .delete(listNotes)
+        .where(and(eq(listNotes.id, id), eq(listNotes.userId, userId)))
+        .returning({ id: listNotes.id });
+      return result.length > 0;
     });
   }
 }

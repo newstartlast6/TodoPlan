@@ -21,11 +21,15 @@ export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type Profile = typeof profiles.$inferSelect;
 
+export const listTypeEnum = z.enum(["todo", "notes"]);
+export type ListType = z.infer<typeof listTypeEnum>;
+
 export const lists = pgTable("lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   emoji: text("emoji").notNull().default("📋"),
   color: text("color"),
+  type: varchar("type").notNull().default("todo"), // todo, notes
   userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -99,6 +103,8 @@ export const insertListSchema = createInsertSchema(lists).omit({
   userId: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  type: listTypeEnum.optional(),
 });
 
 export const updateListSchema = insertListSchema.partial();
@@ -238,6 +244,30 @@ export const updateNoteSchema = insertNoteSchema.partial().omit({ type: true, an
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type UpdateNote = z.infer<typeof updateNoteSchema>;
 export type Note = typeof notes.$inferSelect;
+
+// List notes: free-form notes attached to lists
+export const listNotes = pgTable("list_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  content: text("content"),
+  listId: varchar("list_id").notNull().references(() => lists.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertListNoteSchema = createInsertSchema(listNotes).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateListNoteSchema = insertListNoteSchema.partial();
+
+export type InsertListNote = z.infer<typeof insertListNoteSchema>;
+export type UpdateListNote = z.infer<typeof updateListNoteSchema>;
+export type ListNote = typeof listNotes.$inferSelect;
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

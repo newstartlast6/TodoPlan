@@ -5,6 +5,7 @@ import { TimerDisplay } from '../components/timer/timer-display';
 import { useSelectedTodo } from '../hooks/use-selected-todo';
 import { useLists, useCreateList, useUpdateList, useDeleteList, useListTasks } from '../hooks/use-lists';
 import { useCreateTaskInList, useUpdateTask, useDeleteTask } from '../hooks/use-list-tasks';
+import { useListNotes, useCreateListNote, useUpdateListNote, useDeleteListNote } from '../hooks/use-list-notes';
 import { type CreateListRequest, type UpdateListRequest } from '@shared/list-types';
 import { type UpdateTask } from '@shared/schema';
 import { DndProvider } from 'react-dnd';
@@ -13,17 +14,31 @@ import { Toaster } from '@/components/ui/toaster';
 import { Plus, Edit3, Trash2, CalendarDays } from 'lucide-react';
 import { CreateListDialog } from '@/components/lists/create-list-dialog';
 import { SelectableTodoItem } from '@/components/calendar/selectable-todo-item';
+import { SelectableNoteItem } from '@/components/lists/selectable-note-item';
+import { ListNotesDetailPane } from '@/components/lists/list-notes-detail-pane';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MinimalisticSidebar } from '@/components/calendar/minimalistic-sidebar';
 import { useLocation } from 'wouter';
 
 interface ListsState {
   selectedListId: string | null;
+  viewMode: 'todo' | 'notes';
 }
 
 export function Lists() {
+  // Load saved view mode from localStorage or default to 'todo'
+  const getSavedViewMode = (): 'todo' | 'notes' => {
+    try {
+      const saved = localStorage.getItem('timeflow-list-view-mode');
+      return saved === 'notes' ? 'notes' : 'todo';
+    } catch {
+      return 'todo';
+    }
+  };
+
   const [state, setState] = useState<ListsState>({
     selectedListId: null,
+    viewMode: getSavedViewMode(),
   });
   const [, setLocation] = useLocation();
   const [isCreateListOpen, setIsCreateListOpen] = useState<boolean>(false);
@@ -33,6 +48,10 @@ export function Lists() {
   const [showNewTaskInput, setShowNewTaskInput] = useState<boolean>(false);
   const [newTaskTitle, setNewTaskTitle] = useState<string>('');
   const newTaskInputRef = useRef<HTMLInputElement>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [showNewNoteInput, setShowNewNoteInput] = useState<boolean>(false);
+  const [newNoteTitle, setNewNoteTitle] = useState<string>('');
+  const newNoteInputRef = useRef<HTMLInputElement>(null);
 
   // Use global selected todo context
   const { selectedTodoId, isDetailPaneOpen, selectTodo, closeDetailPane } = useSelectedTodo();
@@ -40,9 +59,11 @@ export function Lists() {
   // Fetch data using custom hooks
   const { data: lists = [], isLoading: listsLoading } = useLists();
   const { data: tasks = [], isLoading: tasksLoading } = useListTasks(state.selectedListId);
+  const { data: listNotes = [], isLoading: notesLoading } = useListNotes(state.selectedListId);
 
-  // Get selected list
+  // Get selected list and note
   const selectedList = lists.find(list => list.id === state.selectedListId) || null;
+  const selectedNote = listNotes.find(note => note.id === selectedNoteId) || null;
 
   // Mutations
   const createListMutation = useCreateList();
@@ -51,6 +72,9 @@ export function Lists() {
   const createTaskMutation = useCreateTaskInList();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
+  const createNoteMutation = useCreateListNote();
+  const updateNoteMutation = useUpdateListNote();
+  const deleteNoteMutation = useDeleteListNote();
 
 
 
@@ -60,8 +84,22 @@ export function Lists() {
       ...prev, 
       selectedListId: listId,
     }));
-    // Clear task selection when switching lists
+    // Clear task and note selection when switching lists
     selectTodo(null);
+    setSelectedNoteId(null);
+  };
+
+  const handleViewModeChange = (mode: 'todo' | 'notes') => {
+    setState(prev => ({ ...prev, viewMode: mode }));
+    // Save view mode to localStorage
+    try {
+      localStorage.setItem('timeflow-list-view-mode', mode);
+    } catch {
+      // Ignore localStorage errors
+    }
+    // Clear selections when switching modes
+    selectTodo(null);
+    setSelectedNoteId(null);
   };
 
   const handleListCreate = (listData: CreateListRequest) => {
@@ -142,6 +180,41 @@ export function Lists() {
     updateTaskMutation.mutate({ taskId, updates });
   };
 
+  // Note handlers
+  const handleNoteSelect = (noteId: string) => {
+    setSelectedNoteId(noteId);
+  };
+
+  const handleNoteCreate = (noteData: { title: string; content?: string }) => {
+    if (!state.selectedListId) return;
+    
+    createNoteMutation.mutate({
+      ...noteData,
+      listId: state.selectedListId,
+    }, {
+      onSuccess: (newNote) => {
+        setSelectedNoteId(newNote.id);
+        setShowNewNoteInput(false);
+        setNewNoteTitle('');
+      },
+    });
+  };
+
+  const handleNoteUpdate = (noteId: string, updates: { title?: string; content?: string }) => {
+    updateNoteMutation.mutate({ noteId, updates });
+  };
+
+  const handleNoteDelete = (noteId: string) => {
+    deleteNoteMutation.mutate(noteId, {
+      onSuccess: () => {
+        // Clear selection if deleted note was selected
+        if (selectedNoteId === noteId) {
+          setSelectedNoteId(null);
+        }
+      },
+    });
+  };
+
 
 
   // Select first list by default when lists load
@@ -187,6 +260,13 @@ export function Lists() {
       newTaskInputRef.current.focus();
     }
   }, [showNewTaskInput]);
+
+  // Focus new note input when shown
+  useEffect(() => {
+    if (showNewNoteInput && newNoteInputRef.current) {
+      newNoteInputRef.current.focus();
+    }
+  }, [showNewNoteInput]);
 
   // Render main content
   const renderMainContent = () => (
@@ -286,120 +366,218 @@ export function Lists() {
               <span>Plan</span>
             </button>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <button
-                className={`px-3 py-1 rounded-md text-sm font-medium ${activeFilter === 'all' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                onClick={() => setActiveFilter('all')}
-              >
-                All
-              </button>
-              <button
-                className={`px-3 py-1 rounded-md text-sm ${activeFilter === 'pending' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                onClick={() => setActiveFilter('pending')}
-              >
-                Pending
-              </button>
-              <button
-                className={`px-3 py-1 rounded-md text-sm ${activeFilter === 'completed' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                onClick={() => setActiveFilter('completed')}
-              >
-                Completed
-              </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* View mode toggle switch */}
+              <div className="flex items-center space-x-3">
+                <span className={`text-sm font-medium ${state.viewMode === 'todo' ? 'text-gray-900' : 'text-gray-500'}`}>
+                  Todos
+                </span>
+                <div 
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                    state.viewMode === 'notes' ? 'bg-orange-600' : 'bg-gray-200'
+                  }`}
+                  onClick={() => handleViewModeChange(state.viewMode === 'todo' ? 'notes' : 'todo')}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      state.viewMode === 'notes' ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </div>
+                <span className={`text-sm font-medium ${state.viewMode === 'notes' ? 'text-gray-900' : 'text-gray-500'}`}>
+                  Notes
+                </span>
+              </div>
+
+              {/* Filter buttons for todos only */}
+              {state.viewMode === 'todo' && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    className={`px-3 py-1 rounded-md text-sm font-medium ${activeFilter === 'all' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
+                    onClick={() => setActiveFilter('all')}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-md text-sm ${activeFilter === 'pending' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
+                    onClick={() => setActiveFilter('pending')}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-md text-sm ${activeFilter === 'completed' ? 'bg-orange-50 text-orange-600' : 'text-gray-500 hover:bg-gray-100'}`}
+                    onClick={() => setActiveFilter('completed')}
+                  >
+                    Completed
+                  </button>
+                </div>
+              )}
             </div>
-            <div className="ml-auto w-[200px]">
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-                <SelectTrigger className="h-8 text-sm rounded-md border border-gray-200 px-3 py-1 focus:ring-2 focus:ring-orange-600 focus:ring-offset-0">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="title">Sort by Name</SelectItem>
-                  <SelectItem value="priority">Sort by Priority</SelectItem>
-                  <SelectItem value="startTime">Sort by Due Date</SelectItem>                  
-                </SelectContent>
-              </Select>
-            </div>
+
+            {/* Sort dropdown for todos only */}
+            {state.viewMode === 'todo' && (
+              <div className="ml-auto w-[200px]">
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="h-8 text-sm rounded-md border border-gray-200 px-3 py-1 focus:ring-2 focus:ring-orange-600 focus:ring-offset-0">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="title">Sort by Name</SelectItem>
+                    <SelectItem value="priority">Sort by Priority</SelectItem>
+                    <SelectItem value="startTime">Sort by Due Date</SelectItem>                  
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Todos list */}
+        {/* Content list */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
-          {tasksLoading ? (
-            <div className="text-sm text-gray-500">Loading...</div>
+          {state.viewMode === 'todo' ? (
+            // Todos list
+            tasksLoading ? (
+              <div className="text-sm text-gray-500">Loading...</div>
+            ) : (
+              displayTasks.map((task) => (
+                <SelectableTodoItem
+                  key={task.id}
+                  task={task}
+                  isSelected={selectedTodoId === task.id}
+                  onSelect={handleTaskSelect}
+                  onToggleComplete={handleTaskToggleComplete}
+                  onUpdate={handleTaskUpdate}
+                  onDelete={handleTaskDelete}
+                  variant="list"
+                  showTime={false}
+                  showDate={false}
+                  showTimer={false}
+                  showLoggedTime={false}
+                  showEstimate={false}
+                  showListChip={false}
+                  showUnscheduledBadge
+                />
+              ))
+            )
           ) : (
-            displayTasks.map((task) => (
-              <SelectableTodoItem
-                key={task.id}
-                task={task}
-                isSelected={selectedTodoId === task.id}
-                onSelect={handleTaskSelect}
-                onToggleComplete={handleTaskToggleComplete}
-                onUpdate={handleTaskUpdate}
-                onDelete={handleTaskDelete}
-                variant="list"
-                showTime={false}
-                showDate={false}
-                showTimer={false}
-                showLoggedTime={false}
-                showEstimate={false}
-                showListChip={false}
-                showUnscheduledBadge
-              />
-            ))
+            // Notes list
+            notesLoading ? (
+              <div className="text-sm text-gray-500">Loading...</div>
+            ) : (
+              listNotes.map((note) => (
+                <SelectableNoteItem
+                  key={note.id}
+                  note={note}
+                  isSelected={selectedNoteId === note.id}
+                  onSelect={handleNoteSelect}
+                  onUpdate={handleNoteUpdate}
+                  onDelete={handleNoteDelete}
+                />
+              ))
+            )
           )}
 
-          {/* Add new */}
-          <div
-            className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-600 transition-colors cursor-pointer"
-            onClick={() => {
-              if (!state.selectedListId) return;
-              setShowNewTaskInput(true);
-            }}
-          >
-            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-            {showNewTaskInput ? (
-              <input
-                ref={newTaskInputRef}
-                type="text"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newTaskTitle.trim()) {
-                    const start = new Date();
-                    const end = new Date(start.getTime() + 30 * 60 * 1000);
-                    handleTaskCreate({ title: newTaskTitle.trim(), startTime: start, endTime: end });
-                  } else if (e.key === 'Escape') {
-                    setShowNewTaskInput(false);
-                    setNewTaskTitle('');
-                  }
-                }}
-                placeholder="Add a new task..."
-                className="flex-1 bg-transparent outline-none text-gray-600 placeholder-gray-400"
-              />
-            ) : (
-              <span className="flex-1 text-gray-500">Add a new task...</span>
-            )}
-          </div>
+          {/* Add new task or note */}
+          {state.viewMode === 'todo' ? (
+            <div
+              className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-600 transition-colors cursor-pointer"
+              onClick={() => {
+                if (!state.selectedListId) return;
+                setShowNewTaskInput(true);
+              }}
+            >
+              <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+              {showNewTaskInput ? (
+                <input
+                  ref={newTaskInputRef}
+                  type="text"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newTaskTitle.trim()) {
+                      const start = new Date();
+                      const end = new Date(start.getTime() + 30 * 60 * 1000);
+                      handleTaskCreate({ title: newTaskTitle.trim(), startTime: start, endTime: end });
+                    } else if (e.key === 'Escape') {
+                      setShowNewTaskInput(false);
+                      setNewTaskTitle('');
+                    }
+                  }}
+                  placeholder="Add a new task..."
+                  className="flex-1 bg-transparent outline-none text-gray-600 placeholder-gray-400"
+                />
+              ) : (
+                <span className="flex-1 text-gray-500">Add a new task...</span>
+              )}
+            </div>
+          ) : (
+            <div
+              className="flex items-center space-x-4 p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-600 transition-colors cursor-pointer"
+              onClick={() => {
+                if (!state.selectedListId) return;
+                setShowNewNoteInput(true);
+              }}
+            >
+              <div className="w-5 h-5 text-gray-300">📝</div>
+              {showNewNoteInput ? (
+                <input
+                  ref={newNoteInputRef}
+                  type="text"
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newNoteTitle.trim()) {
+                      handleNoteCreate({ title: newNoteTitle.trim() });
+                    } else if (e.key === 'Escape') {
+                      setShowNewNoteInput(false);
+                      setNewNoteTitle('');
+                    }
+                  }}
+                  placeholder="Add a new note..."
+                  className="flex-1 bg-transparent outline-none text-gray-600 placeholder-gray-400"
+                />
+              ) : (
+                <span className="flex-1 text-gray-500">Add a new note...</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 
   // Render detail pane
-  const renderDetailPane = () => (
-    selectedTodoId ? (
-      <TodoDetailPane
-        onClose={closeDetailPane}
-      />
-    ) : (
-      <div className="h-full bg-white flex items-center justify-center">
-        <div className="text-center text-gray-500">
-          <div className="text-4xl mb-2">📝</div>
-          <p className="text-sm">Select a task to view details</p>
+  const renderDetailPane = () => {
+    if (state.viewMode === 'todo' && selectedTodoId) {
+      return (
+        <TodoDetailPane
+          onClose={closeDetailPane}
+        />
+      );
+    } else if (state.viewMode === 'notes' && selectedNoteId && selectedNote) {
+      return (
+        <ListNotesDetailPane
+          note={selectedNote}
+          onClose={() => setSelectedNoteId(null)}
+          onUpdate={handleNoteUpdate}
+          onDelete={handleNoteDelete}
+        />
+      );
+    } else {
+      return (
+        <div className="h-full bg-white flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <div className="text-4xl mb-2">{state.viewMode === 'todo' ? '📝' : '📄'}</div>
+            <p className="text-sm">Select a {state.viewMode === 'todo' ? 'task' : 'note'} to view details</p>
+          </div>
         </div>
-      </div>
-    )
-  );
+      );
+    }
+  };
+
+  // Determine if detail pane should be open
+  const isDetailOpen = state.viewMode === 'todo' ? isDetailPaneOpen : selectedNoteId !== null;
 
   return (
     <>
@@ -408,8 +586,14 @@ export function Lists() {
           sidebar={renderSidebar()}
           main={renderMainContent()}
           detail={renderDetailPane()}
-          isDetailOpen={isDetailPaneOpen}
-          onDetailClose={closeDetailPane}
+          isDetailOpen={isDetailOpen}
+          onDetailClose={() => {
+            if (state.viewMode === 'todo') {
+              closeDetailPane();
+            } else {
+              setSelectedNoteId(null);
+            }
+          }}
           detailWidthClass="w-[480px]"
         />
       </DndProvider>

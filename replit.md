@@ -6,6 +6,14 @@ TimeFlow is a modern task management and calendar application built with React a
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+- Added notes list functionality with toggle between todo and notes modes (January 2025)
+- Implemented user preference persistence for view mode using localStorage
+- Notes feature includes creation, editing, deletion with database persistence
+- Toggle switch design for better UX between Todos/Notes modes
+- Restored full sorting and filtering functionality for todos
+
 # System Architecture
 
 ## Frontend Architecture

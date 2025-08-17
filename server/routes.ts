@@ -9,7 +9,8 @@ import {
   reviewTypeEnum,
   insertReviewSchema, updateReviewSchema,
   noteTypeEnum,
-  updateNoteSchema
+  updateNoteSchema,
+  insertListNoteSchema, updateListNoteSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { requireAuth } from "./auth";
@@ -487,6 +488,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to process error report',
       });
+    }
+  });
+
+  // List Notes endpoints
+  
+  // Get list notes for a specific list
+  app.get("/api/list-notes", async (req, res) => {
+    try {
+      const listId = req.query.listId as string;
+      if (!listId) {
+        return res.status(400).json({ message: "listId is required" });
+      }
+      const listNotes = await storage.getListNotes(req.userId!, listId);
+      res.json(listNotes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch list notes" });
+    }
+  });
+
+  // Get single list note
+  app.get("/api/list-notes/:id", async (req, res) => {
+    try {
+      const listNote = await storage.getListNote(req.userId!, req.params.id);
+      if (!listNote) {
+        return res.status(404).json({ message: "List note not found" });
+      }
+      res.json(listNote);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch list note" });
+    }
+  });
+
+  // Create new list note
+  app.post("/api/list-notes", async (req, res) => {
+    try {
+      const validatedData = insertListNoteSchema.parse(req.body);
+      const listNote = await storage.createListNote(req.userId!, validatedData);
+      res.status(201).json(listNote);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid list note data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create list note" });
+    }
+  });
+
+  // Update list note
+  app.patch("/api/list-notes/:id", async (req, res) => {
+    try {
+      const validatedData = updateListNoteSchema.parse(req.body);
+      const listNote = await storage.updateListNote(req.userId!, req.params.id, validatedData);
+      if (!listNote) {
+        return res.status(404).json({ message: "List note not found" });
+      }
+      res.json(listNote);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid list note data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update list note" });
+    }
+  });
+
+  // Delete list note
+  app.delete("/api/list-notes/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteListNote(req.userId!, req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "List note not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete list note" });
     }
   });
 
