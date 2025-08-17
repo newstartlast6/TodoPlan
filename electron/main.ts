@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, powerMonitor } from 'electron';
 import path from 'path';
 import { pathToFileURL, fileURLToPath } from 'url';
 import express from 'express';
@@ -283,6 +283,148 @@ function refreshTrayMenu() {
   tray.setContextMenu(Menu.buildFromTemplate(buildMenu()));
 }
 
+function setupPowerMonitoring() {
+  // Track timer state before system events
+  let wasTimerRunningBeforeLock = false;
+
+  // Listen for screen lock events
+  powerMonitor.on('lock-screen', () => {
+    console.log('Screen locked - pausing timer if running');
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      // Show the app window and send pause action (same as tray pause)
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('tray:action', 'pause');
+    }
+  });
+
+  // Listen for screen unlock events - show dialog with resume option
+  powerMonitor.on('unlock-screen', async () => {
+    console.log('Screen unlocked');
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      // Show the app window
+      mainWindow.show();
+      mainWindow.focus();
+      
+      // Show dialog asking if user wants to resume
+      const options = {
+        type: 'question' as const,
+        buttons: ['Resume Timer', 'Keep Paused'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Timer Paused',
+        message: 'Timer was paused because screen was locked',
+        detail: 'Would you like to resume the timer?',
+        normalizeAccessKeys: true,
+      };
+      
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options);
+        if (result.response === 0) {
+          // User chose to resume
+          mainWindow.webContents.send('tray:action', 'resume');
+        }
+      } catch (error) {
+        console.error('Failed to show dialog:', error);
+      }
+      
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+
+  // Listen for system suspend (sleep)
+  powerMonitor.on('suspend', () => {
+    console.log('System suspending - pausing timer if running');
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      // Show the app window and send pause action
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('tray:action', 'pause');
+    }
+  });
+
+  // Listen for system resume (wake from sleep) - show dialog with resume option
+  powerMonitor.on('resume', async () => {
+    console.log('System resumed from sleep');
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      // Show the app window
+      mainWindow.show();
+      mainWindow.focus();
+      
+      // Show dialog asking if user wants to resume
+      const options = {
+        type: 'question' as const,
+        buttons: ['Resume Timer', 'Keep Paused'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Timer Paused',
+        message: 'Timer was paused because system went to sleep',
+        detail: 'Would you like to resume the timer?',
+        normalizeAccessKeys: true,
+      };
+      
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options);
+        if (result.response === 0) {
+          // User chose to resume
+          mainWindow.webContents.send('tray:action', 'resume');
+        }
+      } catch (error) {
+        console.error('Failed to show dialog:', error);
+      }
+      
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+
+  // Listen for user session lock (logout/switch user)
+  powerMonitor.on('user-did-become-active', async () => {
+    console.log('User session became active');
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      // Show the app window
+      mainWindow.show();
+      mainWindow.focus();
+      
+      // Show dialog asking if user wants to resume
+      const options = {
+        type: 'question' as const,
+        buttons: ['Resume Timer', 'Keep Paused'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Timer Paused',
+        message: 'Timer was paused because user session changed',
+        detail: 'Would you like to resume the timer?',
+        normalizeAccessKeys: true,
+      };
+      
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options);
+        if (result.response === 0) {
+          // User chose to resume
+          mainWindow.webContents.send('tray:action', 'resume');
+        }
+      } catch (error) {
+        console.error('Failed to show dialog:', error);
+      }
+      
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+
+  powerMonitor.on('user-did-resign-active', () => {
+    console.log('User session resigned active - pausing timer if running');
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      // Show the app window and send pause action
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('tray:action', 'pause');
+    }
+  });
+}
+
 function registerIpc() {
   ipcMain.on('timer:tick', (_event, payload: { elapsedSeconds: number }) => {
     if (!tray) return;
@@ -396,6 +538,9 @@ app.whenReady().then(async () => {
 
   // Initialize "Open at Login" state for menu
   try { openAtLoginEnabled = app.getLoginItemSettings().openAtLogin; } catch { openAtLoginEnabled = false; }
+
+  // Setup power monitoring for screen lock detection
+  setupPowerMonitoring();
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -13,7 +13,7 @@ import require$$3$1 from "fs";
 import path$4 from "path";
 import require$$2$2 from "os";
 import require$$0$3, { randomUUID } from "crypto";
-import { app, BrowserWindow, dialog, nativeImage, Tray, Menu, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, nativeImage, Tray, Menu, powerMonitor, ipcMain } from "electron";
 import require$$0$4 from "tty";
 import require$$1$1 from "util";
 import require$$4$2 from "net";
@@ -24141,7 +24141,7 @@ var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
-var max$2 = Math.max;
+var max$1 = Math.max;
 var min$1 = Math.min;
 var pow$1 = Math.pow;
 var round$1 = Math.round;
@@ -24270,77 +24270,91 @@ function requireObject_getPrototypeOf() {
   Object_getPrototypeOf = $Object2.getPrototypeOf || null;
   return Object_getPrototypeOf;
 }
-var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
-var toStr$1 = Object.prototype.toString;
-var max$1 = Math.max;
-var funcType = "[object Function]";
-var concatty = function concatty2(a, b) {
-  var arr = [];
-  for (var i = 0; i < a.length; i += 1) {
-    arr[i] = a[i];
-  }
-  for (var j = 0; j < b.length; j += 1) {
-    arr[j + a.length] = b[j];
-  }
-  return arr;
-};
-var slicy = function slicy2(arrLike, offset) {
-  var arr = [];
-  for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
-    arr[j] = arrLike[i];
-  }
-  return arr;
-};
-var joiny = function(arr, joiner) {
-  var str = "";
-  for (var i = 0; i < arr.length; i += 1) {
-    str += arr[i];
-    if (i + 1 < arr.length) {
-      str += joiner;
+var implementation;
+var hasRequiredImplementation;
+function requireImplementation() {
+  if (hasRequiredImplementation) return implementation;
+  hasRequiredImplementation = 1;
+  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+  var toStr2 = Object.prototype.toString;
+  var max2 = Math.max;
+  var funcType = "[object Function]";
+  var concatty = function concatty2(a, b) {
+    var arr = [];
+    for (var i = 0; i < a.length; i += 1) {
+      arr[i] = a[i];
     }
-  }
-  return str;
-};
-var implementation$1 = function bind(that) {
-  var target = this;
-  if (typeof target !== "function" || toStr$1.apply(target) !== funcType) {
-    throw new TypeError(ERROR_MESSAGE + target);
-  }
-  var args = slicy(arguments, 1);
-  var bound;
-  var binder = function() {
-    if (this instanceof bound) {
-      var result = target.apply(
-        this,
+    for (var j = 0; j < b.length; j += 1) {
+      arr[j + a.length] = b[j];
+    }
+    return arr;
+  };
+  var slicy = function slicy2(arrLike, offset) {
+    var arr = [];
+    for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
+      arr[j] = arrLike[i];
+    }
+    return arr;
+  };
+  var joiny = function(arr, joiner) {
+    var str = "";
+    for (var i = 0; i < arr.length; i += 1) {
+      str += arr[i];
+      if (i + 1 < arr.length) {
+        str += joiner;
+      }
+    }
+    return str;
+  };
+  implementation = function bind2(that) {
+    var target = this;
+    if (typeof target !== "function" || toStr2.apply(target) !== funcType) {
+      throw new TypeError(ERROR_MESSAGE + target);
+    }
+    var args = slicy(arguments, 1);
+    var bound;
+    var binder = function() {
+      if (this instanceof bound) {
+        var result = target.apply(
+          this,
+          concatty(args, arguments)
+        );
+        if (Object(result) === result) {
+          return result;
+        }
+        return this;
+      }
+      return target.apply(
+        that,
         concatty(args, arguments)
       );
-      if (Object(result) === result) {
-        return result;
-      }
-      return this;
-    }
-    return target.apply(
-      that,
-      concatty(args, arguments)
-    );
-  };
-  var boundLength = max$1(0, target.length - args.length);
-  var boundArgs = [];
-  for (var i = 0; i < boundLength; i++) {
-    boundArgs[i] = "$" + i;
-  }
-  bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
-  if (target.prototype) {
-    var Empty = function Empty2() {
     };
-    Empty.prototype = target.prototype;
-    bound.prototype = new Empty();
-    Empty.prototype = null;
-  }
-  return bound;
-};
-var implementation = implementation$1;
-var functionBind = Function.prototype.bind || implementation;
+    var boundLength = max2(0, target.length - args.length);
+    var boundArgs = [];
+    for (var i = 0; i < boundLength; i++) {
+      boundArgs[i] = "$" + i;
+    }
+    bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
+    if (target.prototype) {
+      var Empty = function Empty2() {
+      };
+      Empty.prototype = target.prototype;
+      bound.prototype = new Empty();
+      Empty.prototype = null;
+    }
+    return bound;
+  };
+  return implementation;
+}
+var functionBind;
+var hasRequiredFunctionBind;
+function requireFunctionBind() {
+  if (hasRequiredFunctionBind) return functionBind;
+  hasRequiredFunctionBind = 1;
+  var implementation2 = requireImplementation();
+  functionBind = Function.prototype.bind || implementation2;
+  return functionBind;
+}
 var functionCall;
 var hasRequiredFunctionCall;
 function requireFunctionCall() {
@@ -24370,11 +24384,11 @@ var hasRequiredActualApply;
 function requireActualApply() {
   if (hasRequiredActualApply) return actualApply;
   hasRequiredActualApply = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $apply2 = requireFunctionApply();
   var $call2 = requireFunctionCall();
   var $reflectApply = requireReflectApply();
-  actualApply = $reflectApply || bind3.call($call2, $apply2);
+  actualApply = $reflectApply || bind2.call($call2, $apply2);
   return actualApply;
 }
 var callBindApplyHelpers;
@@ -24382,7 +24396,7 @@ var hasRequiredCallBindApplyHelpers;
 function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
@@ -24390,7 +24404,7 @@ function requireCallBindApplyHelpers() {
     if (args.length < 1 || typeof args[0] !== "function") {
       throw new $TypeError2("a function is required");
     }
-    return $actualApply(bind3, $call2, args);
+    return $actualApply(bind2, $call2, args);
   };
   return callBindApplyHelpers;
 }
@@ -24452,8 +24466,8 @@ function requireHasown() {
   hasRequiredHasown = 1;
   var call = Function.prototype.call;
   var $hasOwn = Object.prototype.hasOwnProperty;
-  var bind3 = functionBind;
-  hasown = bind3.call(call, $hasOwn);
+  var bind2 = requireFunctionBind();
+  hasown = bind2.call(call, $hasOwn);
   return hasown;
 }
 var undefined$1;
@@ -24467,7 +24481,7 @@ var $TypeError$3 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
-var max = max$2;
+var max = max$1;
 var min = min$1;
 var pow = pow$1;
 var round = round$1;
@@ -24672,13 +24686,13 @@ var LEGACY_ALIASES = {
   "%WeakMapPrototype%": ["WeakMap", "prototype"],
   "%WeakSetPrototype%": ["WeakSet", "prototype"]
 };
-var bind2 = functionBind;
+var bind = requireFunctionBind();
 var hasOwn$1 = requireHasown();
-var $concat$1 = bind2.call($call, Array.prototype.concat);
-var $spliceApply = bind2.call($apply, Array.prototype.splice);
-var $replace$1 = bind2.call($call, String.prototype.replace);
-var $strSlice = bind2.call($call, String.prototype.slice);
-var $exec = bind2.call($call, RegExp.prototype.exec);
+var $concat$1 = bind.call($call, Array.prototype.concat);
+var $spliceApply = bind.call($apply, Array.prototype.splice);
+var $replace$1 = bind.call($call, String.prototype.replace);
+var $strSlice = bind.call($call, String.prototype.slice);
+var $exec = bind.call($call, RegExp.prototype.exec);
 var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
 var reEscapeChar = /\\(\\)?/g;
 var stringToPath = function stringToPath2(string) {
@@ -24883,20 +24897,20 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
   return fn;
 };
 (function(module) {
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var GetIntrinsic3 = getIntrinsic;
   var setFunctionLength$1 = setFunctionLength;
   var $TypeError2 = type;
   var $apply2 = GetIntrinsic3("%Function.prototype.apply%");
   var $call2 = GetIntrinsic3("%Function.prototype.call%");
-  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind3.call($call2, $apply2);
+  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind2.call($call2, $apply2);
   var $defineProperty2 = esDefineProperty;
   var $max = GetIntrinsic3("%Math.max%");
   module.exports = function callBind2(originalFunction) {
     if (typeof originalFunction !== "function") {
       throw new $TypeError2("a function is required");
     }
-    var func = $reflectApply(bind3, $call2, arguments);
+    var func = $reflectApply(bind2, $call2, arguments);
     return setFunctionLength$1(
       func,
       1 + $max(0, originalFunction.length - (arguments.length - 1)),
@@ -24904,7 +24918,7 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
     );
   };
   var applyBind = function applyBind2() {
-    return $reflectApply(bind3, $apply2, arguments);
+    return $reflectApply(bind2, $apply2, arguments);
   };
   if ($defineProperty2) {
     $defineProperty2(module.exports, "apply", { value: applyBind });
@@ -49702,6 +49716,114 @@ function refreshTrayMenu() {
   };
   tray.setContextMenu(Menu.buildFromTemplate(buildMenu()));
 }
+function setupPowerMonitoring() {
+  let wasTimerRunningBeforeLock = false;
+  powerMonitor.on("lock-screen", () => {
+    console.log("Screen locked - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
+  });
+  powerMonitor.on("unlock-screen", async () => {
+    console.log("Screen unlocked");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because screen was locked",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("suspend", () => {
+    console.log("System suspending - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
+  });
+  powerMonitor.on("resume", async () => {
+    console.log("System resumed from sleep");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because system went to sleep",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("user-did-become-active", async () => {
+    console.log("User session became active");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because user session changed",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("user-did-resign-active", () => {
+    console.log("User session resigned active - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
+  });
+}
 function registerIpc() {
   ipcMain.on("timer:tick", (_event, payload) => {
     if (!tray) return;
@@ -49802,6 +49924,7 @@ app.whenReady().then(async () => {
   } catch {
     openAtLoginEnabled = false;
   }
+  setupPowerMonitoring();
   app.on("activate", async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       await createWindow();
