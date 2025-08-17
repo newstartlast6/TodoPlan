@@ -1,29 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, Pause, CheckCircle, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSelectedTodo } from "@/hooks/use-selected-todo";
-import { TimerProvider } from "@/contexts/timer-context";
+// TimerProvider removed in sessionless rewrite
 import { Toaster } from '@/components/ui/toaster';
 import { MinimalisticSidebar } from "@/components/calendar/minimalistic-sidebar";
 import { ResponsiveLayout } from "@/components/layout/responsive-layout";
 import { TodoDetailPane } from "@/components/calendar/todo-detail-pane";
+import { ReviewDetailPane } from "@/components/calendar/review-detail-pane";
+import { NotesDetailPane } from "@/components/calendar/notes-detail-pane";
 import { DayView } from "@/components/calendar/day-view";
 import { WeekView } from "@/components/calendar/week-view";
 import { MonthView } from "@/components/calendar/month-view";
 import { YearView } from "@/components/calendar/year-view";
 import { TaskForm } from "@/components/calendar/task-form";
-import { TimerDisplay } from "@/components/timer/timer-display";
 import { apiRequest } from "@/lib/queryClient";
 import { getTimeRangeForView } from "@/lib/time-utils";
 import { Task, InsertTask } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { PlanPanel } from "../components/planning/plan-panel";
-import { X } from "lucide-react";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
- 
+import { useTimerStore } from "@/hooks/use-timer-store";
+import { TimerCalculator } from "@shared/services/timer-store";
+
 
 type CalendarView = 'day' | 'week' | 'month' | 'year';
 
@@ -32,12 +34,29 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [isPlanPanelOpen, setIsPlanPanelOpen] = useState(false);
- 
+  const [scrollTargetTaskId, setScrollTargetTaskId] = useState<string | null>(null);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectedTodoId, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+  const { selectedTodoId, selectedReviewType, selectedReviewAnchorDate, selectedNotesType, selectedNotesAnchorDate, isDetailPaneOpen, closeDetailPane } = useSelectedTodo();
+  const timer = useTimerStore();
 
   // No goal chips in tabs; goals are displayed within each view
+
+  // Honor query params to open week view and plan panel from other pages
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view');
+      const planParam = params.get('plan');
+      if (viewParam === 'week') {
+        setCurrentView('week');
+      }
+      if (planParam === 'open') {
+        setIsPlanPanelOpen(true);
+      }
+    } catch { }
+  }, []);
 
   // Get date range for current view
   const { start: rangeStart, end: rangeEnd } = getTimeRangeForView(currentView, currentDate);
@@ -65,14 +84,62 @@ export default function Calendar() {
     });
   }, [tasks]);
 
+  // Active task info for banner
+  const activeTask = useMemo(() => {
+    if (!timer.activeTaskId) return null;
+    const fromList = tasksSorted.find(t => t.id === timer.activeTaskId);
+    if (fromList) return fromList;
+    const fromCache = queryClient.getQueryData<Task>(['task', timer.activeTaskId]);
+    return fromCache ?? null;
+  }, [timer.activeTaskId, tasksSorted, queryClient]);
+
+  const activeTaskTitle = activeTask?.title || 'Active Task';
+  const activeTaskDate = activeTask?.scheduledDate ? new Date(activeTask.scheduledDate) : (activeTask?.startTime ? new Date(activeTask.startTime as any) : null);
+
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (newTask: InsertTask) => {
       const response = await apiRequest('POST', '/api/tasks', newTask);
       return response.json();
     },
-    onSuccess: (created: Task) => {
+    onMutate: async (newTask: InsertTask) => {
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks'] });
+
+      const previousLists = queryClient.getQueriesData<Task[]>({ queryKey: ['/api/tasks'] });
+
+      const tempId = `temp-${Date.now()}`;
+      const tempTask: Task = {
+        id: tempId as any,
+        title: newTask.title,
+        description: (newTask as any).description,
+        notes: (newTask as any).notes,
+        startTime: new Date(newTask.startTime) as any,
+        endTime: new Date(newTask.endTime) as any,
+        completed: Boolean(newTask.completed),
+        priority: newTask.priority ?? 'medium',
+        listId: (newTask as any).listId as any,
+        scheduledDate: (newTask as any).scheduledDate ? new Date((newTask as any).scheduledDate) as any : null as any,
+        timeLoggedSeconds: 0 as any,
+        createdAt: new Date() as any,
+      } as Task;
+
+      queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+        if (!old) return [tempTask];
+        return [tempTask, ...old];
+      });
+
+      return { previousLists, tempId } as const;
+    },
+    onSuccess: (created: Task, _vars, context) => {
+      // Replace temp task with the created one
+      if (context?.tempId) {
+        queryClient.setQueriesData({ queryKey: ['/api/tasks'] }, (old: Task[] | undefined) => {
+          if (!old) return old;
+          return old.map((t) => (t.id === (context.tempId as any) ? created : t));
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+
       // Select the newly created task so it highlights and opens details
       // and triggers inline edit in the list
       window.dispatchEvent(new CustomEvent('tasks:select', { detail: created.id }));
@@ -81,7 +148,13 @@ export default function Calendar() {
         description: "Your task has been added successfully.",
       });
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      // Rollback optimistic insert
+      if (context?.previousLists) {
+        for (const [key, data] of context.previousLists) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       toast({
         title: "Error",
         description: "Failed to create task. Please try again.",
@@ -120,6 +193,7 @@ export default function Calendar() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
+
       toast({
         title: "Task updated",
         description: "Your task has been updated successfully.",
@@ -157,6 +231,7 @@ export default function Calendar() {
       if (selectedTodoId === id) {
         closeDetailPane();
       }
+
       toast({
         title: 'Task deleted',
         description: 'The task has been removed.',
@@ -229,6 +304,8 @@ export default function Calendar() {
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
             onAddTask={handleAddEmptyTaskInline}
+            onTaskCreate={handleCreateTask}
+            onChangeDate={(date) => setCurrentDate(date)}
           />
         );
       case 'week':
@@ -238,6 +315,9 @@ export default function Calendar() {
             currentDate={currentDate}
             onTaskUpdate={handleUpdateTask}
             onTaskDelete={handleDeleteTask}
+            onTaskCreate={handleCreateTask}
+            onChangeDate={(date) => setCurrentDate(date)}
+            scrollToTaskId={scrollTargetTaskId}
           />
         );
       case 'month':
@@ -247,6 +327,7 @@ export default function Calendar() {
             currentDate={currentDate}
             onDateClick={handleDateClick}
             onTaskUpdate={handleUpdateTask}
+            onChangeDate={(date) => setCurrentDate(date)}
           />
         );
       case 'year':
@@ -265,20 +346,92 @@ export default function Calendar() {
   // Render sidebar
   const renderSidebar = () => (
     <div className="space-y-4">
-      <MinimalisticSidebar
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onTogglePlanPanel={() => {
-          setIsPlanPanelOpen((v) => !v);
-        }}
-        isPlanPanelOpen={isPlanPanelOpen}
-      />
+      <MinimalisticSidebar />
     </div>
   );
 
   // Render main content
+  // Auto-close and prevent detail pane only in Month/Year views
+  useEffect(() => {
+    if ((currentView === 'month' || currentView === 'year') && isDetailPaneOpen && !selectedNotesType) {
+      closeDetailPane();
+    }
+  }, [currentView, isDetailPaneOpen, selectedNotesType, closeDetailPane]);
+
   const renderMainContent = () => (
     <div className="flex-1 flex flex-col">
+      {timer.isRunning && timer.activeTaskId && (
+        <div
+          className="sticky top-0 z-40 bg-orange-50/95 backdrop-blur supports-[backdrop-filter]:bg-orange-50/80 border-b border-orange-200"
+          onClick={() => {
+            const targetDate = activeTaskDate ?? new Date();
+            setCurrentDate(targetDate);
+            setCurrentView('week');
+            setScrollTargetTaskId(timer.activeTaskId!);
+            window.setTimeout(() => setScrollTargetTaskId(null), 1500);
+          }}
+          role="button"
+          aria-label="Timer running banner"
+        >
+          <div className="px-8 py-3 grid grid-cols-3 items-center gap-3">
+            {/* Left spacer to help center content */}
+            <div className="hidden sm:block" />
+
+            {/* Center content */}
+            <div className="min-w-0 flex items-center justify-center text-center gap-3">
+              <span className="inline-flex items-center justify-center rounded-full  text-orange-500  shrink-0 flex-none">
+                <Timer className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex items-center gap-2">
+                <span className="text-[13px] font-medium text-orange-600 tesxtfont-semibold truncate max-w-[40vw]">
+                  {activeTaskTitle}
+                </span>
+                <span className="text-orange-300">•</span>
+                <span className="inline-flex items-center rounded-full  text-orange-600 text-sm font-semibold ring-1 ring-orange-400 px-2 py-0.5 font-mono text-[13px] font-medium whitespace-nowrap shrink-0 flex-none">
+                  {TimerCalculator.formatDuration(timer.displaySeconds || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Right controls */}
+            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                className="hover:bg-orange-400 hover:text-white hover:ring-0 text-orange-600 ring-1 ring-orange-400 bg-orange-50"
+                variant="outline"
+                onClick={() => { void timer.pause(); }}
+              >
+                <Pause className="h-4 w-4 mr-1" /> Pause
+              </Button>
+              {timer.hasActiveSession && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={() => { void timer.discardLastSession(); }}
+                  title={`Discard Session`}
+                >
+                  Discard  Session
+                </Button>
+              )}
+              {timer.activeTaskId && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white text-orange-700 border-orange-300 hover:bg-orange-50"
+                  onClick={async () => {
+                    const id = timer.activeTaskId!;
+                    try { await timer.pause(); } catch { }
+                    updateTaskMutation.mutate({ id, updates: { completed: true } });
+                  }}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" /> Mark Complete
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-surface border-b border-border px-8 py-4" data-testid="calendar-header">
         <div className="flex items-center justify-between">
@@ -288,7 +441,12 @@ export default function Calendar() {
               return (
                 <button
                   key={view}
-                  onClick={() => setCurrentView(view)}
+                  onClick={() => {
+                    setCurrentView(view);
+                    if (view === 'month' || view === 'year') {
+                      closeDetailPane();
+                    }
+                  }}
                   className={cn(
                     "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
                     currentView === view
@@ -305,17 +463,9 @@ export default function Calendar() {
 
           {/* Actions */}
           <div className="flex items-center space-x-3" data-testid="header-actions">
+            {/* Removed Add Task from calendar header to emphasize Plan flow */}
             <Button
-              onClick={handleAddEmptyTaskInline}
-              className="flex items-center space-x-2"
-              disabled={createTaskMutation.isPending}
-              data-testid="button-add-task"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Task</span>
-            </Button>
-            <Button
-              variant={isPlanPanelOpen ? 'default' : 'outline'}
+              variant={isPlanPanelOpen ? 'outline' : 'default'}
               onClick={() => {
                 setIsPlanPanelOpen((v) => !v);
               }}
@@ -358,41 +508,60 @@ export default function Calendar() {
   );
 
   // Render detail pane
-  const renderDetailPane = () => (
-    <TodoDetailPane onClose={closeDetailPane} />
-  );
+  const renderDetailPane = () => {
+    if (selectedReviewType && selectedReviewAnchorDate && !selectedTodoId) {
+      return (
+        <ReviewDetailPane
+          type={selectedReviewType}
+          anchorDate={new Date(selectedReviewAnchorDate)}
+          onClose={closeDetailPane}
+        />
+      );
+    }
+    if (selectedNotesType && selectedNotesAnchorDate && !selectedTodoId) {
+      return (
+        <NotesDetailPane
+          type={selectedNotesType}
+          anchorDate={new Date(selectedNotesAnchorDate)}
+          onClose={closeDetailPane}
+        />
+      );
+    }
+    return <TodoDetailPane onClose={closeDetailPane} />;
+  };
 
   return (
-    <TimerProvider>
+    <>
       <DndProvider backend={HTML5Backend}>
         <ResponsiveLayout
           sidebar={renderSidebar()}
           main={renderMainContent()}
           detail={renderDetailPane()}
-          isDetailOpen={isDetailPaneOpen}
+          isDetailOpen={isDetailPaneOpen && ((currentView !== 'month' && currentView !== 'year') || Boolean(selectedNotesType))}
           onDetailClose={closeDetailPane}
+          detailWidthClass={selectedReviewType || selectedNotesType ? 'w-[500px]' : undefined}
         />
       </DndProvider>
 
-      {/* Global Timer Display */}
-      <div className="fixed top-4 right-4 z-50">
-        <TimerDisplay compact />
-      </div>
+      {/* Global Timer Display removed in favor of sticky banner */}
 
       <Toaster />
 
       {/* Task Form Dialog */}
       {/* Form kept for future use; not used for inline quick-add */}
 
-      {/* Floating Add Button (Mobile) */}
+      {/* Floating Plan Button (Mobile) */}
       <Button
-        onClick={handleAddEmptyTaskInline}
+        onClick={() => {
+          setCurrentView('week');
+          setIsPlanPanelOpen(true);
+        }}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg md:hidden"
         size="icon"
-        data-testid="floating-add-button"
+        data-testid="floating-plan-button"
       >
-        <Plus className="w-6 h-6" />
+        <Settings className="w-6 h-6" />
       </Button>
-    </TimerProvider>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle, Clock, Circle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,12 +7,13 @@ import { Task } from "@shared/schema";
 import { formatTimeRange } from "@/lib/time-utils";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { TaskEstimateIndicator } from "@/components/timer/task-estimation";
-import { useTaskTimer } from "@/hooks/use-timer-state";
+import { useTimerStore } from "@/hooks/use-timer-store";
 import { cn } from "@/lib/utils";
 import { EditableText } from "@/components/ui/editable-text";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { TimerCalculator } from "@shared/services/timer-service";
+import { TimerCalculator } from "@shared/services/timer-store";
+import { useLists } from "@/hooks/use-lists";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -25,6 +26,16 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+// Notes preview helpers
+const NOTES_CHARACTER_LIMIT = 80;
+const ELLIPSIS_CHARACTER = "…";
+function truncateTextWithEllipsis(text: string, maxCharacters: number): string {
+  if (!text) return "";
+  const normalizedText = String(text);
+  if (normalizedText.length <= maxCharacters) return normalizedText;
+  return normalizedText.slice(0, Math.max(0, maxCharacters - 1)).trimEnd() + ELLIPSIS_CHARACTER;
+}
+
 interface SelectableTodoItemProps {
   task: Task;
   isSelected: boolean;
@@ -32,13 +43,15 @@ interface SelectableTodoItemProps {
   onToggleComplete: (taskId: string, completed: boolean) => void;
   onUpdate?: (taskId: string, updates: Partial<Task>) => void;
   onDelete?: (taskId: string) => void;
-  variant?: 'default' | 'compact' | 'minimal';
+  variant?: 'default' | 'compact' | 'minimal' | 'list';
   showTime?: boolean;
   showDate?: boolean;
   showTimer?: boolean;
   // Whether to show the small "time logged today" row under the title
   showLoggedTime?: boolean;
   showEstimate?: boolean;
+  // Show the list chip (emoji + name) when task has a list
+  showListChip?: boolean;
   className?: string;
   // When true, programmatically start editing the title
   startEditing?: boolean;
@@ -46,6 +59,10 @@ interface SelectableTodoItemProps {
   enableMoveMenu?: boolean;
   // Show an "Unscheduled" badge when task has no scheduledDate
   showUnscheduledBadge?: boolean;
+  // When true, and when task has a scheduledDate, show a small scheduled date row under the title
+  showScheduledDateUnderTitle?: boolean;
+  // Disable inline editing for the title
+  disableTitleEditing?: boolean;
 }
 
 export function SelectableTodoItem({
@@ -61,15 +78,26 @@ export function SelectableTodoItem({
   showTimer = true,
   showLoggedTime = true,
   showEstimate = true,
+  showListChip = true,
   className,
   startEditing = false,
   enableMoveMenu = false,
   showUnscheduledBadge = false,
+  showScheduledDateUnderTitle = false,
+  disableTitleEditing = false,
 }: SelectableTodoItemProps) {
   const isTaskCompleted = task.completed;
   const taskStartTime = new Date(task.startTime);
   const taskEndTime = new Date(task.endTime);
   const [titleEditTrigger, setTitleEditTrigger] = useState(0);
+  const { data: allLists = [] } = useLists();
+  const listInfo = (task as any).listId ? allLists.find(l => l.id === (task as any).listId) : null;
+  const ListChip = showListChip && listInfo ? (
+    <span className="inline-flex items-center gap-1 text-[10px] text-slate-600 max-w-[140px] truncate">
+      <span className="leading-none">{listInfo.emoji}</span>
+      <span className="truncate">{listInfo.name}</span>
+    </span>
+  ) : null;
   
   // If parent asks to start editing, bump the trigger
   useEffect(() => {
@@ -81,34 +109,13 @@ export function SelectableTodoItem({
   // Timer integration
   // Show while running: current session total (seeded base + elapsed)
   // When paused: show persisted total
-  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(task.id);
+  const timer = useTimerStore();
+  const isActiveTask = timer.activeTaskId === task.id;
+  const isRunning = timer.isRunning && isActiveTask;
   const persistedSeconds = (task as any).timeLoggedSeconds || 0;
-  const holdRef = useRef<number>(0);
-  const isRunningActiveComputed = isActiveTask && isRunning;
-  // Track latest running session value
-  useEffect(() => {
-    if (isRunningActiveComputed) {
-      holdRef.current = Math.max(holdRef.current, currentSessionSeconds || 0);
-    }
-  }, [isRunningActiveComputed, currentSessionSeconds]);
-
-  // When not running, hold the last running value until persisted catches up
-  const displaySeconds = isRunningActiveComputed
-    ? (currentSessionSeconds || 0)
-    : Math.max(persistedSeconds, holdRef.current || 0);
-
-  // Reset hold once persisted matches or exceeds the held value
-  useEffect(() => {
-    if (!isRunningActiveComputed && persistedSeconds >= (holdRef.current || 0)) {
-      holdRef.current = 0;
-    }
-  }, [isRunningActiveComputed, persistedSeconds]);
-
-  // Debug logging removed
-  useEffect(() => {
-    holdRef.current = 0;
-  }, [isRunningActiveComputed, persistedSeconds]);
+  const displaySeconds = isActiveTask && isRunning ? (timer.displaySeconds || 0) : persistedSeconds;
   const formattedPersistedTime = TimerCalculator.formatDuration(displaySeconds);
+  const hasLoggedTime = (displaySeconds || 0) > 0;
 
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger selection when clicking the completion button or timer controls
@@ -117,8 +124,10 @@ export function SelectableTodoItem({
       return;
     }
     onSelect(task.id);
-    // Start inline editing of title on item click
-    setTitleEditTrigger((n) => n + 1);
+    // Start inline editing of title on item click (unless disabled)
+    if (!disableTitleEditing) {
+      setTitleEditTrigger((n) => n + 1);
+    }
   };
 
   const handleToggleComplete = (e: React.MouseEvent) => {
@@ -126,13 +135,13 @@ export function SelectableTodoItem({
     onToggleComplete(task.id, task.completed || false);
   };
 
-  const isRunningActive = isRunningActiveComputed;
+  const isRunningActive = isRunning;
 
   const baseClasses = cn(
     "flex items-center space-x-3 p-4 rounded-xl transition-all cursor-pointer group",
     isRunningActive ? "hover:bg-orange-50/60" : "hover:bg-blue-50/60",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    isRunningActive && (isSelected ? "bg-orange-50/70 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -142,7 +151,7 @@ export function SelectableTodoItem({
     "flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/50" : "hover:bg-blue-50/50",
     "focus:outline-none",
-    isRunningActive && "bg-orange-50/70 ring-1 ring-orange-200",
+    isRunningActive && (isSelected ? "bg-orange-50/70 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/70 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60 shadow-sm",
     isTaskCompleted && "opacity-60",
     className
@@ -151,13 +160,34 @@ export function SelectableTodoItem({
   const minimalClasses = cn(
     "flex items-center space-x-2 p-2 rounded-lg transition-all cursor-pointer text-sm group",
     isRunningActive ? "hover:bg-orange-50/40" : "hover:bg-blue-50/40",
-    isRunningActive && "bg-orange-50/60 ring-1 ring-orange-200",
+    isRunningActive && (isSelected ? "bg-orange-50/60 ring-1 ring-orange-200 border-2 border-orange-500" : "bg-orange-50/60 ring-1 ring-orange-200 border border-orange-400"),
     !isRunningActive && isSelected && "bg-blue-50/60",
     isTaskCompleted && "opacity-50",
     className
   );
 
-  const containerClasses = variant === 'compact' ? compactClasses : variant === 'minimal' ? minimalClasses : baseClasses;
+  const listClasses = cn(
+    "group flex items-center space-x-4 p-4 rounded-lg transition-all cursor-pointer",
+    // Running state border around card (thin). If selected too, keep same orange color.
+    isRunningActive && (isSelected ? "border border-orange-500" : "border border-orange-400"),
+    // Base hover when not selected
+    !isSelected && "hover:bg-gray-50",
+    // Selected background
+    isSelected && "bg-orange-50",
+    // Selected left accent border — placed AFTER generic border so width isn't overridden
+    isSelected && "border-l-4 border-orange-500",
+    isTaskCompleted && "opacity-75",
+    className
+  );
+
+  const containerClasses =
+    variant === 'compact'
+      ? compactClasses
+      : variant === 'minimal'
+      ? minimalClasses
+      : variant === 'list'
+      ? listClasses
+      : baseClasses;
 
   return (
     <div
@@ -176,86 +206,243 @@ export function SelectableTodoItem({
       data-testid={`selectable-todo-${task.id}`}
     >
 
-      {/* Selection Indicator - always reserve space to avoid layout shift */}
-      <div
-        className={cn(
-          "w-1 h-6 rounded-full shrink-0",
-          isSelected ? "bg-blue-400" : isRunningActive ? "bg-orange-400" : "invisible bg-blue-400"
-        )}
-        data-testid={`selection-indicator-${task.id}`}
-      />
+      {/* For list variant we do not show the left selection bar */}
+      {variant !== 'list' && (
+        <div
+          className={cn(
+            "w-1 h-6 rounded-full shrink-0",
+            isSelected ? "bg-blue-400" : isRunningActive ? "bg-orange-400" : "invisible bg-blue-400"
+          )}
+          data-testid={`selection-indicator-${task.id}`}
+        />
+      )}
       
       {/* In Progress Indicator removed - only show In Progress when timer is running */}
       {/* Completion Button */}
-      <Button
-        variant="ghost"
-        size={variant === 'minimal' ? 'sm' : 'sm'}
-        onClick={handleToggleComplete}
-        className="p-0 h-auto shrink-0"
-        data-completion-button
-        data-testid={`todo-toggle-${task.id}`}
-        aria-label={isTaskCompleted ? 'Mark as incomplete' : 'Mark as complete'}
-      >
-        {isTaskCompleted ? (
-          <CheckCircle className="text-green-500 w-4 h-4" />
-        ) : (
-          <Circle className="text-gray-400 w-4 h-4" />
-        )}
-      </Button>
+      {variant === 'list' ? (
+        <button
+          onClick={handleToggleComplete}
+          className={cn(
+            "w-5 h-5 rounded-full flex items-center justify-center ",
+            isTaskCompleted ? "" : "border-2 border-gray-300 hover:border-orange-500"
+          )}
+          data-completion-button
+          data-testid={`todo-toggle-${task.id}`}
+          aria-label={isTaskCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+        >
+          {isTaskCompleted && <CheckCircle className="text-green-500 w-4 h-4" /> }
+        </button>
+      ) : (
+        <Button
+          variant="ghost"
+          size={variant === 'minimal' ? 'sm' : 'sm'}
+          onClick={handleToggleComplete}
+          className="p-0 h-auto shrink-0"
+          data-completion-button
+          data-testid={`todo-toggle-${task.id}`}
+          aria-label={isTaskCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+        >
+          {isTaskCompleted ? (
+            <CheckCircle className="text-green-500 w-4 h-4" />
+          ) : (
+            <Circle className="text-gray-400 w-4 h-4" />
+          )}
+        </Button>
+      )}
       
 
       {/* Task Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2">
-          
-          <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
-            <EditableText
-              value={task.title}
-              onChange={(newTitle) => {
-                // Only update when editing session ends (commit). EditableText calls this on blur/Enter
-                if (newTitle && newTitle !== task.title) {
-                  onUpdate?.(task.id, { title: newTitle });
-                }
-              }}
-              placeholder={task.title ? undefined : ""}
-              className={cn(
-                variant === 'minimal' ? "text-sm font-medium" : "font-medium",
-                "text-foreground truncate align-middle",
-                isTaskCompleted && "line-through"
+        {variant === 'list' ? (
+          <div>
+            <div className="flex items-center space-x-2">
+              <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
+                {disableTitleEditing ? (
+                  <div
+                    className={cn("font-medium text-gray-900 truncate align-middle", isTaskCompleted && "line-through")}
+                    data-testid={`todo-title-${task.id}`}
+                  >
+                    {task.title}
+                  </div>
+                ) : (
+                  <EditableText
+                    value={task.title}
+                    onChange={(newTitle) => {
+                      if (newTitle && newTitle !== task.title) {
+                        onUpdate?.(task.id, { title: newTitle });
+                      }
+                    }}
+                    onStartEditing={() => {
+                      if (!isSelected) onSelect(task.id);
+                    }}
+                    placeholder={task.title ? undefined : ""}
+                    className={cn("font-medium text-gray-900 truncate align-middle", isTaskCompleted && "line-through")}
+                    editTrigger={titleEditTrigger}
+                    autoFocusOnEmpty
+                  />
+                )}
+                {isRunning && (
+                  <Badge className="mt-1 ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                    In Progress
+                  </Badge>
+                )}
+              </div>              
+            </div>
+            {task.notes ? (
+              <p
+                className="text-xs text-muted-foreground mt-1 truncate italic"
+                data-testid={`todo-notes-${task.id}`}
+                title={(() => {
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = task.notes as any;
+                  return tmp.textContent || tmp.innerText || '';
+                })()}
+              >
+                {truncateTextWithEllipsis((() => {
+                  const tmp = document.createElement('div');
+                  tmp.innerHTML = task.notes as any;
+                  return tmp.textContent || tmp.innerText || '';
+                })(), NOTES_CHARACTER_LIMIT)}
+              </p>
+            ) : task.description ? (
+              <p className="text-sm text-gray-500 mb-2 mt-1 truncate">{task.description}</p>
+            ) : null}
+            <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+              {ListChip && (
+                <div className="flex items-center pr-2 border-r border-slate-200">
+                  {ListChip}
+                </div>
               )}
-              editTrigger={titleEditTrigger}
-              autoFocusOnEmpty
-            />
-            {showUnscheduledBadge && !task.scheduledDate && (
-              <Badge variant="outline" className="ml-2 text-[10px] align-middle">Unscheduled</Badge>
+              {showUnscheduledBadge && !task.scheduledDate ? (
+                <span className="inline-flex items-center gap-1 text-slate-600">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10l6 6M15 10l-6 6" />
+                  </svg>
+                  <span>Unscheduled</span>
+                </span>
+              ) : (
+                <div className="flex items-center space-x-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>
+                    {isToday(taskStartTime) ? 'Today' : format(taskStartTime, 'MMM d')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center space-x-1">
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    task.priority === 'high' ? 'bg-red-300 animate-pulse' : task.priority === 'medium' ? 'bg-yellow-300 animate-pulse-subtle' : 'bg-green-300 animate-pulse-extra-light'
+                  )}
+                />
+                <span>
+                  {task.priority ? `${task.priority[0].toUpperCase()}${task.priority.slice(1)} Priority` : 'Priority'}
+                </span>
+              </div>              
+              <div className="flex items-center space-x-1">
+                {hasLoggedTime && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className={cn("w-3 h-3", isRunning ? "text-orange-600" : undefined)} />
+                    <span className={cn("font-medium", isRunning ? "text-orange-700" : undefined)}>{formattedPersistedTime}</span>
+                  </span>
+                )}
+              </div>          
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2">
+              
+              <div onClick={(e) => e.stopPropagation()} className="min-w-0" data-testid={`todo-title-${task.id}`}>
+                <EditableText
+                  value={task.title}
+                  onChange={(newTitle) => {
+                    // Only update when editing session ends (commit). EditableText calls this on blur/Enter
+                    if (newTitle && newTitle !== task.title) {
+                      onUpdate?.(task.id, { title: newTitle });
+                    }
+                  }}
+                  onStartEditing={() => {
+                    if (!isSelected) onSelect(task.id);
+                  }}
+                  placeholder={task.title ? undefined : ""}
+                  className={cn(
+                    variant === 'minimal' ? "text-sm font-medium" : "font-medium",
+                    "text-foreground truncate align-middle",
+                    isTaskCompleted && "line-through"
+                  )}
+                  editTrigger={titleEditTrigger}
+                  autoFocusOnEmpty
+                />
+                {isRunning && (
+                  <Badge className="ml-2 inline-flex items-center gap-1 text-[10px] bg-orange-100 text-orange-700 ring-1 ring-orange-300">
+                    In Progress
+                  </Badge>
+                )}
+                {showScheduledDateUnderTitle && (
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {task.scheduledDate ? (
+                      <span className="inline-flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>
+                          {isToday(new Date(task.scheduledDate as any)) ? 'Today' : format(new Date(task.scheduledDate as any), 'MMM d')}
+                        </span>
+                      </span>
+                    ) : (
+                      showUnscheduledBadge ? (
+                        <span className="inline-flex items-center gap-1 text-slate-600">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10l6 6M15 10l-6 6" />
+                          </svg>
+                          <span>Unscheduled</span>
+                        </span>
+                      ) : null
+                    )}
+                  </div>
+                )}
+              </div>
+              {ListChip && (
+                <div className="hidden sm:inline-flex items-center pl-2 ml-1 border-l border-slate-200">
+                  {ListChip}
+                </div>
+              )}
+              {/* Priority removed from UI */}
+              
+              {/* Timer Status Badge removed for persisted-only display */}
+              
+              {/* Estimate Indicator */}
+              {showEstimate && variant !== 'minimal' && (
+                <TaskEstimateIndicator taskId={task.id} className="shrink-0" />
+              )}
+            </div>
+            
+            {/* Task Notes Preview */}
+            {task.notes && (variant === 'default' || variant === 'compact') && (
+              <p
+                className="text-xs text-muted-foreground mt-1 truncate italic"
+                data-testid={`todo-notes-${task.id}`}
+                title={task.notes}
+              >
+                {truncateTextWithEllipsis(task.notes, NOTES_CHARACTER_LIMIT)}
+              </p>
             )}
-          </div>
-          
-          {/* Priority removed from UI */}
-          
-          {/* Timer Status Badge removed for persisted-only display */}
-          
-          {/* Estimate Indicator */}
-          {showEstimate && variant !== 'minimal' && (
-            <TaskEstimateIndicator taskId={task.id} className="shrink-0" />
-          )}
-        </div>
-        
-        {/* Task Notes Preview */}
-        {task.notes && (variant === 'default' || variant === 'compact') && (
-          <p className="text-xs text-muted-foreground mt-1 truncate italic" data-testid={`todo-notes-${task.id}`}>
-            {task.notes}
-          </p>
-        )}
-        
-        {/* Time Logged (always visible; persisted per-task, continues while running) */}
-        {showLoggedTime && variant !== 'minimal' && (
-          <div className="flex items-center gap-1 mt-1">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground font-mono">
-              {formattedPersistedTime}
-            </span>
-          </div>
+            
+            {/* Time Logged (always visible; persisted per-task, continues while running) */}
+            {showLoggedTime && variant !== 'minimal' && hasLoggedTime && (
+              <div className="flex items-center gap-4 mt-1">
+                <Clock className={cn("w-3 h-3", isRunning ? "text-orange-600" : "text-muted-foreground")} />
+                <span className={cn("text-xs font-mono", isRunning ? "text-orange-700" : "text-muted-foreground")}>
+                  {formattedPersistedTime}
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -263,7 +450,13 @@ export function SelectableTodoItem({
       <div className="flex items-center gap-2 shrink-0">
         {/* Timer Button */}
         {showTimer && !isTaskCompleted && (
-          <div data-timer-control>
+          <div
+            data-timer-control
+            className={cn(
+              "shrink-0 transition-opacity",
+              isRunningActive ? "opacity-100" : (isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100")
+            )}
+          >
             <TaskTimerButton
               taskId={task.id}
               taskTitle={task.title}
@@ -291,26 +484,40 @@ export function SelectableTodoItem({
         )}
 
         {/* Time and Date Info */}
-        {(showTime || showDate) && (
+        {variant !== 'list' && (showTime || showDate) && (
           <div className="text-right">
-            {showDate && (
-              <p className="text-xs text-muted-foreground" data-testid={`todo-date-${task.id}`}>
-                {format(taskStartTime, "MMM d")}
-              </p>
-            )}
-            {showTime && (
-              <p 
-                className={cn(
-                  variant === 'minimal' ? "text-xs" : "text-sm",
-                  "font-medium text-foreground"
-                )}
-                data-testid={`todo-time-${task.id}`}
+            {showUnscheduledBadge && !task.scheduledDate ? (
+              <Badge
+                variant="outline"
+                className="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-blue-900 dark:text-blue-300"
               >
-                {variant === 'minimal' 
-                  ? format(taskStartTime, "h:mm a")
-                  : formatTimeRange(taskStartTime, taskEndTime)
-                }
-              </p>
+                <span className="inline-flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
+                  Unscheduled
+                </span>
+              </Badge>
+            ) : (
+              <>
+                {showDate && (
+                  <p className="text-xs text-muted-foreground" data-testid={`todo-date-${task.id}`}>
+                    {format(taskStartTime, "MMM d")}
+                  </p>
+                )}
+                {showTime && (
+                  <p 
+                    className={cn(
+                      variant === 'minimal' ? "text-xs" : "text-sm",
+                      "font-medium text-foreground"
+                    )}
+                    data-testid={`todo-time-${task.id}`}
+                  >
+                    {variant === 'minimal' 
+                      ? format(taskStartTime, "h:mm a")
+                      : formatTimeRange(taskStartTime, taskEndTime)
+                    }
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -324,8 +531,8 @@ export function SelectableTodoItem({
                 size="icon"
                 onClick={(e) => { e.stopPropagation(); }}
                 className={cn(
-                  "h-7 w-7 text-muted-foreground hover:text-destructive",
-                  isSelected ? "inline-flex" : "hidden"
+                  "h-7 w-7 text-muted-foreground hover:text-destructive transition-opacity",
+                  isSelected ? "inline-flex opacity-100" : "hidden group-hover:inline-flex group-hover:opacity-100 opacity-0"
                 )}
                 aria-label="Delete task"
                 data-testid={`delete-task-${task.id}`}

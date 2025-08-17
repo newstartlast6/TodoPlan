@@ -5,7 +5,8 @@ import { Task, List } from './schema';
 import { z } from 'zod';
 
 // Extended List interface with computed properties
-export interface ListWithTaskCount extends List {
+export interface ListWithTaskCount extends Omit<List, 'color'> {
+  color: string | null;
   taskCount: number;
   completedTaskCount: number;
 }
@@ -14,13 +15,11 @@ export interface ListWithTaskCount extends List {
 export interface CreateListRequest {
   name: string;
   emoji: string;
-  color?: string;
 }
 
 export interface UpdateListRequest {
   name?: string;
   emoji?: string;
-  color?: string;
 }
 
 export interface CreateTaskInListRequest {
@@ -37,7 +36,6 @@ export interface CreateTaskInListRequest {
 export const createListRequestSchema = z.object({
   name: z.string().min(1, 'List name is required').max(50, 'List name must be 50 characters or less'),
   emoji: z.string().min(1, 'Emoji is required'),
-  color: z.string().optional(),
 });
 
 export const updateListRequestSchema = createListRequestSchema.partial();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
+import { apiRequest } from '@/lib/queryClient';
 import { useDailyTimerStats } from './use-timer-state';
-import { TimerApiClient } from '@/services/timer-api-client';
+// Legacy TimerApiClient removed; use direct fetches or TimerStore if needed
 
 interface DayProgress {
   date: string;
@@ -36,7 +37,7 @@ export function useProgressAnalytics(days: number = 7) {
   const [historicalData, setHistoricalData] = useState<DayProgress[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  const apiClient = new TimerApiClient();
+  
 
   // Load historical data
   useEffect(() => {
@@ -51,7 +52,9 @@ export function useProgressAnalytics(days: number = 7) {
           date.setDate(date.getDate() - i);
           
           try {
-            const summary = await apiClient.getDailySummary(date);
+            const params = new URLSearchParams({ date: date.toISOString().split('T')[0] });
+            const res = await apiRequest('GET', `/api/timers/daily?${params}`);
+            const summary = await res.json();
             data.push({
               date: date.toISOString().split('T')[0],
               totalSeconds: summary.totalSeconds,
@@ -59,7 +62,7 @@ export function useProgressAnalytics(days: number = 7) {
               progressPercentage: (summary.totalSeconds / targetSeconds) * 100,
               isOverTarget: summary.totalSeconds > targetSeconds,
               taskCount: summary.taskBreakdown.length,
-              sessionCount: summary.taskBreakdown.reduce((sum, task) => sum + task.sessionCount, 0),
+              sessionCount: summary.taskBreakdown.reduce((sum: number, task: any) => sum + (task.sessionCount || 0), 0),
             });
           } catch (error) {
             // If no data for a day, add empty entry
@@ -84,7 +87,7 @@ export function useProgressAnalytics(days: number = 7) {
     };
 
     loadHistoricalData();
-  }, [days, apiClient]);
+  }, [days]);
 
   // Calculate analytics
   const analytics = useMemo(() => {

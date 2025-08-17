@@ -4,17 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SelectableTodoItem } from '../selectable-todo-item';
 import { TodoDetailPane } from '../todo-detail-pane';
 import { DayView } from '../day-view';
-import { TimerProvider } from '@/contexts/timer-context';
+// Legacy TimerProvider removed in sessionless rewrite
 import { useSelectedTodo } from '@/hooks/use-selected-todo';
 import { Task } from '@shared/schema';
 
 // Mock hooks and services
 jest.mock('@/hooks/use-selected-todo');
 jest.mock('@/hooks/use-timer-state');
-jest.mock('@/services/timer-api-client');
-jest.mock('@shared/services/timer-service');
-jest.mock('@shared/services/persistence-service');
-jest.mock('@shared/services/sync-service');
+// Legacy timer-api-client removed
+// Legacy session services removed
 
 const mockUseSelectedTodo = useSelectedTodo as jest.MockedFunction<typeof useSelectedTodo>;
 
@@ -39,9 +37,7 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TimerProvider>
-        {children}
-      </TimerProvider>
+      {children}
     </QueryClientProvider>
   );
 }

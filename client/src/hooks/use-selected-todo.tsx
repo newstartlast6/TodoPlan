@@ -2,13 +2,25 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 
 interface SelectionState {
   selectedTodoId: string | null;
+  // Review selection (mutually exclusive with selectedTodoId)
+  selectedReviewType: 'daily' | 'weekly' | null;
+  selectedReviewAnchorDate: string | null; // ISO date string (yyyy-mm-dd)
+  // Notes selection (mutually exclusive with above)
+  selectedNotesType: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  selectedNotesAnchorDate: string | null; // ISO date string
   isDetailPaneOpen: boolean;
 }
 
 interface SelectionContextType {
   selectedTodoId: string | null;
+  selectedReviewType: 'daily' | 'weekly' | null;
+  selectedReviewAnchorDate: string | null;
+  selectedNotesType: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  selectedNotesAnchorDate: string | null;
   isDetailPaneOpen: boolean;
   selectTodo: (todoId: string | null) => void;
+  selectReview: (type: 'daily' | 'weekly', anchorDate: Date) => void;
+  selectNotes: (type: 'daily' | 'weekly' | 'monthly' | 'yearly', anchorDate: Date) => void;
   openDetailPane: () => void;
   closeDetailPane: () => void;
   toggleDetailPane: () => void;
@@ -26,6 +38,10 @@ const loadSelectionState = (): SelectionState => {
       const parsed = JSON.parse(stored);
       return {
         selectedTodoId: parsed.selectedTodoId || null,
+        selectedReviewType: parsed.selectedReviewType || null,
+        selectedReviewAnchorDate: parsed.selectedReviewAnchorDate || null,
+        selectedNotesType: parsed.selectedNotesType || null,
+        selectedNotesAnchorDate: parsed.selectedNotesAnchorDate || null,
         isDetailPaneOpen: parsed.isDetailPaneOpen || false,
       };
     }
@@ -34,6 +50,10 @@ const loadSelectionState = (): SelectionState => {
   }
   return {
     selectedTodoId: null,
+    selectedReviewType: null,
+    selectedReviewAnchorDate: null,
+    selectedNotesType: null,
+    selectedNotesAnchorDate: null,
     isDetailPaneOpen: false,
   };
 };
@@ -75,7 +95,39 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
     setState(prev => ({
       ...prev,
       selectedTodoId: todoId,
+      selectedReviewType: null,
+      selectedReviewAnchorDate: null,
+      selectedNotesType: null,
+      selectedNotesAnchorDate: null,
       isDetailPaneOpen: todoId !== null, // Auto-open detail pane when selecting a todo
+    }));
+  }, []);
+
+  const selectReview = useCallback((type: 'daily' | 'weekly', anchorDate: Date) => {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    const iso = d.toISOString();
+    setState(prev => ({
+      ...prev,
+      selectedTodoId: null,
+      selectedReviewType: type,
+      selectedReviewAnchorDate: iso,
+      selectedNotesType: null,
+      selectedNotesAnchorDate: null,
+      isDetailPaneOpen: true,
+    }));
+  }, []);
+
+  const selectNotes = useCallback((type: 'daily' | 'weekly' | 'monthly' | 'yearly', anchorDate: Date) => {
+    const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    const iso = d.toISOString();
+    setState(prev => ({
+      ...prev,
+      selectedTodoId: null,
+      selectedReviewType: null,
+      selectedReviewAnchorDate: null,
+      selectedNotesType: type,
+      selectedNotesAnchorDate: iso,
+      isDetailPaneOpen: true,
     }));
   }, []);
 
@@ -87,7 +139,11 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
     setState(prev => ({ 
       ...prev, 
       isDetailPaneOpen: false,
-      selectedTodoId: null, // Clear selection when closing detail pane
+      selectedTodoId: null,
+      selectedReviewType: null,
+      selectedReviewAnchorDate: null,
+      selectedNotesType: null,
+      selectedNotesAnchorDate: null,
     }));
   }, []);
 
@@ -97,8 +153,14 @@ export function SelectionProvider({ children }: SelectionProviderProps) {
 
   const value: SelectionContextType = {
     selectedTodoId: state.selectedTodoId,
+    selectedReviewType: state.selectedReviewType,
+    selectedReviewAnchorDate: state.selectedReviewAnchorDate,
+    selectedNotesType: state.selectedNotesType,
+    selectedNotesAnchorDate: state.selectedNotesAnchorDate,
     isDetailPaneOpen: state.isDetailPaneOpen,
     selectTodo,
+    selectReview,
+    selectNotes,
     openDetailPane,
     closeDetailPane,
     toggleDetailPane,

@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { useTimer } from '@/contexts/timer-context';
+// Removed legacy timer context usage in sessionless rewrite
 import { cn } from '@/lib/utils';
 
 interface SyncStatus {

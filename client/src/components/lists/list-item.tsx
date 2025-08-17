@@ -8,7 +8,7 @@ interface ListItemProps {
   isSelected: boolean;
   isEditing: boolean;
   onClick: () => void;
-  onEdit: (updates: { name?: string; emoji?: string; color?: string }) => void;
+  onEdit: (updates: { name?: string; emoji?: string }) => void;
   onCancelEdit: () => void;
   onContextMenu: () => void;
 }

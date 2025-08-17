@@ -3,107 +3,40 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertTaskSchema, updateTaskSchema,
-  insertTimerSessionSchema, updateTimerSessionSchema,
   insertTaskEstimateSchema, updateTaskEstimateSchema,
   insertListSchema, updateListSchema,
-  goalTypeEnum
+  goalTypeEnum,
+  reviewTypeEnum,
+  insertReviewSchema, updateReviewSchema,
+  noteTypeEnum,
+  updateNoteSchema
 } from "@shared/schema";
 import { z } from "zod";
-import { 
-  TimerError, 
-  TimerValidationError, 
-  TimerStateError, 
-  TimerSyncError,
-  TimerPersistenceError,
-  TIMER_ERROR_CODES,
-  TimerErrorHandler 
-} from "@shared/services/timer-errors";
+import { requireAuth } from "./auth";
+// Legacy session error helpers removed in sessionless rewrite
 
-// Enhanced error handling middleware
-function handleTimerError(error: unknown, req: any, res: any, operation: string) {
-  console.error(`Timer operation failed: ${operation}`, {
-    error,
-    url: req.url,
-    method: req.method,
-    body: req.body,
-    timestamp: new Date().toISOString(),
-  });
-
-  if (error instanceof TimerValidationError) {
-    return res.status(400).json({
-      error: 'VALIDATION_ERROR',
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-  }
-
-  if (error instanceof TimerStateError) {
-    return res.status(409).json({
-      error: 'STATE_ERROR',
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    });
-  }
-
-  if (error instanceof TimerSyncError) {
-    return res.status(409).json({
-      error: 'SYNC_ERROR',
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      retryable: true,
-    });
-  }
-
-  if (error instanceof TimerPersistenceError) {
-    return res.status(503).json({
-      error: 'PERSISTENCE_ERROR',
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      retryable: true,
-    });
-  }
-
-  if (error instanceof z.ZodError) {
-    return res.status(400).json({
-      error: 'VALIDATION_ERROR',
-      message: 'Invalid request data',
-      code: 'INVALID_REQUEST_DATA',
-      details: error.errors,
-    });
-  }
-
-  // Generic server error
-  return res.status(500).json({
-    error: 'INTERNAL_SERVER_ERROR',
-    message: 'An unexpected error occurred',
-    code: 'UNKNOWN_ERROR',
-    retryable: true,
-  });
-}
-
-// Request validation middleware
-function validateTimerRequest(schema: z.ZodSchema) {
-  return (req: any, res: any, next: any) => {
-    try {
-      req.validatedBody = schema.parse(req.body);
-      next();
-    } catch (error) {
-      handleTimerError(error, req, res, 'request_validation');
-    }
-  };
-}
+// Legacy timer error helpers removed
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check
+  app.head('/api/health', (_req, res) => res.status(200).end());
+  app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
+
+  // Session info endpoint
+  app.get('/api/me', requireAuth(), async (req, res) => {
+    const userId = (req as any).userId as string | undefined;
+    res.json({ userId });
+  });
+
+  // Protect all subsequent /api routes (excluding already-defined public ones like /api/health, /api/me)
+  app.use('/api', requireAuth());
+
   // Lists endpoints
   
   // Get all lists with task counts
   app.get("/api/lists", async (req, res) => {
     try {
-      const lists = await storage.getLists();
+      const lists = await storage.getLists(req.userId!);
       res.json(lists);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch lists" });
@@ -113,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single list
   app.get("/api/lists/:id", async (req, res) => {
     try {
-      const list = await storage.getList(req.params.id);
+      const list = await storage.getList(req.userId!, req.params.id);
       if (!list) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -127,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/lists", async (req, res) => {
     try {
       const validatedData = insertListSchema.parse(req.body);
-      const list = await storage.createList(validatedData);
+      const list = await storage.createList(req.userId!, validatedData);
       res.status(201).json(list);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -141,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/lists/:id", async (req, res) => {
     try {
       const validatedData = updateListSchema.parse(req.body);
-      const list = await storage.updateList(req.params.id, validatedData);
+      const list = await storage.updateList(req.userId!, req.params.id, validatedData);
       if (!list) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -157,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete list
   app.delete("/api/lists/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteList(req.params.id);
+      const deleted = await storage.deleteList(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "List not found" });
       }
@@ -170,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get tasks for specific list
   app.get("/api/lists/:id/tasks", async (req, res) => {
     try {
-      const tasks = await storage.getTasksByList(req.params.id);
+      const tasks = await storage.getTasksByList(req.userId!, req.params.id);
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tasks for list" });
@@ -187,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const type = goalTypeEnum.parse(typeRaw);
       const anchorDate = new Date(dateRaw);
-      const goal = await storage.getGoal(type, anchorDate);
+      const goal = await storage.getGoal(req.userId!, type, anchorDate);
       res.json(goal ?? null);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -208,13 +141,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (typeof value !== 'string') {
         return res.status(400).json({ message: "value must be a string" });
       }
-      const updated = await storage.setGoal(type, anchorDate, value);
+      const updated = await storage.setGoal(req.userId!, type, anchorDate, value);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid goal data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to save goal" });
+    }
+  });
+
+  // Reviews endpoints
+  app.get("/api/reviews", async (req, res) => {
+    try {
+      const typeRaw = req.query.type;
+      const dateRaw = req.query.anchorDate;
+      if (typeof typeRaw !== 'string' || typeof dateRaw !== 'string') {
+        return res.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type = reviewTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const review = await storage.getReview(req.userId!, type, anchorDate);
+      res.json(review ?? null);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review request", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to fetch review" });
+    }
+  });
+
+  app.put("/api/reviews", async (req, res) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, ...values } = req.body || {};
+      const type = reviewTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== 'string' && !(dateRaw instanceof Date)) {
+        return res.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      const validated = updateReviewSchema.parse(values);
+      const updated = await storage.setReview(req.userId!, type, anchorDate, validated);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save review" });
+    }
+  });
+
+  // Notes endpoints
+  app.get("/api/notes", async (req, res) => {
+    try {
+      const typeRaw = req.query.type;
+      const dateRaw = req.query.anchorDate;
+      if (typeof typeRaw !== 'string' || typeof dateRaw !== 'string') {
+        return res.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type = noteTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const note = await storage.getNote(req.userId!, type, anchorDate);
+      res.json(note ?? null);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid note request", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to fetch note" });
+    }
+  });
+
+  app.put("/api/notes", async (req, res) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, ...values } = req.body || {};
+      const type = noteTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== 'string' && !(dateRaw instanceof Date)) {
+        return res.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      const validated = updateNoteSchema.parse(values);
+      const updated = await storage.setNote(req.userId!, type, anchorDate, validated);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid note data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to save note" });
     }
   });
   // Get tasks with optional date filtering
@@ -232,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         end = new Date(endDate as string);
       }
       
-      const tasks = await storage.getTasks(start, end, includeUnscheduled === 'true');
+      const tasks = await storage.getTasks(req.userId!, start, end, includeUnscheduled === 'true');
       res.json(tasks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tasks" });
@@ -242,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get single task
   app.get("/api/tasks/:id", async (req, res) => {
     try {
-      const task = await storage.getTask(req.params.id);
+      const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -252,11 +263,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Set absolute time logged for a task (sessionless)
+  app.put("/api/tasks/:id/time-logged", async (req, res) => {
+    try {
+      const taskId = req.params.id;
+      const { timeLoggedSeconds } = req.body || {};
+
+      if (typeof timeLoggedSeconds !== 'number' || !isFinite(timeLoggedSeconds)) {
+        return res.status(400).json({ message: "timeLoggedSeconds must be a non-negative number" });
+      }
+
+      const seconds = Math.max(0, Math.floor(timeLoggedSeconds));
+      const existing = await storage.getTask(req.userId!, taskId);
+      if (!existing) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      const updated = await storage.updateTask(req.userId!, taskId, { timeLoggedSeconds: seconds } as any);
+      if (!updated) {
+        return res.status(500).json({ message: "Failed to update task time" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to set time logged" });
+    }
+  });
+
   // Create new task
   app.post("/api/tasks", async (req, res) => {
     try {
       const validatedData = insertTaskSchema.parse(req.body);
-      const task = await storage.createTask(validatedData);
+      const task = await storage.createTask(req.userId!, validatedData);
       res.status(201).json(task);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -270,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/tasks/:id", async (req, res) => {
     try {
       const validatedData = updateTaskSchema.parse(req.body);
-      const task = await storage.updateTask(req.params.id, validatedData);
+      const task = await storage.updateTask(req.userId!, req.params.id, validatedData);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -286,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete task
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteTask(req.params.id);
+      const deleted = await storage.deleteTask(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -296,330 +333,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Timer API Routes
-
-  // Start timer for a task
-  app.post("/api/timers/start", async (req, res) => {
-    try {
-      const { taskId } = req.body;
-      
-      if (!taskId || typeof taskId !== 'string') {
-        throw new TimerValidationError(
-          "Task ID is required and must be a valid string",
-          { taskId }
-        );
-      }
-
-      // Check if task exists
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        throw new TimerValidationError(
-          "Task not found",
-          { taskId, code: TIMER_ERROR_CODES.INVALID_TASK_ID }
-        );
-      }
-
-      // Check for existing active timer
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          { 
-            activeTaskId: activeSession.taskId,
-            requestedTaskId: taskId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-
-      // Create new timer session
-      const sessionData = insertTimerSessionSchema.parse({
-        taskId,
-        startTime: new Date(),
-        durationSeconds: 0,
-        isActive: true,
-      });
-
-      const session = await storage.createTimerSession(sessionData);
-      
-      // Logging removed
-
-      res.status(201).json({ 
-        session,
-        message: "Timer started successfully"
-      });
-    } catch (error) {
-      handleTimerError(error, req, res, 'start_timer');
-    }
-  });
-
-  // Pause current timer
-  app.post("/api/timers/pause", async (req, res) => {
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to pause",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          { 
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_NOT_PAUSED
-          }
-        );
-      }
-
-      // Calculate elapsed time with validation
-      const now = new Date();
-      const startTime = new Date(activeSession.startTime);
-      
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-
-      // Prefer client-reported total seconds if provided
-      const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      // Logging removed
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      // Snap up to at least last reported duration to avoid off-by-one
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-
-      // Update session to paused state
-      const updatedSession = await storage.updateTimerSession(activeSession.id, {
-        durationSeconds: totalSeconds,
-        isActive: false,
-      });
-
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to update timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-
-      // Increment task's persisted logged time with the delta in this segment
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error('Failed to increment task logged time on pause', { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-
-      // Logging removed
-
-      res.json({ 
-        session: updatedSession,
-        totalElapsedSeconds: totalSeconds,
-        message: "Timer paused successfully"
-      });
-    } catch (error) {
-      handleTimerError(error, req, res, 'pause_timer');
-    }
-  });
-
-  // Resume paused timer
-  app.post("/api/timers/resume", async (req, res) => {
-    try {
-      const { sessionId } = req.body;
-      
-      if (!sessionId || typeof sessionId !== 'string') {
-        throw new TimerValidationError(
-          "Session ID is required and must be a valid string",
-          { sessionId }
-        );
-      }
-
-      const session = await storage.getTimerSession(sessionId);
-      if (!session) {
-        throw new TimerValidationError(
-          "Timer session not found",
-          { sessionId, code: TIMER_ERROR_CODES.INVALID_SESSION }
-        );
-      }
-
-      if (session.isActive) {
-        throw new TimerStateError(
-          "Timer is already active",
-          { 
-            sessionId,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-
-      if (session.endTime) {
-        throw new TimerStateError(
-          "Cannot resume a completed timer session",
-          { 
-            sessionId,
-            endTime: session.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-
-      // Check for other active timers
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession && activeSession.id !== sessionId) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          { 
-            activeSessionId: activeSession.id,
-            activeTaskId: activeSession.taskId,
-            requestedSessionId: sessionId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-
-      // Resume the timer
-      const updatedSession = await storage.updateTimerSession(sessionId, {
-        isActive: true,
-        startTime: new Date(), // Reset start time for new segment
-      });
-
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to resume timer session",
-          { sessionId }
-        );
-      }
-
-      // Logging removed
-
-      res.json({ 
-        session: updatedSession,
-        message: "Timer resumed successfully"
-      });
-    } catch (error) {
-      handleTimerError(error, req, res, 'resume_timer');
-    }
-  });
-
-  // Stop and complete timer
-  app.post("/api/timers/stop", async (req, res) => {
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to stop",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          { 
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-
-      if (activeSession.endTime) {
-        throw new TimerStateError(
-          "Timer session is already completed",
-          { 
-            sessionId: activeSession.id,
-            endTime: activeSession.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-
-      // Calculate final elapsed time with validation
-      const now = new Date();
-      const startTime = new Date(activeSession.startTime);
-      
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-
-      // Prefer client-reported total seconds if provided
-      const clientTotal = typeof req.body?.clientTotalSeconds === 'number' ? Math.max(0, Math.floor(req.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      // Logging removed
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-
-      // Complete the session
-      const completedSession = await storage.updateTimerSession(activeSession.id, {
-        endTime: now,
-        durationSeconds: totalSeconds,
-        isActive: false,
-      });
-
-      if (!completedSession) {
-        throw new TimerPersistenceError(
-          "Failed to complete timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-
-      // Increment task's persisted logged time with the delta in this final segment
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error('Failed to increment task logged time on stop', { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-
-      // Logging removed
-
-      res.json({ 
-        session: completedSession,
-        message: "Timer stopped successfully"
-      });
-    } catch (error) {
-      handleTimerError(error, req, res, 'stop_timer');
-    }
-  });
-
-  // Get current active timer
-  app.get("/api/timers/active", async (req, res) => {
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      res.json({ session: activeSession });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get active timer" });
-    }
-  });
+  // Legacy timer session routes removed
 
   // Get overall logged time for a task (persisted)
   app.get("/api/tasks/:id/time-logged", async (req, res) => {
     try {
-      const task = await storage.getTask(req.params.id);
+      const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
         return res.status(404).json({ message: 'Task not found' });
       }
@@ -629,25 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Increment persisted logged time for a task
-  app.post("/api/tasks/:id/time-logged/increment", async (req, res) => {
-    try {
-      const taskId = req.params.id;
-      const { deltaSeconds } = req.body || {};
-      if (typeof deltaSeconds !== 'number' || !isFinite(deltaSeconds)) {
-        return res.status(400).json({ message: 'deltaSeconds must be a number' });
-      }
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        return res.status(404).json({ message: 'Task not found' });
-      }
-      await storage.incrementTaskLoggedTime(taskId, Math.max(0, Math.floor(deltaSeconds)));
-      const updated = await storage.getTask(taskId);
-      res.json({ taskId, timeLoggedSeconds: (updated as any)?.timeLoggedSeconds ?? 0 });
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to increment task logged time' });
-    }
-  });
+  // Removed increment route in favor of absolute PUT time-logged
 
   // Get daily time summary
   app.get("/api/timers/daily", async (req, res) => {
@@ -655,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { date } = req.query;
       const targetDate = date ? new Date(date as string) : new Date();
       
-      const dailySummary = await storage.getDailySummary(targetDate);
+      const dailySummary = await storage.getDailySummary(req.userId!, targetDate);
       const totalSeconds = dailySummary.reduce((sum, item) => sum + item.totalSeconds, 0);
       const targetSeconds = 8 * 60 * 60; // 8 hours
       const remainingSeconds = Math.max(0, targetSeconds - totalSeconds);
@@ -672,177 +373,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get time data for specific task
-  app.get("/api/timers/task/:id", async (req, res) => {
-    try {
-      const taskId = req.params.id;
-      const sessions = await storage.getTimerSessionsByTask(taskId);
-      const estimate = await storage.getTaskEstimate(taskId);
-      
-      const totalSeconds = sessions
-        .filter(session => session.endTime)
-        .reduce((sum, session) => sum + (session.durationSeconds || 0), 0);
+  // Removed legacy timer task sessions endpoint
 
-      res.json({
-        taskId,
-        sessions,
-        estimate,
-        totalSeconds,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get task timer data" });
-    }
-  });
-
-  // Sync timer state (for recovery)
-  app.post("/api/timers/sync", async (req, res) => {
-    try {
-      const { events, clientTimestamp } = req.body;
-      
-      if (!Array.isArray(events)) {
-        throw new TimerValidationError(
-          "Events array is required for sync operation",
-          { eventsType: typeof events }
-        );
-      }
-
-      if (events.length === 0) {
-        return res.json({ 
-          syncedEventIds: [],
-          conflicts: [],
-          message: "No events to sync"
-        });
-      }
-
-      // Validate sync request timing
-      const serverTime = new Date();
-      const clientTime = clientTimestamp ? new Date(clientTimestamp) : null;
-      
-      if (clientTime && Math.abs(serverTime.getTime() - clientTime.getTime()) > 300000) { // 5 minutes
-        console.warn('Large time difference detected in sync request', {
-          serverTime: serverTime.toISOString(),
-          clientTime: clientTime.toISOString(),
-          difference: Math.abs(serverTime.getTime() - clientTime.getTime()),
-        });
-      }
-
-      // Process sync events with conflict detection
-      const syncedEventIds: string[] = [];
-      const failedEvents: Array<{ eventId: string; error: string }> = [];
-      const conflicts: Array<{ eventId: string; reason: string; serverState: any }> = [];
-      
-      for (const event of events) {
-        try {
-          // Validate event structure
-          if (!event.id || !event.type || !event.timestamp) {
-            throw new TimerValidationError(
-              "Invalid event structure",
-              { event }
-            );
-          }
-
-          // Check for conflicts with server state
-          const activeSession = await storage.getActiveTimerSession();
-          
-          // Process each event based on type
-          switch (event.type) {
-            case 'start':
-              if (activeSession && activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: 'Another timer is active on server',
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id,
-                  },
-                });
-                continue;
-              }
-              break;
-              
-            case 'pause':
-            case 'stop':
-              if (!activeSession || activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: 'No matching active timer on server',
-                  serverState: {
-                    activeSession: activeSession ? {
-                      taskId: activeSession.taskId,
-                      sessionId: activeSession.id,
-                    } : null,
-                  },
-                });
-                continue;
-              }
-              break;
-              
-            case 'resume':
-              if (activeSession) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: 'Another timer is already active',
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id,
-                  },
-                });
-                continue;
-              }
-              break;
-              
-            default:
-              throw new TimerValidationError(
-                `Unknown event type: ${event.type}`,
-                { event }
-              );
-          }
-          
-          syncedEventIds.push(event.id);
-        } catch (eventError) {
-          const timerError = TimerErrorHandler.handleError(eventError);
-          failedEvents.push({
-            eventId: event.id || 'unknown',
-            error: timerError.message,
-          });
-          
-          console.error('Failed to process sync event:', {
-            event,
-            error: timerError,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      }
-
-      const response = {
-        syncedEventIds,
-        failedEvents,
-        conflicts,
-        serverTimestamp: serverTime.toISOString(),
-        message: `Processed ${events.length} events: ${syncedEventIds.length} synced, ${failedEvents.length} failed, ${conflicts.length} conflicts`,
-      };
-
-      // Log sync operation
-      console.log('Timer sync completed', {
-        totalEvents: events.length,
-        syncedCount: syncedEventIds.length,
-        failedCount: failedEvents.length,
-        conflictCount: conflicts.length,
-        timestamp: serverTime.toISOString(),
-      });
-
-      res.json(response);
-    } catch (error) {
-      handleTimerError(error, req, res, 'sync_timer_events');
-    }
-  });
+  // Removed legacy timer sync endpoint
 
   // Task Estimate Routes
 
   // Get task estimate
   app.get("/api/tasks/:id/estimate", async (req, res) => {
     try {
-      const estimate = await storage.getTaskEstimate(req.params.id);
+      const estimate = await storage.getTaskEstimate(req.userId!, req.params.id);
       res.json({ estimate });
     } catch (error) {
       res.status(500).json({ message: "Failed to get task estimate" });
@@ -861,13 +401,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const taskId = req.params.id;
       
       // Check if task exists
-      const task = await storage.getTask(taskId);
+      const task = await storage.getTask(req.userId!, taskId);
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
 
       // Try to update existing estimate first
-      let estimate = await storage.updateTaskEstimate(taskId, { estimatedDurationMinutes });
+      let estimate = await storage.updateTaskEstimate(req.userId!, taskId, { estimatedDurationMinutes });
       
       // If no existing estimate, create new one
       if (!estimate) {
@@ -875,7 +415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           taskId,
           estimatedDurationMinutes,
         });
-        estimate = await storage.createTaskEstimate(estimateData);
+        estimate = await storage.createTaskEstimate(req.userId!, estimateData);
       }
 
       res.json({ estimate });
@@ -890,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete task estimate
   app.delete("/api/tasks/:id/estimate", async (req, res) => {
     try {
-      const deleted = await storage.deleteTaskEstimate(req.params.id);
+      const deleted = await storage.deleteTaskEstimate(req.userId!, req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Task estimate not found" });
       }

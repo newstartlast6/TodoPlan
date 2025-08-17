@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useLists } from '@/hooks/use-lists';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Task } from '@shared/schema';
 import { SelectableTodoItem } from '@/components/calendar/selectable-todo-item';
 import { useUpdateTask } from '@/hooks/use-list-tasks';
@@ -21,8 +22,7 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ['/api/tasks', 'plan-panel', 'includeUnscheduled'],
     queryFn: async () => {
-      const res = await fetch('/api/tasks?includeUnscheduled=true');
-      if (!res.ok) throw new Error('Failed to fetch tasks');
+      const res = await apiRequest('GET', '/api/tasks?includeUnscheduled=true');
       return res.json();
     },
     staleTime: 60_000,
@@ -72,12 +72,7 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
             </button>
           )}
         </div>
-        <div className="mt-2">
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
-            <CalendarDays className="h-3 w-3" />
-            Drag to calendar to schedule
-          </span>
-        </div>
+   
         <div className="mt-2">
           <input
             value={query}
@@ -85,6 +80,12 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
             placeholder="Search tasks"
             className="w-full text-sm px-3 py-2 rounded-md border bg-background"
           />
+        </div>
+        <div className="mt-2 w-full">
+          <span className="inline-flex items-center gap-1 px-4 py-1 text-[11px] rounded-full bg-green-50 text-green-700 ring-1 ring-green-200 w-full">
+            <CalendarDays className="h-3 w-3" />
+            Drag tasks to calendar to schedule
+          </span>
         </div>
       </div>
 
@@ -113,12 +114,18 @@ export function PlanPanel({ className, variant = 'inline', onClose }: PlanPanelP
                         task={task}
                         isSelected={false}
                         onSelect={() => {}}
-                        onToggleComplete={() => {}}
+                        onToggleComplete={(id, completed) => {
+                          updateTaskMutation.mutate({ taskId: id, updates: { completed: !completed } });
+                        }}
                         onUpdate={(id, updates) => updateTaskMutation.mutate({ taskId: id, updates })}
                         variant="compact"
                         showTime={false}
                         showDate={false}
                         showTimer={false}
+                        showListChip={false}
+                        showScheduledDateUnderTitle
+                        showUnscheduledBadge
+                        disableTitleEditing
                         enableMoveMenu
                         className="!cursor-grab active:!cursor-grabbing select-none"
                       />

@@ -1,3 +1,4 @@
+// Legacy SyncService retained only for reference; not used in sessionless timer
 import { TimerEvent, TimerSession, DEFAULT_TIMER_CONFIG } from '../timer-types';
 import { TimerError, TimerSyncError, TIMER_ERROR_CODES, TimerRetryHandler } from './timer-errors';
 import { PersistenceService } from './persistence-service';

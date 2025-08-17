@@ -2,6 +2,7 @@ import React, { ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 interface ResponsiveLayoutProps {
   sidebar: ReactNode;
@@ -10,6 +11,7 @@ interface ResponsiveLayoutProps {
   isDetailOpen: boolean;
   onDetailClose?: () => void;
   className?: string;
+  detailWidthClass?: string;
 }
 
 // Custom hook to detect screen size breakpoints
@@ -43,6 +45,7 @@ export function ResponsiveLayout({
   isDetailOpen,
   onDetailClose,
   className,
+  detailWidthClass,
 }: ResponsiveLayoutProps) {
   const breakpoint = useBreakpoint();
 
@@ -104,7 +107,7 @@ export function ResponsiveLayout({
         {/* Detail Pane - Overlay on tablet */}
         {isDetailOpen && (
           <div className="absolute inset-0 bg-black/20 z-40 flex justify-end">
-            <div className="w-96 bg-surface border-l border-border shadow-xl h-full flex flex-col">
+            <div className={`${detailWidthClass ?? 'w-96'} bg-surface border-l border-border shadow-xl h-full flex flex-col`}>
               {/* Close button for tablet detail view */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Task Details</h2>
@@ -128,35 +131,40 @@ export function ResponsiveLayout({
     );
   }
 
-  // Desktop Layout (>= 1024px) - Three pane system
+  // Desktop Layout (>= 1024px) - Three pane system with resizable right detail when open
   return (
     <div className={cn("h-screen flex bg-background-page", className)} data-testid="responsive-layout-desktop">
       {/* Sidebar - Always visible on desktop */}
       {sidebar}
-      
-      {/* Main Content - Flexible width with independent scroll */}
-      <div className={cn(
-        "flex-1 flex flex-col transition-all duration-300 min-w-0 h-full",
-        isDetailOpen ? "mr-0" : "mr-0"
-      )}>
-        <div className="flex-1 overflow-y-auto">
-          {main}
-        </div>
-      </div>
-      
-      {/* Detail Pane - Collapsible on desktop with increased width and independent scroll */}
-      <div className={cn(
-        "transition-all duration-300 ease-in-out border-l border-border bg-surface h-full",
-        isDetailOpen 
-          ? "w-[480px] opacity-100 translate-x-0" 
-          : "w-0 opacity-0 translate-x-full overflow-hidden"
-      )}>
-        {isDetailOpen && (
-          <div className="w-[480px] h-full overflow-y-auto">
-            {detail}
+
+      {/* Main + Detail area */}
+      {!isDetailOpen ? (
+        // No detail: main takes all available space
+        <div className={cn("flex-1 flex flex-col min-w-0 h-full")}> 
+          <div className="flex-1 overflow-y-auto">
+            {main}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        // Detail open: use resizable panels
+        <div className="flex-1 min-w-0 h-full">
+          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+            <ResizablePanel defaultSize={65} minSize={40} className="min-w-0">
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto">
+                  {main}
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={35} minSize={20} className="min-w-[320px] max-w-[70vw]">
+              <div className="h-full overflow-y-auto border-l border-border bg-surface">
+                {detail}
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      )}
     </div>
   );
 }

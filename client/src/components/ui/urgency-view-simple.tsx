@@ -315,16 +315,16 @@ export function UrgencyViewSimple({ tasks, currentDate, view, className }: Urgen
               <div className="text-xs text-left">
                 <span className="text-red-400 font-medium">
                   {view === "day" && (
-                    progress.percentage < 25 ? `Morning started - Only ${24 - new Date().getHours()}h remaining` :
-                    progress.percentage < 50 ? `Half day passed - Only ${24 - new Date().getHours()}h left` :
-                    progress.percentage < 75 ? `Afternoon fading - Only ${24 - new Date().getHours()}h remaining` :
-                    `Day almost over - Only ${24 - new Date().getHours()}h left`
+                    progress.percentage < 25 ? `Don't let the Day slip away - Only ${24 - new Date().getHours()}h remaining` :
+                    progress.percentage < 50 ? `Half day is already passed - Only ${24 - new Date().getHours()}h left` :
+                    progress.percentage < 75 ? `Day is getting passed - Only ${24 - new Date().getHours()}h remaining` :
+                    `Day is almost over - Only ${24 - new Date().getHours()}h left`
                   )}
                   {view === "week" && (
-                    Math.floor((progress.elapsed / 100) * 7) === 0 ? `Week started - Only 7 days ahead` :
-                    Math.floor((progress.elapsed / 100) * 7) < 3 ? `${Math.floor((progress.elapsed / 100) * 7)} days passed - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days left` :
+                    Math.floor((progress.elapsed / 100) * 7) === 0 ? `Don't let this Weeek Slip away` :
+                    Math.floor((progress.elapsed / 100) * 7) < 3 ? `${Math.floor((progress.elapsed / 100) * 7)} days already passed - what are you doing?` :
                     Math.floor((progress.elapsed / 100) * 7) < 5 ? `Mid-week - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days remaining` :
-                    `Weekend close - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days left`
+                    `Weekend is close - Only ${7 - Math.floor((progress.elapsed / 100) * 7)} days left`
                   )}
                   {view === "month" && (
                     new Date().getDate() <= 7 ? `First week done - Only ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate()} days left` :

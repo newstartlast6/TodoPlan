@@ -10,6 +10,7 @@ interface EditableTextProps {
   editTrigger?: number; // increment to programmatically start editing
   autoSaveOnIdle?: boolean; // emit onChange after user stops typing
   idleMs?: number; // debounce duration for idle save
+  onStartEditing?: () => void; // callback when entering edit mode
 }
 
 export function EditableText({
@@ -21,6 +22,7 @@ export function EditableText({
   editTrigger,
   autoSaveOnIdle = true,
   idleMs = 800,
+  onStartEditing,
 }: EditableTextProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -32,6 +34,7 @@ export function EditableText({
   const pendingEnterCommitRef = useRef(false);
   const suppressNextBlurCommitRef = useRef(false);
   const hasCommittedRef = useRef(false);
+  const pendingCaretPointRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     // Avoid resetting caret position while actively editing
@@ -45,10 +48,51 @@ export function EditableText({
       // Reset per-edit flags when entering edit mode
       hasCommittedRef.current = false;
       suppressNextBlurCommitRef.current = false;
+      onStartEditing?.();
       const el = editableRef.current;
       if (!el) return;
+      // Initialize content from current draft once when entering edit mode
+      try {
+        el.textContent = draft ?? "";
+      } catch {}
       el.focus();
-      // Place caret at end reliably even when content updates quickly
+
+      const placeCaretAtPointIfNeeded = () => {
+        const point = pendingCaretPointRef.current;
+        if (!point) return false;
+        pendingCaretPointRef.current = null;
+        try {
+          // Try modern API first
+          // @ts-ignore - not in TS lib yet for all targets
+          if (document.caretPositionFromPoint) {
+            // @ts-ignore
+            const pos = document.caretPositionFromPoint(point.x, point.y);
+            if (pos && pos.offsetNode) {
+              const range = document.createRange();
+              range.setStart(pos.offsetNode, pos.offset);
+              range.collapse(true);
+              const sel = window.getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+              return true;
+            }
+          }
+          // Fallback for WebKit
+          // @ts-ignore
+          if (document.caretRangeFromPoint) {
+            // @ts-ignore
+            const range = document.caretRangeFromPoint(point.x, point.y);
+            if (range) {
+              const sel = window.getSelection();
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+              return true;
+            }
+          }
+        } catch {}
+        return false;
+      };
+
       const placeCaretAtEnd = () => {
         try {
           const range = document.createRange();
@@ -59,12 +103,17 @@ export function EditableText({
           sel?.addRange(range);
         } catch {}
       };
-      placeCaretAtEnd();
-      // Run once more on next frame for safety
-      requestAnimationFrame(placeCaretAtEnd);
-      setTimeout(placeCaretAtEnd, 0);
+
+      // Attempt to place caret where user clicked; if not available, leave default
+      const placeCaret = () => {
+        const placed = placeCaretAtPointIfNeeded();
+        if (!placed) placeCaretAtEnd();
+      };
+      // Run after layout is stable to compute caret position
+      requestAnimationFrame(placeCaret);
+      setTimeout(placeCaret, 0);
     }
-  }, [isEditing, draft]);
+  }, [isEditing]);
 
   useEffect(() => {
     if (autoFocusOnEmpty && !value) {
@@ -133,12 +182,9 @@ export function EditableText({
         contentEditable
         suppressContentEditableWarning
         onBeforeInput={(e) => {
-          // Let the browser apply the input first
-          // We'll sync draft on the next frame
+          // Let the browser apply the input and keep DOM in control while editing
+          // Only schedule idle save; avoid setState to preserve caret position
           requestAnimationFrame(() => {
-            const el = editableRef.current;
-            if (!el) return;
-            setDraft(el.textContent ?? el.innerText ?? "");
             scheduleIdleSave();
           });
         }}
@@ -149,7 +195,6 @@ export function EditableText({
           requestAnimationFrame(() => {
             const el = editableRef.current;
             if (!el) return;
-            setDraft(el.textContent ?? el.innerText ?? "");
             scheduleIdleSave();
             if (pendingEnterCommitRef.current) {
               pendingEnterCommitRef.current = false;
@@ -194,14 +239,16 @@ export function EditableText({
           className
         )}
         data-editable="true"
-      >
-        {draft}
-      </div>
+      />
     );
   }
 
   return (
     <span
+      onMouseDown={(e) => {
+        // Record the click point so we can restore caret at that location after entering edit mode
+        pendingCaretPointRef.current = { x: e.clientX, y: e.clientY };
+      }}
       onClick={() => setIsEditing(true)}
       className={cn(
         "inline-block max-w-full whitespace-nowrap overflow-hidden text-ellipsis",

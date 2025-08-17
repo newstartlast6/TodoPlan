@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Play, Pause, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTaskTimer } from '@/hooks/use-timer-state';
-import { useTimerActions } from '@/hooks/use-timer-state';
+import { useTimerStore } from '@/hooks/use-timer-store';
 import { TimerSwitchModal } from './timer-switch-modal';
 import { cn } from '@/lib/utils';
-import { TimerCalculator } from '@shared/services/timer-service';
+import { TimerCalculator } from '@shared/services/timer-store';
 
 interface TaskTimerButtonProps {
   taskId: string;
@@ -27,27 +26,27 @@ export function TaskTimerButton({
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [switchFromTask, setSwitchFromTask] = useState<string>('');
   
-  const { isActiveTask, isRunning, currentSessionSeconds } = useTaskTimer(taskId);
+  const timer = useTimerStore();
+  const isActiveTask = timer.activeTaskId === taskId;
+  const isRunning = timer.isRunning && isActiveTask;
   const persistedSeconds = Math.max(0, Math.floor(initialLoggedSeconds || 0));
-  const displaySeconds = isActiveTask && isRunning ? (currentSessionSeconds || 0) : persistedSeconds;
+  const displaySeconds = isActiveTask && isRunning ? (timer.displaySeconds || 0) : persistedSeconds;
   // Debug logging removed
   const formattedDisplayTime = TimerCalculator.formatDuration(displaySeconds);
 
-  const { startTimer, pauseTimer, resumeTimer } = useTimerActions();
+  const start = timer.start;
+  const pause = timer.pause;
+  const resume = timer.resume;
 
   const handleTimerAction = async () => {
     if (isActiveTask) {
       if (isRunning) {
-        await pauseTimer();
+        await pause();
       } else {
-        await resumeTimer();
+        await resume(taskId);
       }
     } else {
-      const result = await startTimer(taskId);
-      if (result.requiresConfirmation && result.currentActiveTask) {
-        setSwitchFromTask(result.currentActiveTask);
-        setShowSwitchModal(true);
-      }
+      await start(taskId);
     }
   };
 
@@ -67,10 +66,16 @@ export function TaskTimerButton({
       <>
         <Button
           size="sm"
-          variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
+          variant={"ghost"}
           onClick={handleTimerAction}
           disabled={disabled}
-          className={cn("h-8 w-8 p-0", className)}
+          className={cn(
+            "h-8 w-8 p-0",
+            isActiveTask && isRunning
+              ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+              : "hover:bg-muted",
+            className
+          )}
           title={isActiveTask ? (isRunning ? 'Pause timer' : 'Start timer') : 'Start timer'}
         >
           {isActiveTask ? (
@@ -99,10 +104,15 @@ export function TaskTimerButton({
         <div className={cn("flex items-center gap-2", className)}>
           <Button
             size="sm"
-            variant={isActiveTask ? (isRunning ? "default" : "default") : "ghost"}
+            variant={"ghost"}
             onClick={handleTimerAction}
             disabled={disabled}
-            className="h-7 px-2"
+            className={cn(
+              "h-7 px-2",
+              isActiveTask && isRunning
+                ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+                : "hover:bg-muted"
+            )}
           >
             {isActiveTask ? (
               isRunning ? (
@@ -137,8 +147,13 @@ export function TaskTimerButton({
         <Button
           onClick={handleTimerAction}
           disabled={disabled}
-          variant={isActiveTask ? (isRunning ? "default" : "default") : "default"}
-          className="w-full"
+          variant={"secondary"}
+          className={cn(
+            "w-full",
+            isActiveTask && isRunning
+              ? "bg-orange-100 text-orange-700 ring-1 ring-orange-300 hover:bg-orange-200"
+              : ""
+          )}
         >
           {isActiveTask ? (
             isRunning ? (

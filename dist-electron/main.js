@@ -1,13 +1,19 @@
 var __defProp = Object.defineProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z, __, _$, _aa, _ba, _ca, _da, _ea, _fa, _ga, _ha, _ia, _ja, _ka, _la, _ma, _na, _oa, _pa, _qa, _ra, _sa, _ta, _ua, _va, _wa, _xa, _ya, _za, _Aa, _Ba, _Ca, _Da, _Ea, _Fa, _Ga, _Ha, _Ia, _Ja, _Ka, _La, _Ma, _Na, _Oa, _Pa, _Qa, _Ra, _Sa, _Ta, _Ua, _Va, _Wa, _Xa, _Ya, _Za, __a, _$a, _ab, _bb, _cb, _db, _eb, _fb, _gb, _hb, _ib, _jb, _kb, _lb, _mb, _nb, _ob, _pb, _qb, _rb, _sb, _tb, _ub, _vb, _wb, _xb, _yb, _zb, _Ab, _Bb, _Cb, _Db, _Eb, _Fb, _Gb, _Hb, _Ib, _Jb, _Kb, _Lb, _Mb, _Nb, _Ob, _Pb, _Qb, _Rb, _Sb, _Tb, _Ub, _Vb, _Wb, _Xb, _Yb, _Zb, __b, _$b, _ac, _bc, _cc, _dc, _ec, _fc, _gc, _hc, _ic, _jc, _kc, _lc, _mc, _nc, _oc, _pc, _qc, _rc, _sc, _tc, _uc, _vc, _wc, _xc, _yc, _zc, _Ac, _Bc, _Cc, _Dc, _Ec, _Fc, _Gc, _Hc, _Ic, _Jc, _Kc, _Lc, _Mc, _Nc, _Oc, _Pc, _Qc, _Rc, _Sc, _Tc, _Uc, _Vc, _Wc, _Xc, _Yc, _Zc, __c, _$c, _ad, _bd, _cd, _dd, _ed, _fd, _gd, _hd, _id, _jd, _kd, _ld, _md, _nd, _od, _pd, _qd, _rd, _sd, _td, _ud, _vd, _wd, _xd, _yd, _zd, _Ad, _Bd, _Cd, _Dd, _Ed, _Fd, _Gd, _Hd, _Id, _Jd, _Kd, _Ld, _Md, _Nd, _Od, _Pd, _Qd, _Rd, _Sd, _Td, _Ud;
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K, _L, _M, _N, _O, _P, _Q, _R, _S, _T, _U, _V, _W, _X, _Y, _Z, __, _$, _aa, _ba, _ca, _da, _ea, _fa, _ga, _ha, _ia, _ja, _ka, _la, _ma, _na, _oa, _pa, _qa, _ra, _sa, _ta, _ua, _va, _wa, _xa, _ya, _za, _Aa, _Ba, _Ca, _Da, _Ea, _Fa, _Ga, _Ha, _Ia, _Ja, _Ka, _La, _Ma, _Na, _Oa, _Pa, _Qa, _Ra, _Sa, _Ta, _Ua, _Va, _Wa, _Xa, _Ya, _Za, __a, _$a, _ab, _bb, _cb, _db, _eb, _fb, _gb, _hb, _ib, _jb, _kb, _lb, _mb, _nb, _ob, _pb, _qb, _rb, _sb, _tb, _ub, _vb, _wb, _xb, _yb, _zb, _Ab, _Bb, _Cb, _Db, _Eb, _Fb, _Gb, _Hb, _Ib, _Jb, _Kb, _Lb, _Mb, _Nb, _Ob, _Pb, _Qb, _Rb, _Sb, _Tb, _Ub, _Vb, _Wb, _Xb, _Yb, _Zb, __b, _$b, _ac, _bc, _cc, _dc, _ec, _fc, _gc, _hc, _ic, _jc, _kc, _lc, _mc, _nc, _oc, _pc, _qc, _rc, _sc, _tc, _uc, _vc, _wc, _xc, _yc, _zc, _Ac, _Bc, _Cc, _Dc, _Ec, _Fc, _Gc, _Hc, _Ic, _Jc, _Kc, _Lc, _Mc, _Nc, _Oc, _Pc, _Qc, _Rc, _Sc, _Tc, _Uc, _Vc, _Wc, _Xc, _Yc, _Zc, __c, _$c, _ad, _bd, _cd, _dd, _ed, _fd, _gd, _hd, _id, _jd, _kd, _ld, _md, _nd, _od, _pd, _qd, _rd, _sd, _td, _ud, _vd, _wd, _xd, _yd, _zd, _Ad, _Bd, _Cd, _Dd, _Ed, _Fd, _Gd, _Hd, _Id, _Jd, _Kd, _Ld, _Md, _Nd, _Od, _Pd, _Qd, _Rd, _Sd, _Td, _Ud, _Vd, _Wd, _jwks, _cached, _Xd, _Yd, _url, _timeoutDuration, _cooldownDuration, _cacheMaxAge, _jwksTimestamp, _pendingFetch, _headers, _customFetch, _local, _cache;
 import require$$3$1 from "fs";
 import path$4 from "path";
 import require$$2$2 from "os";
 import require$$0$3, { randomUUID } from "crypto";
-import { app, BrowserWindow, dialog, nativeImage, Tray, Menu, ipcMain } from "electron";
-import require$$0$7, { pathToFileURL } from "url";
+import { app, BrowserWindow, dialog, nativeImage, Tray, Menu, powerMonitor, ipcMain } from "electron";
 import require$$0$4 from "tty";
 import require$$1$1 from "util";
 import require$$4$2 from "net";
@@ -17,6 +23,7 @@ import require$$3$2 from "zlib";
 import require$$0$6 from "buffer";
 import require$$1$3 from "string_decoder";
 import require$$8 from "querystring";
+import require$$0$7 from "url";
 import require$$0$8, { createServer } from "http";
 import pg from "pg";
 var commonjsGlobal = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
@@ -105,7 +112,7 @@ const require$$4$1 = {
 const fs$3 = require$$3$1;
 const path$3 = path$4;
 const os = require$$2$2;
-const crypto$1 = require$$0$3;
+const crypto$2 = require$$0$3;
 const packageJson = require$$4$1;
 const version = packageJson.version;
 const TIPS = [
@@ -185,14 +192,14 @@ function _parseVault(options2) {
   }
   return DotenvModule.parse(decrypted);
 }
-function _warn(message) {
-  console.error(`[dotenv@${version}][WARN] ${message}`);
+function _warn(message2) {
+  console.error(`[dotenv@${version}][WARN] ${message2}`);
 }
-function _debug(message) {
-  console.log(`[dotenv@${version}][DEBUG] ${message}`);
+function _debug(message2) {
+  console.log(`[dotenv@${version}][DEBUG] ${message2}`);
 }
-function _log(message) {
-  console.log(`[dotenv@${version}] ${message}`);
+function _log(message2) {
+  console.log(`[dotenv@${version}] ${message2}`);
 }
 function _dotenvKey(options2) {
   if (options2 && options2.DOTENV_KEY && options2.DOTENV_KEY.length > 0) {
@@ -356,7 +363,7 @@ function decrypt(encrypted, keyStr) {
   const authTag = ciphertext.subarray(-16);
   ciphertext = ciphertext.subarray(12, -16);
   try {
-    const aesgcm = crypto$1.createDecipheriv("aes-256-gcm", key, nonce);
+    const aesgcm = crypto$2.createDecipheriv("aes-256-gcm", key, nonce);
     aesgcm.setAuthTag(authTag);
     return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
   } catch (error2) {
@@ -487,7 +494,7 @@ function containsNamespace(str, namespace) {
   }
   return false;
 }
-function convertDataDescriptorToAccessor(obj, prop, message) {
+function convertDataDescriptorToAccessor(obj, prop, message2) {
   var descriptor = Object.getOwnPropertyDescriptor(obj, prop);
   var value = descriptor.value;
   descriptor.get = function getter() {
@@ -527,8 +534,8 @@ function depd(namespace) {
   var stack = getStack();
   var site = callSiteLocation(stack[1]);
   var file = site[0];
-  function deprecate2(message) {
-    log.call(deprecate2, message);
+  function deprecate2(message2) {
+    log.call(deprecate2, message2);
   }
   deprecate2._file = file;
   deprecate2._ignored = isignored(namespace);
@@ -557,7 +564,7 @@ function istraced(namespace) {
   var str = process.env.TRACE_DEPRECATION || "";
   return containsNamespace(str, namespace);
 }
-function log(message, site) {
+function log(message2, site) {
   var haslisteners = eehaslisteners(process, "deprecation");
   if (!haslisteners && this._ignored) {
     return;
@@ -596,7 +603,7 @@ function log(message, site) {
     return;
   }
   this._warned[key] = true;
-  var msg = message;
+  var msg = message2;
   if (!msg) {
     msg = callSite === depSite || !callSite.name ? defaultMessage(depSite) : defaultMessage(callSite);
   }
@@ -682,7 +689,7 @@ function getStack() {
 function prepareObjectStackTrace(obj, stack) {
   return stack;
 }
-function wrapfunction(fn, message) {
+function wrapfunction(fn, message2) {
   if (typeof fn !== "function") {
     throw new TypeError("argument fn must be a function");
   }
@@ -697,10 +704,10 @@ function wrapfunction(fn, message) {
     "message",
     "site",
     '"use strict"\nreturn function (' + args + ") {log.call(deprecate, message, site)\nreturn fn.apply(this, arguments)\n}"
-  )(fn, log, this, message, site);
+  )(fn, log, this, message2, site);
   return deprecatedfn;
 }
-function wrapproperty(obj, prop, message) {
+function wrapproperty(obj, prop, message2) {
   if (!obj || typeof obj !== "object" && typeof obj !== "function") {
     throw new TypeError("argument obj must be object");
   }
@@ -722,19 +729,19 @@ function wrapproperty(obj, prop, message) {
   var set = descriptor.set;
   if (typeof get2 === "function") {
     descriptor.get = function getter() {
-      log.call(deprecate2, message, site);
+      log.call(deprecate2, message2, site);
       return get2.apply(this, arguments);
     };
   }
   if (typeof set === "function") {
     descriptor.set = function setter() {
-      log.call(deprecate2, message, site);
+      log.call(deprecate2, message2, site);
       return set.apply(this, arguments);
     };
   }
   Object.defineProperty(obj, prop, descriptor);
 }
-function DeprecationError(namespace, message, stack) {
+function DeprecationError(namespace, message2, stack) {
   var error2 = new Error();
   var stackString;
   Object.defineProperty(error2, "constructor", {
@@ -743,7 +750,7 @@ function DeprecationError(namespace, message, stack) {
   Object.defineProperty(error2, "message", {
     configurable: true,
     enumerable: false,
-    value: message,
+    value: message2,
     writable: true
   });
   Object.defineProperty(error2, "name", {
@@ -1083,9 +1090,9 @@ status.retry = {
 function createMessageToStatusCodeMap(codes2) {
   var map = {};
   Object.keys(codes2).forEach(function forEachCode(code) {
-    var message = codes2[code];
+    var message2 = codes2[code];
     var status3 = Number(code);
-    map[message.toLowerCase()] = status3;
+    map[message2.toLowerCase()] = status3;
   });
   return map;
 }
@@ -1094,10 +1101,10 @@ function createStatusCodeList(codes2) {
     return Number(code);
   });
 }
-function getStatusCode(message) {
-  var msg = message.toLowerCase();
+function getStatusCode(message2) {
+  var msg = message2.toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(status.code, msg)) {
-    throw new Error('invalid status message: "' + message + '"');
+    throw new Error('invalid status message: "' + message2 + '"');
   }
   return status.code[msg];
 }
@@ -1244,8 +1251,8 @@ function toIdentifier(str) {
   }
   function createClientErrorConstructor(HttpError, name2, code) {
     var className = toClassName(name2);
-    function ClientError(message) {
-      var msg = message != null ? message : statuses2.message[code];
+    function ClientError(message2) {
+      var msg = message2 != null ? message2 : statuses2.message[code];
       var err = new Error(msg);
       Error.captureStackTrace(err, ClientError);
       setPrototypeOf2(err, ClientError.prototype);
@@ -1283,8 +1290,8 @@ function toIdentifier(str) {
   }
   function createServerErrorConstructor(HttpError, name2, code) {
     var className = toClassName(name2);
-    function ServerError(message) {
-      var msg = message != null ? message : statuses2.message[code];
+    function ServerError(message2) {
+      var msg = message2 != null ? message2 : statuses2.message[code];
       var err = new Error(msg);
       Error.captureStackTrace(err, ServerError);
       setPrototypeOf2(err, ServerError.prototype);
@@ -1936,8 +1943,8 @@ function requireBomHandling() {
   hasRequiredBomHandling = 1;
   var BOMChar = "\uFEFF";
   bomHandling.PrependBOM = PrependBOMWrapper;
-  function PrependBOMWrapper(encoder, options2) {
-    this.encoder = encoder;
+  function PrependBOMWrapper(encoder2, options2) {
+    this.encoder = encoder2;
     this.addBOM = true;
   }
   PrependBOMWrapper.prototype.write = function(str) {
@@ -1951,8 +1958,8 @@ function requireBomHandling() {
     return this.encoder.end();
   };
   bomHandling.StripBOM = StripBOMWrapper;
-  function StripBOMWrapper(decoder, options2) {
-    this.decoder = decoder;
+  function StripBOMWrapper(decoder2, options2) {
+    this.decoder = decoder2;
     this.pass = false;
     this.options = options2 || {};
   }
@@ -12212,9 +12219,9 @@ function requireLib() {
     iconv.defaultCharSingleByte = "?";
     iconv.encode = function encode3(str, encoding3, options2) {
       str = "" + (str || "");
-      var encoder = iconv.getEncoder(encoding3, options2);
-      var res2 = encoder.write(str);
-      var trail = encoder.end();
+      var encoder2 = iconv.getEncoder(encoding3, options2);
+      var res2 = encoder2.write(str);
+      var trail = encoder2.end();
       return trail && trail.length > 0 ? Buffer2.concat([res2, trail]) : res2;
     };
     iconv.decode = function decode2(buf, encoding3, options2) {
@@ -12225,9 +12232,9 @@ function requireLib() {
         }
         buf = Buffer2.from("" + (buf || ""), "binary");
       }
-      var decoder = iconv.getDecoder(encoding3, options2);
-      var res2 = decoder.write(buf);
-      var trail = decoder.end();
+      var decoder2 = iconv.getDecoder(encoding3, options2);
+      var res2 = decoder2.write(buf);
+      var trail = decoder2.end();
       return trail ? res2 + trail : res2;
     };
     iconv.encodingExists = function encodingExists(enc) {
@@ -12277,16 +12284,16 @@ function requireLib() {
       return ("" + encoding3).toLowerCase().replace(/:\d{4}$|[^0-9a-z]/g, "");
     };
     iconv.getEncoder = function getEncoder(encoding3, options2) {
-      var codec = iconv.getCodec(encoding3), encoder = new codec.encoder(options2, codec);
+      var codec = iconv.getCodec(encoding3), encoder2 = new codec.encoder(options2, codec);
       if (codec.bomAware && options2 && options2.addBOM)
-        encoder = new bomHandling2.PrependBOM(encoder, options2);
-      return encoder;
+        encoder2 = new bomHandling2.PrependBOM(encoder2, options2);
+      return encoder2;
     };
     iconv.getDecoder = function getDecoder(encoding3, options2) {
-      var codec = iconv.getCodec(encoding3), decoder = new codec.decoder(options2, codec);
+      var codec = iconv.getCodec(encoding3), decoder2 = new codec.decoder(options2, codec);
       if (codec.bomAware && !(options2 && options2.stripBOM === false))
-        decoder = new bomHandling2.StripBOM(decoder, options2);
-      return decoder;
+        decoder2 = new bomHandling2.StripBOM(decoder2, options2);
+      return decoder2;
     };
     var nodeVer = typeof process !== "undefined" && process.versions && process.versions.node;
     if (nodeVer) {
@@ -12430,13 +12437,13 @@ function requireRawBody() {
       }));
     }
     var received = 0;
-    var decoder;
+    var decoder2;
     try {
-      decoder = getDecoder(encoding3);
+      decoder2 = getDecoder(encoding3);
     } catch (err) {
       return done(err);
     }
-    var buffer = decoder ? "" : [];
+    var buffer = decoder2 ? "" : [];
     stream2.on("aborted", onAborted);
     stream2.on("close", cleanup);
     stream2.on("data", onData);
@@ -12481,8 +12488,8 @@ function requireRawBody() {
           received,
           type: "entity.too.large"
         }));
-      } else if (decoder) {
-        buffer += decoder.write(chunk);
+      } else if (decoder2) {
+        buffer += decoder2.write(chunk);
       } else {
         buffer.push(chunk);
       }
@@ -12498,7 +12505,7 @@ function requireRawBody() {
           type: "request.size.invalid"
         }));
       } else {
-        var string = decoder ? buffer + (decoder.end() || "") : Buffer.concat(buffer);
+        var string = decoder2 ? buffer + (decoder2.end() || "") : Buffer.concat(buffer);
         done(null, string);
       }
     }
@@ -12713,7 +12720,7 @@ function requireRead() {
     var stream2;
     req2._body = true;
     var encoding3 = opts.encoding !== null ? opts.encoding : null;
-    var verify = opts.verify;
+    var verify2 = opts.verify;
     try {
       stream2 = contentstream(req2, debug2, opts.inflate);
       length = stream2.length;
@@ -12722,7 +12729,7 @@ function requireRead() {
       return next(err);
     }
     opts.length = length;
-    opts.encoding = verify ? null : encoding3;
+    opts.encoding = verify2 ? null : encoding3;
     if (opts.encoding === null && encoding3 !== null && !iconv.encodingExists(encoding3)) {
       return next(createError2(415, 'unsupported charset "' + encoding3.toUpperCase() + '"', {
         charset: encoding3.toLowerCase(),
@@ -12750,10 +12757,10 @@ function requireRead() {
         });
         return;
       }
-      if (verify) {
+      if (verify2) {
         try {
           debug2("verify body");
-          verify(req2, res2, body, encoding3);
+          verify2(req2, res2, body, encoding3);
         } catch (err) {
           next(createError2(403, err, {
             body,
@@ -23880,8 +23887,8 @@ function requireJson() {
     var reviver = opts.reviver;
     var strict = opts.strict !== false;
     var type3 = opts.type || "application/json";
-    var verify = opts.verify || false;
-    if (verify !== false && typeof verify !== "function") {
+    var verify2 = opts.verify || false;
+    if (verify2 !== false && typeof verify2 !== "function") {
       throw new TypeError("option verify must be function");
     }
     var shouldParse = typeof type3 !== "function" ? typeChecker(type3) : type3;
@@ -23937,7 +23944,7 @@ function requireJson() {
         encoding: charset3,
         inflate,
         limit: limit2,
-        verify
+        verify: verify2
       });
     };
   }
@@ -24012,8 +24019,8 @@ function requireRaw() {
     var inflate = opts.inflate !== false;
     var limit2 = typeof opts.limit !== "number" ? bytes2.parse(opts.limit || "100kb") : opts.limit;
     var type3 = opts.type || "application/octet-stream";
-    var verify = opts.verify || false;
-    if (verify !== false && typeof verify !== "function") {
+    var verify2 = opts.verify || false;
+    if (verify2 !== false && typeof verify2 !== "function") {
       throw new TypeError("option verify must be function");
     }
     var shouldParse = typeof type3 !== "function" ? typeChecker(type3) : type3;
@@ -24042,7 +24049,7 @@ function requireRaw() {
         encoding: null,
         inflate,
         limit: limit2,
-        verify
+        verify: verify2
       });
     };
   }
@@ -24075,8 +24082,8 @@ function requireText() {
     var inflate = opts.inflate !== false;
     var limit2 = typeof opts.limit !== "number" ? bytes2.parse(opts.limit || "100kb") : opts.limit;
     var type3 = opts.type || "text/plain";
-    var verify = opts.verify || false;
-    if (verify !== false && typeof verify !== "function") {
+    var verify2 = opts.verify || false;
+    if (verify2 !== false && typeof verify2 !== "function") {
       throw new TypeError("option verify must be function");
     }
     var shouldParse = typeof type3 !== "function" ? typeChecker(type3) : type3;
@@ -24106,7 +24113,7 @@ function requireText() {
         encoding: charset3,
         inflate,
         limit: limit2,
-        verify
+        verify: verify2
       });
     };
   }
@@ -24134,7 +24141,7 @@ var type = TypeError;
 var uri = URIError;
 var abs$1 = Math.abs;
 var floor$1 = Math.floor;
-var max$2 = Math.max;
+var max$1 = Math.max;
 var min$1 = Math.min;
 var pow$1 = Math.pow;
 var round$1 = Math.round;
@@ -24263,77 +24270,91 @@ function requireObject_getPrototypeOf() {
   Object_getPrototypeOf = $Object2.getPrototypeOf || null;
   return Object_getPrototypeOf;
 }
-var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
-var toStr$1 = Object.prototype.toString;
-var max$1 = Math.max;
-var funcType = "[object Function]";
-var concatty = function concatty2(a, b) {
-  var arr = [];
-  for (var i = 0; i < a.length; i += 1) {
-    arr[i] = a[i];
-  }
-  for (var j = 0; j < b.length; j += 1) {
-    arr[j + a.length] = b[j];
-  }
-  return arr;
-};
-var slicy = function slicy2(arrLike, offset) {
-  var arr = [];
-  for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
-    arr[j] = arrLike[i];
-  }
-  return arr;
-};
-var joiny = function(arr, joiner) {
-  var str = "";
-  for (var i = 0; i < arr.length; i += 1) {
-    str += arr[i];
-    if (i + 1 < arr.length) {
-      str += joiner;
+var implementation;
+var hasRequiredImplementation;
+function requireImplementation() {
+  if (hasRequiredImplementation) return implementation;
+  hasRequiredImplementation = 1;
+  var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
+  var toStr2 = Object.prototype.toString;
+  var max2 = Math.max;
+  var funcType = "[object Function]";
+  var concatty = function concatty2(a, b) {
+    var arr = [];
+    for (var i = 0; i < a.length; i += 1) {
+      arr[i] = a[i];
     }
-  }
-  return str;
-};
-var implementation$1 = function bind(that) {
-  var target = this;
-  if (typeof target !== "function" || toStr$1.apply(target) !== funcType) {
-    throw new TypeError(ERROR_MESSAGE + target);
-  }
-  var args = slicy(arguments, 1);
-  var bound;
-  var binder = function() {
-    if (this instanceof bound) {
-      var result = target.apply(
-        this,
+    for (var j = 0; j < b.length; j += 1) {
+      arr[j + a.length] = b[j];
+    }
+    return arr;
+  };
+  var slicy = function slicy2(arrLike, offset) {
+    var arr = [];
+    for (var i = offset, j = 0; i < arrLike.length; i += 1, j += 1) {
+      arr[j] = arrLike[i];
+    }
+    return arr;
+  };
+  var joiny = function(arr, joiner) {
+    var str = "";
+    for (var i = 0; i < arr.length; i += 1) {
+      str += arr[i];
+      if (i + 1 < arr.length) {
+        str += joiner;
+      }
+    }
+    return str;
+  };
+  implementation = function bind2(that) {
+    var target = this;
+    if (typeof target !== "function" || toStr2.apply(target) !== funcType) {
+      throw new TypeError(ERROR_MESSAGE + target);
+    }
+    var args = slicy(arguments, 1);
+    var bound;
+    var binder = function() {
+      if (this instanceof bound) {
+        var result = target.apply(
+          this,
+          concatty(args, arguments)
+        );
+        if (Object(result) === result) {
+          return result;
+        }
+        return this;
+      }
+      return target.apply(
+        that,
         concatty(args, arguments)
       );
-      if (Object(result) === result) {
-        return result;
-      }
-      return this;
-    }
-    return target.apply(
-      that,
-      concatty(args, arguments)
-    );
-  };
-  var boundLength = max$1(0, target.length - args.length);
-  var boundArgs = [];
-  for (var i = 0; i < boundLength; i++) {
-    boundArgs[i] = "$" + i;
-  }
-  bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
-  if (target.prototype) {
-    var Empty = function Empty2() {
     };
-    Empty.prototype = target.prototype;
-    bound.prototype = new Empty();
-    Empty.prototype = null;
-  }
-  return bound;
-};
-var implementation = implementation$1;
-var functionBind = Function.prototype.bind || implementation;
+    var boundLength = max2(0, target.length - args.length);
+    var boundArgs = [];
+    for (var i = 0; i < boundLength; i++) {
+      boundArgs[i] = "$" + i;
+    }
+    bound = Function("binder", "return function (" + joiny(boundArgs, ",") + "){ return binder.apply(this,arguments); }")(binder);
+    if (target.prototype) {
+      var Empty = function Empty2() {
+      };
+      Empty.prototype = target.prototype;
+      bound.prototype = new Empty();
+      Empty.prototype = null;
+    }
+    return bound;
+  };
+  return implementation;
+}
+var functionBind;
+var hasRequiredFunctionBind;
+function requireFunctionBind() {
+  if (hasRequiredFunctionBind) return functionBind;
+  hasRequiredFunctionBind = 1;
+  var implementation2 = requireImplementation();
+  functionBind = Function.prototype.bind || implementation2;
+  return functionBind;
+}
 var functionCall;
 var hasRequiredFunctionCall;
 function requireFunctionCall() {
@@ -24363,11 +24384,11 @@ var hasRequiredActualApply;
 function requireActualApply() {
   if (hasRequiredActualApply) return actualApply;
   hasRequiredActualApply = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $apply2 = requireFunctionApply();
   var $call2 = requireFunctionCall();
   var $reflectApply = requireReflectApply();
-  actualApply = $reflectApply || bind3.call($call2, $apply2);
+  actualApply = $reflectApply || bind2.call($call2, $apply2);
   return actualApply;
 }
 var callBindApplyHelpers;
@@ -24375,7 +24396,7 @@ var hasRequiredCallBindApplyHelpers;
 function requireCallBindApplyHelpers() {
   if (hasRequiredCallBindApplyHelpers) return callBindApplyHelpers;
   hasRequiredCallBindApplyHelpers = 1;
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var $TypeError2 = type;
   var $call2 = requireFunctionCall();
   var $actualApply = requireActualApply();
@@ -24383,7 +24404,7 @@ function requireCallBindApplyHelpers() {
     if (args.length < 1 || typeof args[0] !== "function") {
       throw new $TypeError2("a function is required");
     }
-    return $actualApply(bind3, $call2, args);
+    return $actualApply(bind2, $call2, args);
   };
   return callBindApplyHelpers;
 }
@@ -24445,8 +24466,8 @@ function requireHasown() {
   hasRequiredHasown = 1;
   var call = Function.prototype.call;
   var $hasOwn = Object.prototype.hasOwnProperty;
-  var bind3 = functionBind;
-  hasown = bind3.call(call, $hasOwn);
+  var bind2 = requireFunctionBind();
+  hasown = bind2.call(call, $hasOwn);
   return hasown;
 }
 var undefined$1;
@@ -24460,7 +24481,7 @@ var $TypeError$3 = type;
 var $URIError = uri;
 var abs = abs$1;
 var floor = floor$1;
-var max = max$2;
+var max = max$1;
 var min = min$1;
 var pow = pow$1;
 var round = round$1;
@@ -24665,13 +24686,13 @@ var LEGACY_ALIASES = {
   "%WeakMapPrototype%": ["WeakMap", "prototype"],
   "%WeakSetPrototype%": ["WeakSet", "prototype"]
 };
-var bind2 = functionBind;
+var bind = requireFunctionBind();
 var hasOwn$1 = requireHasown();
-var $concat$1 = bind2.call($call, Array.prototype.concat);
-var $spliceApply = bind2.call($apply, Array.prototype.splice);
-var $replace$1 = bind2.call($call, String.prototype.replace);
-var $strSlice = bind2.call($call, String.prototype.slice);
-var $exec = bind2.call($call, RegExp.prototype.exec);
+var $concat$1 = bind.call($call, Array.prototype.concat);
+var $spliceApply = bind.call($apply, Array.prototype.splice);
+var $replace$1 = bind.call($call, String.prototype.replace);
+var $strSlice = bind.call($call, String.prototype.slice);
+var $exec = bind.call($call, RegExp.prototype.exec);
 var rePropName = /[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g;
 var reEscapeChar = /\\(\\)?/g;
 var stringToPath = function stringToPath2(string) {
@@ -24876,20 +24897,20 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
   return fn;
 };
 (function(module) {
-  var bind3 = functionBind;
+  var bind2 = requireFunctionBind();
   var GetIntrinsic3 = getIntrinsic;
   var setFunctionLength$1 = setFunctionLength;
   var $TypeError2 = type;
   var $apply2 = GetIntrinsic3("%Function.prototype.apply%");
   var $call2 = GetIntrinsic3("%Function.prototype.call%");
-  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind3.call($call2, $apply2);
+  var $reflectApply = GetIntrinsic3("%Reflect.apply%", true) || bind2.call($call2, $apply2);
   var $defineProperty2 = esDefineProperty;
   var $max = GetIntrinsic3("%Math.max%");
   module.exports = function callBind2(originalFunction) {
     if (typeof originalFunction !== "function") {
       throw new $TypeError2("a function is required");
     }
-    var func = $reflectApply(bind3, $call2, arguments);
+    var func = $reflectApply(bind2, $call2, arguments);
     return setFunctionLength$1(
       func,
       1 + $max(0, originalFunction.length - (arguments.length - 1)),
@@ -24897,7 +24918,7 @@ var setFunctionLength = function setFunctionLength2(fn, length) {
     );
   };
   var applyBind = function applyBind2() {
-    return $reflectApply(bind3, $apply2, arguments);
+    return $reflectApply(bind2, $apply2, arguments);
   };
   if ($defineProperty2) {
     $defineProperty2(module.exports, "apply", { value: applyBind });
@@ -25142,14 +25163,14 @@ var objectInspect = function inspect_(obj, options2, depth, seen) {
     var protoTag = obj instanceof Object ? "" : "null prototype";
     var stringTag = !isPlainObject && toStringTag && Object(obj) === obj && toStringTag in obj ? $slice.call(toStr(obj), 8, -1) : protoTag ? "Object" : "";
     var constructorTag = isPlainObject || typeof obj.constructor !== "function" ? "" : obj.constructor.name ? obj.constructor.name + " " : "";
-    var tag = constructorTag + (stringTag || protoTag ? "[" + $join.call($concat.call([], stringTag || [], protoTag || []), ": ") + "] " : "");
+    var tag2 = constructorTag + (stringTag || protoTag ? "[" + $join.call($concat.call([], stringTag || [], protoTag || []), ": ") + "] " : "");
     if (ys.length === 0) {
-      return tag + "{}";
+      return tag2 + "{}";
     }
     if (indent) {
-      return tag + "{" + indentedJoin(ys, indent) + "}";
+      return tag2 + "{" + indentedJoin(ys, indent) + "}";
     }
-    return tag + "{ " + $join.call(ys, ", ") + " }";
+    return tag2 + "{ " + $join.call(ys, ", ") + " }";
   }
   return String(obj);
 };
@@ -25641,7 +25662,7 @@ var assign = function assignSingleSource(target, source) {
     return acc;
   }, target);
 };
-var decode$2 = function(str, decoder, charset3) {
+var decode$3 = function(str, decoder2, charset3) {
   var strWithoutPlus = str.replace(/\+/g, " ");
   if (charset3 === "iso-8859-1") {
     return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
@@ -25744,7 +25765,7 @@ var utils$3 = {
   assign,
   combine,
   compact,
-  decode: decode$2,
+  decode: decode$3,
   encode,
   isBuffer,
   isRegExp,
@@ -25800,7 +25821,7 @@ var isNonNullishPrimitive = function isNonNullishPrimitive2(v) {
   return typeof v === "string" || typeof v === "number" || typeof v === "boolean" || typeof v === "symbol" || typeof v === "bigint";
 };
 var sentinel = {};
-var stringify$2 = function stringify(object, prefix, generateArrayPrefix, commaRoundTrip, allowEmptyArrays, strictNullHandling, skipNulls, encodeDotInKeys, encoder, filter, sort, allowDots, serializeDate2, format2, formatter, encodeValuesOnly, charset3, sideChannel2) {
+var stringify$2 = function stringify(object, prefix, generateArrayPrefix, commaRoundTrip, allowEmptyArrays, strictNullHandling, skipNulls, encodeDotInKeys, encoder2, filter, sort, allowDots, serializeDate2, format2, formatter, encodeValuesOnly, charset3, sideChannel2) {
   var obj = object;
   var tmpSc = sideChannel2;
   var step = 0;
@@ -25833,14 +25854,14 @@ var stringify$2 = function stringify(object, prefix, generateArrayPrefix, commaR
   }
   if (obj === null) {
     if (strictNullHandling) {
-      return encoder && !encodeValuesOnly ? encoder(prefix, defaults$1.encoder, charset3, "key", format2) : prefix;
+      return encoder2 && !encodeValuesOnly ? encoder2(prefix, defaults$1.encoder, charset3, "key", format2) : prefix;
     }
     obj = "";
   }
   if (isNonNullishPrimitive(obj) || utils$2.isBuffer(obj)) {
-    if (encoder) {
-      var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults$1.encoder, charset3, "key", format2);
-      return [formatter(keyValue) + "=" + formatter(encoder(obj, defaults$1.encoder, charset3, "value", format2))];
+    if (encoder2) {
+      var keyValue = encodeValuesOnly ? prefix : encoder2(prefix, defaults$1.encoder, charset3, "key", format2);
+      return [formatter(keyValue) + "=" + formatter(encoder2(obj, defaults$1.encoder, charset3, "value", format2))];
     }
     return [formatter(prefix) + "=" + formatter(String(obj))];
   }
@@ -25850,8 +25871,8 @@ var stringify$2 = function stringify(object, prefix, generateArrayPrefix, commaR
   }
   var objKeys;
   if (generateArrayPrefix === "comma" && isArray$1(obj)) {
-    if (encodeValuesOnly && encoder) {
-      obj = utils$2.maybeMap(obj, encoder);
+    if (encodeValuesOnly && encoder2) {
+      obj = utils$2.maybeMap(obj, encoder2);
     }
     objKeys = [{ value: obj.length > 0 ? obj.join(",") || null : void 0 }];
   } else if (isArray$1(filter)) {
@@ -25885,7 +25906,7 @@ var stringify$2 = function stringify(object, prefix, generateArrayPrefix, commaR
       strictNullHandling,
       skipNulls,
       encodeDotInKeys,
-      generateArrayPrefix === "comma" && encodeValuesOnly && isArray$1(obj) ? null : encoder,
+      generateArrayPrefix === "comma" && encodeValuesOnly && isArray$1(obj) ? null : encoder2,
       filter,
       sort,
       allowDots,
@@ -26281,9 +26302,9 @@ function requireUrlencoded() {
     var inflate = opts.inflate !== false;
     var limit2 = typeof opts.limit !== "number" ? bytes2.parse(opts.limit || "100kb") : opts.limit;
     var type3 = opts.type || "application/x-www-form-urlencoded";
-    var verify = opts.verify || false;
+    var verify2 = opts.verify || false;
     var depth = typeof opts.depth !== "number" ? Number(opts.depth || 32) : opts.depth;
-    if (verify !== false && typeof verify !== "function") {
+    if (verify2 !== false && typeof verify2 !== "function") {
       throw new TypeError("option verify must be function");
     }
     var queryparse = extended ? extendedparser(opts) : simpleparser(opts);
@@ -26323,7 +26344,7 @@ function requireUrlencoded() {
         encoding: charset3,
         inflate,
         limit: limit2,
-        verify,
+        verify: verify2,
         depth
       });
     };
@@ -27125,8 +27146,8 @@ var defer = typeof setImmediate === "function" ? setImmediate : function(fn) {
   process.nextTick(fn.bind.apply(fn, arguments));
 };
 var isFinished = onFinished$2.isFinished;
-function createHtmlDocument$1(message) {
-  var body = escapeHtml$2(message).replace(NEWLINE_REGEXP, "<br>").replace(DOUBLE_SPACE_REGEXP, " &nbsp;");
+function createHtmlDocument$1(message2) {
+  var body = escapeHtml$2(message2).replace(NEWLINE_REGEXP, "<br>").replace(DOUBLE_SPACE_REGEXP, " &nbsp;");
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>Error</title>\n</head>\n<body>\n<pre>' + body + "</pre>\n</body>\n</html>\n";
 }
 var finalhandler_1 = finalhandler;
@@ -27216,9 +27237,9 @@ function getResponseStatusCode(res2) {
 function headersSent$1(res2) {
   return typeof res2.headersSent !== "boolean" ? Boolean(res2._header) : res2.headersSent;
 }
-function send$3(req2, res2, status3, headers, message) {
+function send$3(req2, res2, status3, headers, message2) {
   function write() {
-    var body = createHtmlDocument$1(message);
+    var body = createHtmlDocument$1(message2);
     res2.statusCode = status3;
     if (req2.httpVersionMajor < 2) {
       res2.statusMessage = statuses$2.message[status3];
@@ -29271,14 +29292,14 @@ function encodeUrl$2(url2) {
  * MIT Licensed
  */
 var etag_1 = etag$1;
-var crypto = require$$0$3;
+var crypto$1 = require$$0$3;
 var Stats = require$$3$1.Stats;
 var toString = Object.prototype.toString;
 function entitytag(entity) {
   if (entity.length === 0) {
     return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
   }
-  var hash = crypto.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+  var hash = crypto$1.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
   var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
   return '"' + len.toString(16) + "-" + hash + '"';
 }
@@ -29291,8 +29312,8 @@ function etag$1(entity, options2) {
   if (!isStats && typeof entity !== "string" && !Buffer.isBuffer(entity)) {
     throw new TypeError("argument entity must be string, Buffer, or fs.Stats");
   }
-  var tag = isStats ? stattag(entity) : entitytag(entity);
-  return weak ? "W/" + tag : tag;
+  var tag2 = isStats ? stattag(entity) : entitytag(entity);
+  return weak ? "W/" + tag2 : tag2;
 }
 function isstats(obj) {
   if (typeof Stats === "function" && obj instanceof Stats) {
@@ -32578,7 +32599,7 @@ SendStream.prototype.redirect = function redirect(path3) {
 SendStream.prototype.pipe = function pipe(res2) {
   var root2 = this._root;
   this.res = res2;
-  var path3 = decode$1(this.path);
+  var path3 = decode$2(this.path);
   if (path3 === -1) {
     this.error(400);
     return res2;
@@ -32835,7 +32856,7 @@ function createHttpError(status3, err) {
   }
   return err instanceof Error ? createError$1(status3, err, { expose: false }) : createError$1(status3, err);
 }
-function decode$1(path3) {
+function decode$2(path3) {
   try {
     return decodeURIComponent(path3);
   } catch (err) {
@@ -34078,7 +34099,7 @@ var proxyAddrExports = proxyAddr.exports;
   };
   app2.del = deprecate2.function(app2.delete, "app.del: Use app.delete instead");
   app2.render = function render3(name2, options2, callback) {
-    var cache = this.cache;
+    var cache2 = this.cache;
     var done = callback;
     var engines2 = this.engines;
     var opts = options2;
@@ -34097,7 +34118,7 @@ var proxyAddrExports = proxyAddr.exports;
       renderOptions.cache = this.enabled("view cache");
     }
     if (renderOptions.cache) {
-      view2 = cache[name2];
+      view2 = cache2[name2];
     }
     if (!view2) {
       var View22 = this.get("view");
@@ -34113,7 +34134,7 @@ var proxyAddrExports = proxyAddr.exports;
         return done(err);
       }
       if (renderOptions.cache) {
-        cache[name2] = view2;
+        cache2[name2] = view2;
       }
     }
     tryRender(view2, renderOptions, done);
@@ -34896,7 +34917,7 @@ function parse$1(str, opt) {
   var obj = {};
   var len = str.length;
   if (len < 2) return obj;
-  var dec = opt && opt.decode || decode;
+  var dec = opt && opt.decode || decode$1;
   var index2 = 0;
   var eqIdx = 0;
   var endIdx = 0;
@@ -35027,7 +35048,7 @@ function serialize(name2, val, opt) {
   }
   return str;
 }
-function decode(str) {
+function decode$1(str) {
   return str.indexOf("%") !== -1 ? decodeURIComponent(str) : str;
 }
 function isDate(val) {
@@ -36635,8 +36656,8 @@ const _SQL = class _SQL {
     }
     return new _SQL.Aliased(this, alias);
   }
-  mapWith(decoder) {
-    this.decoder = typeof decoder === "function" ? { mapFromDriverValue: decoder } : decoder;
+  mapWith(decoder2) {
+    this.decoder = typeof decoder2 === "function" ? { mapFromDriverValue: decoder2 } : decoder2;
     return this;
   }
   inlineParams() {
@@ -36685,10 +36706,10 @@ class Param {
    * @param value - Parameter value
    * @param encoder - Encoder to convert the value to a driver parameter
    */
-  constructor(value, encoder = noopEncoder) {
+  constructor(value, encoder2 = noopEncoder) {
     __publicField(this, "brand");
     this.value = value;
-    this.encoder = encoder;
+    this.encoder = encoder2;
   }
   getSQL() {
     return new SQL([this]);
@@ -36737,8 +36758,8 @@ function sql(strings, ...params) {
     return new Placeholder(name2);
   }
   sql2.placeholder = placeholder2;
-  function param22(value, encoder) {
-    return new Param(value, encoder);
+  function param22(value, encoder2) {
+    return new Param(value, encoder2);
   }
   sql2.param = param22;
 })(sql || (sql = {}));
@@ -36911,8 +36932,8 @@ function mapColumnsInSQLToAlias(query2, alias) {
   }));
 }
 class DrizzleError extends (_M = Error, _L = entityKind, _M) {
-  constructor({ message, cause }) {
-    super(message);
+  constructor({ message: message2, cause }) {
+    super(message2);
     this.name = "DrizzleError";
     this.cause = cause;
   }
@@ -37045,8 +37066,8 @@ function desc(column) {
 }
 _P = entityKind;
 class ConsoleLogWriter {
-  write(message) {
-    console.log(message);
+  write(message2) {
+    console.log(message2);
   }
 }
 __publicField(ConsoleLogWriter, _P, "ConsoleLogWriter");
@@ -37104,13 +37125,13 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
   const nullifyMap = {};
   const result = columns.reduce(
     (result2, { path: path3, field }, columnIndex) => {
-      let decoder;
+      let decoder2;
       if (is2(field, Column)) {
-        decoder = field;
+        decoder2 = field;
       } else if (is2(field, SQL)) {
-        decoder = field.decoder;
+        decoder2 = field.decoder;
       } else {
-        decoder = field.sql.decoder;
+        decoder2 = field.sql.decoder;
       }
       let node2 = result2;
       for (const [pathChunkIndex, pathChunk] of path3.entries()) {
@@ -37121,7 +37142,7 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
           node2 = node2[pathChunk];
         } else {
           const rawValue = row[columnIndex];
-          const value = node2[pathChunk] = rawValue === null ? null : decoder.mapFromDriverValue(rawValue);
+          const value = node2[pathChunk] = rawValue === null ? null : decoder2.mapFromDriverValue(rawValue);
           if (joinsNotNullableMap && is2(field, Column) && path3.length === 2) {
             const objectName = path3[0];
             if (!(objectName in nullifyMap)) {
@@ -38803,15 +38824,15 @@ function mapRelationalRow(tablesConfig, tableConfig, row, buildQueryResultSelect
     } else {
       const value = mapColumnValue(row[selectionItemIndex]);
       const field = selectionItem.field;
-      let decoder;
+      let decoder2;
       if (is2(field, Column)) {
-        decoder = field;
+        decoder2 = field;
       } else if (is2(field, SQL)) {
-        decoder = field.decoder;
+        decoder2 = field.decoder;
       } else {
-        decoder = field.sql.decoder;
+        decoder2 = field.sql.decoder;
       }
-      result[selectionItem.tsKey] = value === null ? null : decoder.mapFromDriverValue(value);
+      result[selectionItem.tsKey] = value === null ? null : decoder2.mapFromDriverValue(value);
     }
   }
   return result;
@@ -39395,18 +39416,18 @@ class PgDialect {
     const withNoDataSql = withNoData ? sql` with no data` : void 0;
     return sql`refresh materialized view${concurrentlySql} ${view2}${withNoDataSql}`;
   }
-  prepareTyping(encoder) {
-    if (is2(encoder, PgJsonb) || is2(encoder, PgJson)) {
+  prepareTyping(encoder2) {
+    if (is2(encoder2, PgJsonb) || is2(encoder2, PgJson)) {
       return "json";
-    } else if (is2(encoder, PgNumeric)) {
+    } else if (is2(encoder2, PgNumeric)) {
       return "decimal";
-    } else if (is2(encoder, PgTime)) {
+    } else if (is2(encoder2, PgTime)) {
       return "time";
-    } else if (is2(encoder, PgTimestamp) || is2(encoder, PgTimestampString)) {
+    } else if (is2(encoder2, PgTimestamp) || is2(encoder2, PgTimestampString)) {
       return "timestamp";
-    } else if (is2(encoder, PgDate) || is2(encoder, PgDateString)) {
+    } else if (is2(encoder2, PgDate) || is2(encoder2, PgDateString)) {
       return "date";
-    } else if (is2(encoder, PgUUID)) {
+    } else if (is2(encoder2, PgUUID)) {
       return "uuid";
     } else {
       return "none";
@@ -42196,102 +42217,102 @@ ZodError.create = (issues) => {
   return error2;
 };
 const errorMap = (issue, _ctx) => {
-  let message;
+  let message2;
   switch (issue.code) {
     case ZodIssueCode.invalid_type:
       if (issue.received === ZodParsedType.undefined) {
-        message = "Required";
+        message2 = "Required";
       } else {
-        message = `Expected ${issue.expected}, received ${issue.received}`;
+        message2 = `Expected ${issue.expected}, received ${issue.received}`;
       }
       break;
     case ZodIssueCode.invalid_literal:
-      message = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
+      message2 = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
       break;
     case ZodIssueCode.unrecognized_keys:
-      message = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
+      message2 = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
       break;
     case ZodIssueCode.invalid_union:
-      message = `Invalid input`;
+      message2 = `Invalid input`;
       break;
     case ZodIssueCode.invalid_union_discriminator:
-      message = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
+      message2 = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
       break;
     case ZodIssueCode.invalid_enum_value:
-      message = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
+      message2 = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
       break;
     case ZodIssueCode.invalid_arguments:
-      message = `Invalid function arguments`;
+      message2 = `Invalid function arguments`;
       break;
     case ZodIssueCode.invalid_return_type:
-      message = `Invalid function return type`;
+      message2 = `Invalid function return type`;
       break;
     case ZodIssueCode.invalid_date:
-      message = `Invalid date`;
+      message2 = `Invalid date`;
       break;
     case ZodIssueCode.invalid_string:
       if (typeof issue.validation === "object") {
         if ("includes" in issue.validation) {
-          message = `Invalid input: must include "${issue.validation.includes}"`;
+          message2 = `Invalid input: must include "${issue.validation.includes}"`;
           if (typeof issue.validation.position === "number") {
-            message = `${message} at one or more positions greater than or equal to ${issue.validation.position}`;
+            message2 = `${message2} at one or more positions greater than or equal to ${issue.validation.position}`;
           }
         } else if ("startsWith" in issue.validation) {
-          message = `Invalid input: must start with "${issue.validation.startsWith}"`;
+          message2 = `Invalid input: must start with "${issue.validation.startsWith}"`;
         } else if ("endsWith" in issue.validation) {
-          message = `Invalid input: must end with "${issue.validation.endsWith}"`;
+          message2 = `Invalid input: must end with "${issue.validation.endsWith}"`;
         } else {
           util.assertNever(issue.validation);
         }
       } else if (issue.validation !== "regex") {
-        message = `Invalid ${issue.validation}`;
+        message2 = `Invalid ${issue.validation}`;
       } else {
-        message = "Invalid";
+        message2 = "Invalid";
       }
       break;
     case ZodIssueCode.too_small:
       if (issue.type === "array")
-        message = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
+        message2 = `Array must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `more than`} ${issue.minimum} element(s)`;
       else if (issue.type === "string")
-        message = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
+        message2 = `String must contain ${issue.exact ? "exactly" : issue.inclusive ? `at least` : `over`} ${issue.minimum} character(s)`;
       else if (issue.type === "number")
-        message = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
+        message2 = `Number must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${issue.minimum}`;
       else if (issue.type === "date")
-        message = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
+        message2 = `Date must be ${issue.exact ? `exactly equal to ` : issue.inclusive ? `greater than or equal to ` : `greater than `}${new Date(Number(issue.minimum))}`;
       else
-        message = "Invalid input";
+        message2 = "Invalid input";
       break;
     case ZodIssueCode.too_big:
       if (issue.type === "array")
-        message = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
+        message2 = `Array must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `less than`} ${issue.maximum} element(s)`;
       else if (issue.type === "string")
-        message = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
+        message2 = `String must contain ${issue.exact ? `exactly` : issue.inclusive ? `at most` : `under`} ${issue.maximum} character(s)`;
       else if (issue.type === "number")
-        message = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+        message2 = `Number must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
       else if (issue.type === "bigint")
-        message = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
+        message2 = `BigInt must be ${issue.exact ? `exactly` : issue.inclusive ? `less than or equal to` : `less than`} ${issue.maximum}`;
       else if (issue.type === "date")
-        message = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
+        message2 = `Date must be ${issue.exact ? `exactly` : issue.inclusive ? `smaller than or equal to` : `smaller than`} ${new Date(Number(issue.maximum))}`;
       else
-        message = "Invalid input";
+        message2 = "Invalid input";
       break;
     case ZodIssueCode.custom:
-      message = `Invalid input`;
+      message2 = `Invalid input`;
       break;
     case ZodIssueCode.invalid_intersection_types:
-      message = `Intersection results could not be merged`;
+      message2 = `Intersection results could not be merged`;
       break;
     case ZodIssueCode.not_multiple_of:
-      message = `Number must be a multiple of ${issue.multipleOf}`;
+      message2 = `Number must be a multiple of ${issue.multipleOf}`;
       break;
     case ZodIssueCode.not_finite:
-      message = "Number must be finite";
+      message2 = "Number must be finite";
       break;
     default:
-      message = _ctx.defaultError;
+      message2 = _ctx.defaultError;
       util.assertNever(issue);
   }
-  return { message };
+  return { message: message2 };
 };
 let overrideErrorMap = errorMap;
 function setErrorMap(map) {
@@ -42416,14 +42437,14 @@ function __classPrivateFieldSet(receiver, state, value, kind, f) {
   if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
   return state.set(receiver, value), value;
 }
-typeof SuppressedError === "function" ? SuppressedError : function(error2, suppressed, message) {
-  var e = new Error(message);
+typeof SuppressedError === "function" ? SuppressedError : function(error2, suppressed, message2) {
+  var e = new Error(message2);
   return e.name = "SuppressedError", e.error = error2, e.suppressed = suppressed, e;
 };
 var errorUtil;
 (function(errorUtil2) {
-  errorUtil2.errToObj = (message) => typeof message === "string" ? { message } : message || {};
-  errorUtil2.toString = (message) => typeof message === "string" ? message : message === null || message === void 0 ? void 0 : message.message;
+  errorUtil2.errToObj = (message2) => typeof message2 === "string" ? { message: message2 } : message2 || {};
+  errorUtil2.toString = (message2) => typeof message2 === "string" ? message2 : message2 === null || message2 === void 0 ? void 0 : message2.message;
 })(errorUtil || (errorUtil = {}));
 var _ZodEnum_cache, _ZodNativeEnum_cache;
 class ParseInputLazyPath {
@@ -42475,16 +42496,16 @@ function processCreateParams(params) {
     return { errorMap: errorMap2, description: description2 };
   const customMap = (iss, ctx) => {
     var _a2, _b2;
-    const { message } = params;
+    const { message: message2 } = params;
     if (iss.code === "invalid_enum_value") {
-      return { message: message !== null && message !== void 0 ? message : ctx.defaultError };
+      return { message: message2 !== null && message2 !== void 0 ? message2 : ctx.defaultError };
     }
     if (typeof ctx.data === "undefined") {
-      return { message: (_a2 = message !== null && message !== void 0 ? message : required_error) !== null && _a2 !== void 0 ? _a2 : ctx.defaultError };
+      return { message: (_a2 = message2 !== null && message2 !== void 0 ? message2 : required_error) !== null && _a2 !== void 0 ? _a2 : ctx.defaultError };
     }
     if (iss.code !== "invalid_type")
       return { message: ctx.defaultError };
-    return { message: (_b2 = message !== null && message !== void 0 ? message : invalid_type_error) !== null && _b2 !== void 0 ? _b2 : ctx.defaultError };
+    return { message: (_b2 = message2 !== null && message2 !== void 0 ? message2 : invalid_type_error) !== null && _b2 !== void 0 ? _b2 : ctx.defaultError };
   };
   return { errorMap: customMap, description: description2 };
 }
@@ -42612,14 +42633,14 @@ class ZodType {
     const result = await (isAsync(maybeAsyncResult) ? maybeAsyncResult : Promise.resolve(maybeAsyncResult));
     return handleResult(ctx, result);
   }
-  refine(check, message) {
+  refine(check, message2) {
     const getIssueProperties = (val) => {
-      if (typeof message === "string" || typeof message === "undefined") {
-        return { message };
-      } else if (typeof message === "function") {
-        return message(val);
+      if (typeof message2 === "string" || typeof message2 === "undefined") {
+        return { message: message2 };
+      } else if (typeof message2 === "function") {
+        return message2(val);
       } else {
-        return message;
+        return message2;
       }
     };
     return this._refinement((val, ctx) => {
@@ -43150,11 +43171,11 @@ class ZodString extends ZodType {
     }
     return { status: status3.value, value: input.data };
   }
-  _regex(regex, validation, message) {
+  _regex(regex, validation, message2) {
     return this.refinement((data) => regex.test(data), {
       validation,
       code: ZodIssueCode.invalid_string,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
   _addCheck(check) {
@@ -43163,37 +43184,37 @@ class ZodString extends ZodType {
       checks: [...this._def.checks, check]
     });
   }
-  email(message) {
-    return this._addCheck({ kind: "email", ...errorUtil.errToObj(message) });
+  email(message2) {
+    return this._addCheck({ kind: "email", ...errorUtil.errToObj(message2) });
   }
-  url(message) {
-    return this._addCheck({ kind: "url", ...errorUtil.errToObj(message) });
+  url(message2) {
+    return this._addCheck({ kind: "url", ...errorUtil.errToObj(message2) });
   }
-  emoji(message) {
-    return this._addCheck({ kind: "emoji", ...errorUtil.errToObj(message) });
+  emoji(message2) {
+    return this._addCheck({ kind: "emoji", ...errorUtil.errToObj(message2) });
   }
-  uuid(message) {
-    return this._addCheck({ kind: "uuid", ...errorUtil.errToObj(message) });
+  uuid(message2) {
+    return this._addCheck({ kind: "uuid", ...errorUtil.errToObj(message2) });
   }
-  nanoid(message) {
-    return this._addCheck({ kind: "nanoid", ...errorUtil.errToObj(message) });
+  nanoid(message2) {
+    return this._addCheck({ kind: "nanoid", ...errorUtil.errToObj(message2) });
   }
-  cuid(message) {
-    return this._addCheck({ kind: "cuid", ...errorUtil.errToObj(message) });
+  cuid(message2) {
+    return this._addCheck({ kind: "cuid", ...errorUtil.errToObj(message2) });
   }
-  cuid2(message) {
-    return this._addCheck({ kind: "cuid2", ...errorUtil.errToObj(message) });
+  cuid2(message2) {
+    return this._addCheck({ kind: "cuid2", ...errorUtil.errToObj(message2) });
   }
-  ulid(message) {
-    return this._addCheck({ kind: "ulid", ...errorUtil.errToObj(message) });
+  ulid(message2) {
+    return this._addCheck({ kind: "ulid", ...errorUtil.errToObj(message2) });
   }
-  base64(message) {
-    return this._addCheck({ kind: "base64", ...errorUtil.errToObj(message) });
+  base64(message2) {
+    return this._addCheck({ kind: "base64", ...errorUtil.errToObj(message2) });
   }
-  base64url(message) {
+  base64url(message2) {
     return this._addCheck({
       kind: "base64url",
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
   jwt(options2) {
@@ -43224,8 +43245,8 @@ class ZodString extends ZodType {
       ...errorUtil.errToObj(options2 === null || options2 === void 0 ? void 0 : options2.message)
     });
   }
-  date(message) {
-    return this._addCheck({ kind: "date", message });
+  date(message2) {
+    return this._addCheck({ kind: "date", message: message2 });
   }
   time(options2) {
     if (typeof options2 === "string") {
@@ -43241,14 +43262,14 @@ class ZodString extends ZodType {
       ...errorUtil.errToObj(options2 === null || options2 === void 0 ? void 0 : options2.message)
     });
   }
-  duration(message) {
-    return this._addCheck({ kind: "duration", ...errorUtil.errToObj(message) });
+  duration(message2) {
+    return this._addCheck({ kind: "duration", ...errorUtil.errToObj(message2) });
   }
-  regex(regex, message) {
+  regex(regex, message2) {
     return this._addCheck({
       kind: "regex",
       regex,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
   includes(value, options2) {
@@ -43259,46 +43280,46 @@ class ZodString extends ZodType {
       ...errorUtil.errToObj(options2 === null || options2 === void 0 ? void 0 : options2.message)
     });
   }
-  startsWith(value, message) {
+  startsWith(value, message2) {
     return this._addCheck({
       kind: "startsWith",
       value,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
-  endsWith(value, message) {
+  endsWith(value, message2) {
     return this._addCheck({
       kind: "endsWith",
       value,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
-  min(minLength, message) {
+  min(minLength, message2) {
     return this._addCheck({
       kind: "min",
       value: minLength,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
-  max(maxLength, message) {
+  max(maxLength, message2) {
     return this._addCheck({
       kind: "max",
       value: maxLength,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
-  length(len, message) {
+  length(len, message2) {
     return this._addCheck({
       kind: "length",
       value: len,
-      ...errorUtil.errToObj(message)
+      ...errorUtil.errToObj(message2)
     });
   }
   /**
    * Equivalent to `.min(1)`
    */
-  nonempty(message) {
-    return this.min(1, errorUtil.errToObj(message));
+  nonempty(message2) {
+    return this.min(1, errorUtil.errToObj(message2));
   }
   trim() {
     return new ZodString({
@@ -43492,19 +43513,19 @@ class ZodNumber extends ZodType {
     }
     return { status: status3.value, value: input.data };
   }
-  gte(value, message) {
-    return this.setLimit("min", value, true, errorUtil.toString(message));
+  gte(value, message2) {
+    return this.setLimit("min", value, true, errorUtil.toString(message2));
   }
-  gt(value, message) {
-    return this.setLimit("min", value, false, errorUtil.toString(message));
+  gt(value, message2) {
+    return this.setLimit("min", value, false, errorUtil.toString(message2));
   }
-  lte(value, message) {
-    return this.setLimit("max", value, true, errorUtil.toString(message));
+  lte(value, message2) {
+    return this.setLimit("max", value, true, errorUtil.toString(message2));
   }
-  lt(value, message) {
-    return this.setLimit("max", value, false, errorUtil.toString(message));
+  lt(value, message2) {
+    return this.setLimit("max", value, false, errorUtil.toString(message2));
   }
-  setLimit(kind, value, inclusive, message) {
+  setLimit(kind, value, inclusive, message2) {
     return new ZodNumber({
       ...this._def,
       checks: [
@@ -43513,7 +43534,7 @@ class ZodNumber extends ZodType {
           kind,
           value,
           inclusive,
-          message: errorUtil.toString(message)
+          message: errorUtil.toString(message2)
         }
       ]
     });
@@ -43524,68 +43545,68 @@ class ZodNumber extends ZodType {
       checks: [...this._def.checks, check]
     });
   }
-  int(message) {
+  int(message2) {
     return this._addCheck({
       kind: "int",
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  positive(message) {
+  positive(message2) {
     return this._addCheck({
       kind: "min",
       value: 0,
       inclusive: false,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  negative(message) {
+  negative(message2) {
     return this._addCheck({
       kind: "max",
       value: 0,
       inclusive: false,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  nonpositive(message) {
+  nonpositive(message2) {
     return this._addCheck({
       kind: "max",
       value: 0,
       inclusive: true,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  nonnegative(message) {
+  nonnegative(message2) {
     return this._addCheck({
       kind: "min",
       value: 0,
       inclusive: true,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  multipleOf(value, message) {
+  multipleOf(value, message2) {
     return this._addCheck({
       kind: "multipleOf",
       value,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  finite(message) {
+  finite(message2) {
     return this._addCheck({
       kind: "finite",
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  safe(message) {
+  safe(message2) {
     return this._addCheck({
       kind: "min",
       inclusive: true,
       value: Number.MIN_SAFE_INTEGER,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     })._addCheck({
       kind: "max",
       inclusive: true,
       value: Number.MAX_SAFE_INTEGER,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
   get minValue() {
@@ -43707,19 +43728,19 @@ class ZodBigInt extends ZodType {
     });
     return INVALID;
   }
-  gte(value, message) {
-    return this.setLimit("min", value, true, errorUtil.toString(message));
+  gte(value, message2) {
+    return this.setLimit("min", value, true, errorUtil.toString(message2));
   }
-  gt(value, message) {
-    return this.setLimit("min", value, false, errorUtil.toString(message));
+  gt(value, message2) {
+    return this.setLimit("min", value, false, errorUtil.toString(message2));
   }
-  lte(value, message) {
-    return this.setLimit("max", value, true, errorUtil.toString(message));
+  lte(value, message2) {
+    return this.setLimit("max", value, true, errorUtil.toString(message2));
   }
-  lt(value, message) {
-    return this.setLimit("max", value, false, errorUtil.toString(message));
+  lt(value, message2) {
+    return this.setLimit("max", value, false, errorUtil.toString(message2));
   }
-  setLimit(kind, value, inclusive, message) {
+  setLimit(kind, value, inclusive, message2) {
     return new ZodBigInt({
       ...this._def,
       checks: [
@@ -43728,7 +43749,7 @@ class ZodBigInt extends ZodType {
           kind,
           value,
           inclusive,
-          message: errorUtil.toString(message)
+          message: errorUtil.toString(message2)
         }
       ]
     });
@@ -43739,43 +43760,43 @@ class ZodBigInt extends ZodType {
       checks: [...this._def.checks, check]
     });
   }
-  positive(message) {
+  positive(message2) {
     return this._addCheck({
       kind: "min",
       value: BigInt(0),
       inclusive: false,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  negative(message) {
+  negative(message2) {
     return this._addCheck({
       kind: "max",
       value: BigInt(0),
       inclusive: false,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  nonpositive(message) {
+  nonpositive(message2) {
     return this._addCheck({
       kind: "max",
       value: BigInt(0),
       inclusive: true,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  nonnegative(message) {
+  nonnegative(message2) {
     return this._addCheck({
       kind: "min",
       value: BigInt(0),
       inclusive: true,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  multipleOf(value, message) {
+  multipleOf(value, message2) {
     return this._addCheck({
       kind: "multipleOf",
       value,
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
   get minValue() {
@@ -43899,18 +43920,18 @@ class ZodDate extends ZodType {
       checks: [...this._def.checks, check]
     });
   }
-  min(minDate, message) {
+  min(minDate, message2) {
     return this._addCheck({
       kind: "min",
       value: minDate.getTime(),
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
-  max(maxDate, message) {
+  max(maxDate, message2) {
     return this._addCheck({
       kind: "max",
       value: maxDate.getTime(),
-      message: errorUtil.toString(message)
+      message: errorUtil.toString(message2)
     });
   }
   get minDate() {
@@ -44142,26 +44163,26 @@ class ZodArray extends ZodType {
   get element() {
     return this._def.type;
   }
-  min(minLength, message) {
+  min(minLength, message2) {
     return new ZodArray({
       ...this._def,
-      minLength: { value: minLength, message: errorUtil.toString(message) }
+      minLength: { value: minLength, message: errorUtil.toString(message2) }
     });
   }
-  max(maxLength, message) {
+  max(maxLength, message2) {
     return new ZodArray({
       ...this._def,
-      maxLength: { value: maxLength, message: errorUtil.toString(message) }
+      maxLength: { value: maxLength, message: errorUtil.toString(message2) }
     });
   }
-  length(len, message) {
+  length(len, message2) {
     return new ZodArray({
       ...this._def,
-      exactLength: { value: len, message: errorUtil.toString(message) }
+      exactLength: { value: len, message: errorUtil.toString(message2) }
     });
   }
-  nonempty(message) {
-    return this.min(1, message);
+  nonempty(message2) {
+    return this.min(1, message2);
   }
 }
 ZodArray.create = (schema2, params) => {
@@ -44303,18 +44324,18 @@ class ZodObject extends ZodType {
   get shape() {
     return this._def.shape();
   }
-  strict(message) {
+  strict(message2) {
     errorUtil.errToObj;
     return new ZodObject({
       ...this._def,
       unknownKeys: "strict",
-      ...message !== void 0 ? {
+      ...message2 !== void 0 ? {
         errorMap: (issue, ctx) => {
           var _a2, _b2, _c2, _d2;
           const defaultError = (_c2 = (_b2 = (_a2 = this._def).errorMap) === null || _b2 === void 0 ? void 0 : _b2.call(_a2, issue, ctx).message) !== null && _c2 !== void 0 ? _c2 : ctx.defaultError;
           if (issue.code === "unrecognized_keys")
             return {
-              message: (_d2 = errorUtil.errToObj(message).message) !== null && _d2 !== void 0 ? _d2 : defaultError
+              message: (_d2 = errorUtil.errToObj(message2).message) !== null && _d2 !== void 0 ? _d2 : defaultError
             };
           return {
             message: defaultError
@@ -45070,23 +45091,23 @@ class ZodSet extends ZodType {
       return finalizeSet(elements);
     }
   }
-  min(minSize, message) {
+  min(minSize, message2) {
     return new ZodSet({
       ...this._def,
-      minSize: { value: minSize, message: errorUtil.toString(message) }
+      minSize: { value: minSize, message: errorUtil.toString(message2) }
     });
   }
-  max(maxSize, message) {
+  max(maxSize, message2) {
     return new ZodSet({
       ...this._def,
-      maxSize: { value: maxSize, message: errorUtil.toString(message) }
+      maxSize: { value: maxSize, message: errorUtil.toString(message2) }
     });
   }
-  size(size, message) {
-    return this.min(size, message).max(size, message);
+  size(size, message2) {
+    return this.min(size, message2).max(size, message2);
   }
-  nonempty(message) {
-    return this.min(1, message);
+  nonempty(message2) {
+    return this.min(1, message2);
   }
 }
 ZodSet.create = (valueType, params) => {
@@ -46251,11 +46272,24 @@ const createInsertSchema = (entity, refine) => {
   const columns = getColumns(entity);
   return handleColumns(columns, {}, insertConditions);
 };
+const profiles = pgTable("profiles", {
+  userId: varchar("user_id").primaryKey(),
+  displayName: text("display_name"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+const insertProfileSchema = createInsertSchema(profiles).omit({
+  createdAt: true,
+  updatedAt: true
+});
+const updateProfileSchema = insertProfileSchema.partial().omit({ userId: true });
 const lists = pgTable("lists", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   emoji: text("emoji").notNull().default("📋"),
   color: text("color"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -46273,11 +46307,15 @@ const tasks = pgTable("tasks", {
   scheduledDate: timestamp("scheduled_date"),
   // Persisted aggregate of all-time seconds logged across all sessions for this task
   timeLoggedSeconds: integer("time_logged_seconds").notNull().default(0),
+  // Order of the task within a given day's list. When set, UI sorts by this ascending within that date.
+  dayOrder: integer("day_order"),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow()
 });
 const baseInsertTaskSchema = createInsertSchema(tasks).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  userId: true
 });
 const insertTaskSchema = baseInsertTaskSchema.extend({
   startTime: z.preprocess((val) => {
@@ -46304,11 +46342,13 @@ const insertTaskSchema = baseInsertTaskSchema.extend({
       return isNaN(d2.getTime()) ? val : d2;
     }
     return val;
-  }, z.date().nullable()).optional()
+  }, z.date().nullable()).optional(),
+  dayOrder: z.number().int().optional().nullable()
 });
 const updateTaskSchema = insertTaskSchema.partial();
 const insertListSchema = createInsertSchema(lists).omit({
   id: true,
+  userId: true,
   createdAt: true,
   updatedAt: true
 });
@@ -46318,8 +46358,9 @@ const goals = pgTable("goals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   type: varchar("type").notNull(),
   // Anchor date is normalized to the start of the period (Mon for weekly, 1st for monthly, Jan 1 for yearly)
-  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  anchorDate: timestamp("anchor_date").notNull(),
   value: text("value").notNull().default(""),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -46333,8 +46374,79 @@ const insertGoalSchema = createInsertSchema(goals).omit({ id: true, createdAt: t
     }
     return val;
   }, z.date())
-});
+}).omit({ userId: true });
 const updateGoalSchema = insertGoalSchema.partial().omit({ type: true, anchorDate: true });
+const reviewTypeEnum = z.enum(["daily", "weekly"]);
+const reviewGoalStatusEnum = z.enum(["yes", "partially", "no"]);
+const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  productivityRating: integer("productivity_rating").default(0),
+  goalAchievementStatus: text("goal_achievement_status"),
+  achievedGoal: boolean("achieved_goal"),
+  achievedGoalReason: text("achieved_goal_reason"),
+  satisfied: boolean("satisfied"),
+  satisfiedReason: text("satisfied_reason"),
+  improvements: text("improvements"),
+  biggestWin: text("biggest_win"),
+  topChallenge: text("top_challenge"),
+  topDistraction: text("top_distraction"),
+  nextFocusPlan: text("next_focus_plan"),
+  energyLevel: integer("energy_level").default(0),
+  mood: text("mood"),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, createdAt: true, updatedAt: true, userId: true }).extend({
+  type: reviewTypeEnum,
+  anchorDate: z.preprocess((val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === "string" || typeof val === "number") {
+      const d2 = new Date(val);
+      return isNaN(d2.getTime()) ? val : d2;
+    }
+    return val;
+  }, z.date()),
+  productivityRating: z.number().min(0).max(10).optional(),
+  goalAchievementStatus: reviewGoalStatusEnum.nullable().optional(),
+  achievedGoal: z.boolean().nullable().optional(),
+  achievedGoalReason: z.string().optional().nullable(),
+  satisfied: z.boolean().nullable().optional(),
+  satisfiedReason: z.string().optional().nullable(),
+  improvements: z.string().optional().nullable(),
+  biggestWin: z.string().optional().nullable(),
+  topChallenge: z.string().optional().nullable(),
+  topDistraction: z.string().optional().nullable(),
+  nextFocusPlan: z.string().optional().nullable(),
+  energyLevel: z.number().min(0).max(10).optional(),
+  mood: z.string().optional().nullable()
+});
+const updateReviewSchema = insertReviewSchema.partial().omit({ type: true, anchorDate: true });
+const noteTypeEnum = z.enum(["daily", "weekly", "monthly", "yearly"]);
+const notes = pgTable("notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  anchorDate: date("anchor_date", { mode: "date" }).notNull(),
+  content: text("content"),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, updatedAt: true, userId: true }).extend({
+  type: noteTypeEnum,
+  anchorDate: z.preprocess((val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === "string" || typeof val === "number") {
+      const d2 = new Date(val);
+      return isNaN(d2.getTime()) ? val : d2;
+    }
+    return val;
+  }, z.date()),
+  content: z.string().optional().nullable()
+});
+const updateNoteSchema = insertNoteSchema.partial().omit({ type: true, anchorDate: true });
 const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
@@ -46351,6 +46463,7 @@ const timerSessions = pgTable("timer_sessions", {
   endTime: timestamp("end_time"),
   durationSeconds: integer("duration_seconds").default(0),
   isActive: boolean("is_active").default(false),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -46358,17 +46471,20 @@ const taskEstimates = pgTable("task_estimates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   taskId: varchar("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }).unique(),
   estimatedDurationMinutes: integer("estimated_duration_minutes").notNull(),
+  userId: varchar("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow()
 });
 const insertTimerSessionSchema = createInsertSchema(timerSessions).omit({
   id: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
+  userId: true
 });
 const updateTimerSessionSchema = insertTimerSessionSchema.partial();
 const insertTaskEstimateSchema = createInsertSchema(taskEstimates).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  userId: true
 });
 const updateTaskEstimateSchema = insertTaskEstimateSchema.partial();
 const schema = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
@@ -46377,16 +46493,28 @@ const schema = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   goals,
   insertGoalSchema,
   insertListSchema,
+  insertNoteSchema,
+  insertProfileSchema,
+  insertReviewSchema,
   insertTaskEstimateSchema,
   insertTaskSchema,
   insertTimerSessionSchema,
   insertUserSchema,
   lists,
+  noteTypeEnum,
+  notes,
+  profiles,
+  reviewGoalStatusEnum,
+  reviewTypeEnum,
+  reviews,
   taskEstimates,
   tasks,
   timerSessions,
   updateGoalSchema,
   updateListSchema,
+  updateNoteSchema,
+  updateProfileSchema,
+  updateReviewSchema,
   updateTaskEstimateSchema,
   updateTaskSchema,
   updateTimerSessionSchema,
@@ -46674,105 +46802,17 @@ function getDb() {
   return dbInstance;
 }
 class TimerError extends Error {
-  constructor(message, code, details) {
-    super(message);
+  constructor(message2, code, details) {
+    super(message2);
     this.code = code;
     this.details = details;
     this.name = "TimerError";
   }
 }
-class TimerValidationError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_VALIDATION_ERROR", details);
-    this.name = "TimerValidationError";
-  }
-}
-class TimerStateError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_STATE_ERROR", details);
-    this.name = "TimerStateError";
-  }
-}
-class TimerSyncError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_SYNC_ERROR", details);
-    this.name = "TimerSyncError";
-  }
-}
 class TimerPersistenceError extends TimerError {
-  constructor(message, details) {
-    super(message, "TIMER_PERSISTENCE_ERROR", details);
+  constructor(message2, details) {
+    super(message2, "TIMER_PERSISTENCE_ERROR", details);
     this.name = "TimerPersistenceError";
-  }
-}
-const TIMER_ERROR_CODES = {
-  // Validation errors
-  INVALID_TASK_ID: "INVALID_TASK_ID",
-  INVALID_SESSION: "INVALID_SESSION",
-  INVALID_DURATION: "INVALID_DURATION",
-  TIMER_STATE_ERROR: "TIMER_STATE_ERROR",
-  // State errors
-  NO_ACTIVE_TIMER: "NO_ACTIVE_TIMER",
-  TIMER_ALREADY_ACTIVE: "TIMER_ALREADY_ACTIVE",
-  TIMER_NOT_PAUSED: "TIMER_NOT_PAUSED",
-  TIMER_ALREADY_STOPPED: "TIMER_ALREADY_STOPPED",
-  // Sync errors
-  SYNC_CONFLICT: "SYNC_CONFLICT",
-  NETWORK_ERROR: "NETWORK_ERROR",
-  SERVER_ERROR: "SERVER_ERROR",
-  // Persistence errors
-  STORAGE_FULL: "STORAGE_FULL",
-  STORAGE_UNAVAILABLE: "STORAGE_UNAVAILABLE",
-  CORRUPTION_DETECTED: "CORRUPTION_DETECTED",
-  RECOVERY_FAILED: "RECOVERY_FAILED"
-};
-class TimerErrorHandler {
-  static handleError(error2) {
-    if (error2 instanceof TimerError) {
-      return error2;
-    }
-    if (error2 instanceof Error) {
-      return new TimerError(error2.message, "UNKNOWN_ERROR", { originalError: error2 });
-    }
-    return new TimerError("An unknown error occurred", "UNKNOWN_ERROR", { error: error2 });
-  }
-  static isRetryableError(error2) {
-    const retryableCodes = [
-      TIMER_ERROR_CODES.NETWORK_ERROR,
-      TIMER_ERROR_CODES.SERVER_ERROR,
-      TIMER_ERROR_CODES.STORAGE_UNAVAILABLE
-    ];
-    return retryableCodes.includes(error2.code);
-  }
-  static getErrorMessage(error2) {
-    const errorMessages = {
-      [TIMER_ERROR_CODES.INVALID_TASK_ID]: "Invalid task ID provided",
-      [TIMER_ERROR_CODES.INVALID_SESSION]: "Invalid timer session data",
-      [TIMER_ERROR_CODES.INVALID_DURATION]: "Invalid duration value",
-      [TIMER_ERROR_CODES.NO_ACTIVE_TIMER]: "No active timer found",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE]: "A timer is already running",
-      [TIMER_ERROR_CODES.TIMER_NOT_PAUSED]: "Timer is not in paused state",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED]: "Timer has already been stopped",
-      [TIMER_ERROR_CODES.SYNC_CONFLICT]: "Timer state conflict detected",
-      [TIMER_ERROR_CODES.NETWORK_ERROR]: "Network connection error",
-      [TIMER_ERROR_CODES.SERVER_ERROR]: "Server error occurred",
-      [TIMER_ERROR_CODES.STORAGE_FULL]: "Local storage is full",
-      [TIMER_ERROR_CODES.STORAGE_UNAVAILABLE]: "Local storage is unavailable",
-      [TIMER_ERROR_CODES.CORRUPTION_DETECTED]: "Timer data corruption detected"
-    };
-    return errorMessages[error2.code] || error2.message || "An unknown error occurred";
-  }
-  static createUserFriendlyMessage(error2) {
-    const userMessages = {
-      [TIMER_ERROR_CODES.INVALID_TASK_ID]: "Please select a valid task to start the timer.",
-      [TIMER_ERROR_CODES.NO_ACTIVE_TIMER]: "No timer is currently running.",
-      [TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE]: "Another timer is already running. Please stop it first or switch timers.",
-      [TIMER_ERROR_CODES.NETWORK_ERROR]: "Connection lost. Your timer will continue running and sync when connection is restored.",
-      [TIMER_ERROR_CODES.SERVER_ERROR]: "Server temporarily unavailable. Your timer data will be saved locally.",
-      [TIMER_ERROR_CODES.STORAGE_FULL]: "Local storage is full. Please clear some data or contact support.",
-      [TIMER_ERROR_CODES.CORRUPTION_DETECTED]: "Timer data appears corrupted. Please restart the timer."
-    };
-    return userMessages[error2.code] || "Something went wrong with the timer. Please try again.";
   }
 }
 class MemStorage {
@@ -46783,9 +46823,12 @@ class MemStorage {
     this.timerSessions = /* @__PURE__ */ new Map();
     this.taskEstimates = /* @__PURE__ */ new Map();
     this.goals = /* @__PURE__ */ new Map();
+    this.reviewsMap = /* @__PURE__ */ new Map();
+    this.notesMap = /* @__PURE__ */ new Map();
     this.initializeSampleData();
   }
   initializeSampleData() {
+    const devUserId = process.env.DEV_USER_ID || "dev-user-00000000-0000-0000-0000-000000000000";
     const now = /* @__PURE__ */ new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const sampleTasks = [
@@ -46804,7 +46847,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       {
         id: randomUUID(),
@@ -46820,7 +46865,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       // Tuesday - completed
       {
@@ -46837,7 +46884,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       // Today - mixed
       {
@@ -46854,7 +46903,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       {
         id: randomUUID(),
@@ -46870,7 +46921,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       {
         id: randomUUID(),
@@ -46886,7 +46939,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       {
         id: randomUUID(),
@@ -46902,7 +46957,9 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       },
       // Tomorrow
       {
@@ -46919,10 +46976,12 @@ class MemStorage {
         createdAt: /* @__PURE__ */ new Date(),
         listId: null,
         scheduledDate: null,
-        timeLoggedSeconds: 0
+        timeLoggedSeconds: 0,
+        dayOrder: null,
+        userId: devUserId
       }
     ];
-    sampleTasks.forEach((task) => this.tasks.set(task.id, { ...task, timeLoggedSeconds: task.timeLoggedSeconds ?? 0 }));
+    sampleTasks.forEach((task) => this.tasks.set(task.id, { ...task, timeLoggedSeconds: task.timeLoggedSeconds ?? 0, dayOrder: task.dayOrder ?? null }));
   }
   async getUser(id) {
     return this.users.get(id);
@@ -46939,31 +46998,33 @@ class MemStorage {
     return user;
   }
   // List operations
-  async getLists() {
-    return Array.from(this.lists.values()).sort((a, b) => {
+  async getLists(userId) {
+    return Array.from(this.lists.values()).filter((l) => l.userId === userId).sort((a, b) => {
       const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return aTime - bTime;
     });
   }
-  async getList(id) {
-    return this.lists.get(id);
+  async getList(userId, id) {
+    const l = this.lists.get(id);
+    return l && l.userId === userId ? l : void 0;
   }
-  async createList(insertList) {
+  async createList(userId, insertList) {
     const id = randomUUID();
     const list = {
       ...insertList,
       id,
       emoji: insertList.emoji ?? "📋",
       color: insertList.color ?? null,
+      userId,
       createdAt: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
     };
     this.lists.set(id, list);
     return list;
   }
-  async updateList(id, updateList) {
-    const existingList = this.lists.get(id);
+  async updateList(userId, id, updateList) {
+    const existingList = await this.getList(userId, id);
     if (!existingList) return void 0;
     const updatedList = {
       ...existingList,
@@ -46973,18 +47034,20 @@ class MemStorage {
     this.lists.set(id, updatedList);
     return updatedList;
   }
-  async deleteList(id) {
-    Array.from(this.tasks.values()).filter((task) => task.listId === id).forEach((task) => {
+  async deleteList(userId, id) {
+    Array.from(this.tasks.values()).filter((task) => task.listId === id && task.userId === userId).forEach((task) => {
       const updatedTask = { ...task, listId: null };
       this.tasks.set(task.id, updatedTask);
     });
+    const l = this.lists.get(id);
+    if (!l || l.userId !== userId) return false;
     return this.lists.delete(id);
   }
-  async getTasksByList(listId) {
-    return Array.from(this.tasks.values()).filter((task) => task.listId === listId).sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  async getTasksByList(userId, listId) {
+    return Array.from(this.tasks.values()).filter((task) => task.listId === listId && task.userId === userId).sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
-  async getTasks(startDate, endDate, includeUnscheduled) {
-    let tasks2 = Array.from(this.tasks.values());
+  async getTasks(userId, startDate, endDate, includeUnscheduled) {
+    let tasks2 = Array.from(this.tasks.values()).filter((t) => t.userId === userId);
     if (startDate && endDate) {
       tasks2 = tasks2.filter((task) => {
         const inStartRange = task.startTime >= startDate && task.startTime <= endDate;
@@ -46992,7 +47055,7 @@ class MemStorage {
         return inStartRange || scheduled;
       });
       if (includeUnscheduled) {
-        const unscheduled = Array.from(this.tasks.values()).filter((t) => !t.scheduledDate);
+        const unscheduled = Array.from(this.tasks.values()).filter((t) => !t.scheduledDate && t.userId === userId);
         const byId = new Map(tasks2.map((t) => [t.id, t]));
         for (const t of unscheduled) {
           if (!byId.has(t.id)) {
@@ -47002,16 +47065,36 @@ class MemStorage {
         tasks2 = Array.from(byId.values());
       }
     }
-    return tasks2.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    return tasks2.sort((a, b) => {
+      const aHasSched = Boolean(a.scheduledDate);
+      const bHasSched = Boolean(b.scheduledDate);
+      if (aHasSched && bHasSched) {
+        const aKey = new Date(a.scheduledDate.getFullYear(), a.scheduledDate.getMonth(), a.scheduledDate.getDate()).getTime();
+        const bKey = new Date(b.scheduledDate.getFullYear(), b.scheduledDate.getMonth(), b.scheduledDate.getDate()).getTime();
+        if (aKey !== bKey) return aKey - bKey;
+        const aOrder = a.dayOrder;
+        const bOrder = b.dayOrder;
+        const aHasOrder = typeof aOrder === "number";
+        const bHasOrder = typeof bOrder === "number";
+        if (aHasOrder && bHasOrder) return aOrder - bOrder;
+        if (aHasOrder) return -1;
+        if (bHasOrder) return 1;
+      } else if (aHasSched !== bHasSched) {
+        return aHasSched ? -1 : 1;
+      }
+      return a.startTime.getTime() - b.startTime.getTime();
+    });
   }
-  async getTask(id) {
-    return this.tasks.get(id);
+  async getTask(userId, id) {
+    const t = this.tasks.get(id);
+    return t && t.userId === userId ? t : void 0;
   }
-  async createTask(insertTask) {
+  async createTask(userId, insertTask) {
     const id = randomUUID();
     const task = {
       ...insertTask,
       id,
+      userId,
       createdAt: /* @__PURE__ */ new Date(),
       description: insertTask.description || null,
       notes: insertTask.notes || null,
@@ -47019,32 +47102,36 @@ class MemStorage {
       priority: insertTask.priority || "medium",
       listId: insertTask.listId ?? null,
       scheduledDate: insertTask.scheduledDate ?? null,
-      timeLoggedSeconds: insertTask.timeLoggedSeconds ?? 0
+      timeLoggedSeconds: insertTask.timeLoggedSeconds ?? 0,
+      dayOrder: insertTask.dayOrder ?? null
     };
     this.tasks.set(id, task);
     return task;
   }
-  async updateTask(id, updateTask) {
-    const existingTask = this.tasks.get(id);
+  async updateTask(userId, id, updateTask) {
+    const existingTask = await this.getTask(userId, id);
     if (!existingTask) return void 0;
     const updatedTask = { ...existingTask, ...updateTask };
     this.tasks.set(id, updatedTask);
     return updatedTask;
   }
-  async deleteTask(id) {
+  async deleteTask(userId, id) {
+    const t = this.tasks.get(id);
+    if (!t || t.userId !== userId) return false;
     return this.tasks.delete(id);
   }
   // Timer session operations
-  async getActiveTimerSession() {
-    return Array.from(this.timerSessions.values()).find((session) => session.isActive);
+  async getActiveTimerSession(userId) {
+    return Array.from(this.timerSessions.values()).find((session) => session.isActive && session.userId === userId);
   }
-  async getTimerSession(id) {
-    return this.timerSessions.get(id);
+  async getTimerSession(userId, id) {
+    const s2 = this.timerSessions.get(id);
+    return s2 && s2.userId === userId ? s2 : void 0;
   }
-  async getTimerSessionsByTask(taskId) {
-    return Array.from(this.timerSessions.values()).filter((session) => session.taskId === taskId).sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+  async getTimerSessionsByTask(userId, taskId) {
+    return Array.from(this.timerSessions.values()).filter((session) => session.taskId === taskId && session.userId === userId).sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
   }
-  async createTimerSession(insertSession) {
+  async createTimerSession(userId, insertSession) {
     const id = randomUUID();
     const session = {
       ...insertSession,
@@ -47052,14 +47139,15 @@ class MemStorage {
       endTime: insertSession.endTime ?? null,
       durationSeconds: insertSession.durationSeconds ?? 0,
       isActive: insertSession.isActive ?? false,
+      userId,
       createdAt: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
     };
     this.timerSessions.set(id, session);
     return session;
   }
-  async updateTimerSession(id, updateSession) {
-    const existingSession = this.timerSessions.get(id);
+  async updateTimerSession(userId, id, updateSession) {
+    const existingSession = await this.getTimerSession(userId, id);
     if (!existingSession) return void 0;
     const updatedSession = {
       ...existingSession,
@@ -47069,11 +47157,13 @@ class MemStorage {
     this.timerSessions.set(id, updatedSession);
     return updatedSession;
   }
-  async deleteTimerSession(id) {
+  async deleteTimerSession(userId, id) {
+    const s2 = this.timerSessions.get(id);
+    if (!s2 || s2.userId !== userId) return false;
     return this.timerSessions.delete(id);
   }
-  async stopActiveTimerSessions() {
-    const activeSessions = Array.from(this.timerSessions.values()).filter((session) => session.isActive);
+  async stopActiveTimerSessions(userId) {
+    const activeSessions = Array.from(this.timerSessions.values()).filter((session) => session.isActive && session.userId === userId);
     const now = /* @__PURE__ */ new Date();
     activeSessions.forEach((session) => {
       const elapsedSeconds = Math.floor((now.getTime() - session.startTime.getTime()) / 1e3);
@@ -47091,47 +47181,48 @@ class MemStorage {
       }
     });
   }
-  async incrementTaskLoggedTime(taskId, deltaSeconds) {
-    const task = this.tasks.get(taskId);
+  async incrementTaskLoggedTime(userId, taskId, deltaSeconds) {
+    const task = await this.getTask(userId, taskId);
     if (!task) return;
     const add = Math.max(0, Math.floor(deltaSeconds || 0));
     this.tasks.set(taskId, { ...task, timeLoggedSeconds: (task.timeLoggedSeconds ?? 0) + add });
   }
   // Task estimate operations
-  async getTaskEstimate(taskId) {
-    return Array.from(this.taskEstimates.values()).find((estimate) => estimate.taskId === taskId);
+  async getTaskEstimate(userId, taskId) {
+    return Array.from(this.taskEstimates.values()).find((estimate) => estimate.taskId === taskId && estimate.userId === userId);
   }
-  async createTaskEstimate(insertEstimate) {
+  async createTaskEstimate(userId, insertEstimate) {
     const id = randomUUID();
     const estimate = {
       ...insertEstimate,
       id,
+      userId,
       createdAt: /* @__PURE__ */ new Date()
     };
     this.taskEstimates.set(id, estimate);
     return estimate;
   }
-  async updateTaskEstimate(taskId, updateEstimate) {
-    const existingEstimate = Array.from(this.taskEstimates.values()).find((est) => est.taskId === taskId);
+  async updateTaskEstimate(userId, taskId, updateEstimate) {
+    const existingEstimate = Array.from(this.taskEstimates.values()).find((est) => est.taskId === taskId && est.userId === userId);
     if (!existingEstimate) return void 0;
     const updatedEstimate = { ...existingEstimate, ...updateEstimate };
     this.taskEstimates.set(existingEstimate.id, updatedEstimate);
     return updatedEstimate;
   }
-  async deleteTaskEstimate(taskId) {
-    const estimate = Array.from(this.taskEstimates.entries()).find(([_, est]) => est.taskId === taskId);
+  async deleteTaskEstimate(userId, taskId) {
+    const estimate = Array.from(this.taskEstimates.entries()).find(([_, est]) => est.taskId === taskId && est.userId === userId);
     if (!estimate) return false;
     return this.taskEstimates.delete(estimate[0]);
   }
   // Daily summary operations
-  async getDailySummary(date2) {
+  async getDailySummary(userId, date2) {
     const startOfDay = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
     const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1e3);
-    return this.getDailySummaryByDateRange(startOfDay, endOfDay);
+    return this.getDailySummaryByDateRange(userId, startOfDay, endOfDay);
   }
-  async getDailySummaryByDateRange(startDate, endDate) {
+  async getDailySummaryByDateRange(userId, startDate, endDate) {
     const sessions = Array.from(this.timerSessions.values()).filter(
-      (session) => session.endTime && session.startTime >= startDate && session.startTime < endDate
+      (session) => session.endTime && session.userId === userId && session.startTime >= startDate && session.startTime < endDate
     );
     const summaryMap = /* @__PURE__ */ new Map();
     sessions.forEach((session) => {
@@ -47156,11 +47247,12 @@ class MemStorage {
     const d2 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
     return `${type3}:${d2.toISOString().slice(0, 10)}`;
   }
-  async getGoal(type3, anchorDate) {
+  async getGoal(userId, type3, anchorDate) {
     const key = this.goalKey(type3, anchorDate);
-    return this.goals.get(key);
+    const g = this.goals.get(key);
+    return g && g.userId === userId ? g : void 0;
   }
-  async setGoal(type3, anchorDate, value) {
+  async setGoal(userId, type3, anchorDate, value) {
     const key = this.goalKey(type3, anchorDate);
     const existing = this.goals.get(key);
     const base = existing ?? {
@@ -47168,11 +47260,79 @@ class MemStorage {
       type: type3,
       anchorDate: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()),
       value: "",
+      userId,
       createdAt: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
     };
     const updated = { ...base, value, updatedAt: /* @__PURE__ */ new Date() };
     this.goals.set(key, updated);
+    return updated;
+  }
+  reviewKey(type3, anchorDate) {
+    const d2 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    return `${type3}:${d2.toISOString().slice(0, 10)}`;
+  }
+  async getReview(userId, type3, anchorDate) {
+    const key = this.reviewKey(type3, anchorDate);
+    const r = this.reviewsMap.get(key);
+    return r && r.userId === userId ? r : void 0;
+  }
+  async setReview(userId, type3, anchorDate, values) {
+    const key = this.reviewKey(type3, anchorDate);
+    const existing = this.reviewsMap.get(key);
+    const base = existing ?? {
+      id: randomUUID(),
+      type: type3,
+      anchorDate: new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate()),
+      productivityRating: 0,
+      achievedGoal: null,
+      achievedGoalReason: null,
+      satisfied: null,
+      satisfiedReason: null,
+      improvements: null,
+      biggestWin: null,
+      topChallenge: null,
+      topDistraction: null,
+      nextFocusPlan: null,
+      energyLevel: 0,
+      mood: null,
+      goalAchievementStatus: null,
+      userId,
+      createdAt: /* @__PURE__ */ new Date(),
+      updatedAt: /* @__PURE__ */ new Date()
+    };
+    const updated = {
+      ...base,
+      ...values,
+      updatedAt: /* @__PURE__ */ new Date()
+    };
+    this.reviewsMap.set(key, updated);
+    return updated;
+  }
+  noteKey(type3, anchorDate) {
+    const d2 = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+    return `${type3}:${d2.toISOString().slice(0, 10)}`;
+  }
+  async getNote(userId, type3, anchorDate) {
+    const key = this.noteKey(type3, anchorDate);
+    const n = this.notesMap.get(key);
+    if (!n || n.userId !== userId) return void 0;
+    return { ...n, anchorDate };
+  }
+  async setNote(userId, type3, anchorDate, values) {
+    const key = this.noteKey(type3, anchorDate);
+    const existing = this.notesMap.get(key);
+    const base = existing ?? {
+      id: randomUUID(),
+      type: type3,
+      anchorDate,
+      content: null,
+      userId,
+      createdAt: /* @__PURE__ */ new Date(),
+      updatedAt: /* @__PURE__ */ new Date()
+    };
+    const updated = { ...base, ...values, updatedAt: /* @__PURE__ */ new Date() };
+    this.notesMap.set(key, updated);
     return updated;
   }
 }
@@ -47216,45 +47376,45 @@ class DbStorage {
     });
   }
   // List operations
-  async getLists() {
+  async getLists(userId) {
     return this.withPersistence("get_lists", {}, async () => {
-      return await this.db.select().from(lists).orderBy(lists.createdAt);
+      return await this.db.select().from(lists).where(eq(lists.userId, userId)).orderBy(lists.createdAt);
     });
   }
-  async getList(id) {
+  async getList(userId, id) {
     return this.withPersistence("get_list", { id }, async () => {
-      const result = await this.db.select().from(lists).where(eq(lists.id, id)).limit(1);
+      const result = await this.db.select().from(lists).where(and(eq(lists.id, id), eq(lists.userId, userId))).limit(1);
       return result[0];
     });
   }
-  async createList(insertList) {
+  async createList(userId, insertList) {
     return this.withPersistence("create_list", { name: insertList.name }, async () => {
-      const result = await this.db.insert(lists).values(insertList).returning();
+      const result = await this.db.insert(lists).values({ ...insertList, userId }).returning();
       return result[0];
     });
   }
-  async updateList(id, updateList) {
+  async updateList(userId, id, updateList) {
     return this.withPersistence("update_list", { id }, async () => {
-      const result = await this.db.update(lists).set({ ...updateList, updatedAt: /* @__PURE__ */ new Date() }).where(eq(lists.id, id)).returning();
+      const result = await this.db.update(lists).set({ ...updateList, updatedAt: /* @__PURE__ */ new Date() }).where(and(eq(lists.id, id), eq(lists.userId, userId))).returning();
       return result[0];
     });
   }
-  async deleteList(id) {
+  async deleteList(userId, id) {
     return this.withPersistence("delete_list", { id }, async () => {
       const db = this.db;
       return await db.transaction(async (tx) => {
-        await tx.update(tasks).set({ listId: null }).where(eq(tasks.listId, id));
-        const result = await tx.delete(lists).where(eq(lists.id, id)).returning({ id: lists.id });
+        await tx.update(tasks).set({ listId: null }).where(and(eq(tasks.listId, id), eq(tasks.userId, userId)));
+        const result = await tx.delete(lists).where(and(eq(lists.id, id), eq(lists.userId, userId))).returning({ id: lists.id });
         return result.length > 0;
       });
     });
   }
-  async getTasksByList(listId) {
+  async getTasksByList(userId, listId) {
     return this.withPersistence("get_tasks_by_list", { listId }, async () => {
-      return await this.db.select().from(tasks).where(eq(tasks.listId, listId)).orderBy(tasks.startTime);
+      return await this.db.select().from(tasks).where(and(eq(tasks.listId, listId), eq(tasks.userId, userId))).orderBy(tasks.startTime);
     });
   }
-  async getTasks(startDate, endDate, includeUnscheduled) {
+  async getTasks(userId, startDate, endDate, includeUnscheduled) {
     return this.withPersistence("get_tasks", {
       startDate: startDate == null ? void 0 : startDate.toISOString(),
       endDate: endDate == null ? void 0 : endDate.toISOString(),
@@ -47262,57 +47422,57 @@ class DbStorage {
     }, async () => {
       if (startDate && endDate) {
         const baseWhere = or(
-          and(gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)),
-          and(gte(tasks.scheduledDate, startDate), lte(tasks.scheduledDate, endDate))
+          and(eq(tasks.userId, userId), gte(tasks.startTime, startDate), lte(tasks.startTime, endDate)),
+          and(eq(tasks.userId, userId), gte(tasks.scheduledDate, startDate), lte(tasks.scheduledDate, endDate))
         );
-        const whereClause = includeUnscheduled ? or(baseWhere, isNull(tasks.scheduledDate)) : baseWhere;
+        const whereClause = includeUnscheduled ? or(baseWhere, and(eq(tasks.userId, userId), isNull(tasks.scheduledDate))) : baseWhere;
         return await this.db.select().from(tasks).where(whereClause).orderBy(tasks.startTime);
       }
-      return await this.db.select().from(tasks).orderBy(tasks.startTime);
+      return await this.db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(tasks.startTime);
     });
   }
-  async getTask(id) {
+  async getTask(userId, id) {
     return this.withPersistence("get_task", { id }, async () => {
-      const result = await this.db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+      const result = await this.db.select().from(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId))).limit(1);
       return result[0];
     });
   }
-  async createTask(insertTask) {
+  async createTask(userId, insertTask) {
     return this.withPersistence("create_task", { title: insertTask.title }, async () => {
-      const result = await this.db.insert(tasks).values(insertTask).returning();
+      const result = await this.db.insert(tasks).values({ ...insertTask, userId }).returning();
       return result[0];
     });
   }
-  async updateTask(id, updateTask) {
+  async updateTask(userId, id, updateTask) {
     return this.withPersistence("update_task", { id }, async () => {
-      const result = await this.db.update(tasks).set(updateTask).where(eq(tasks.id, id)).returning();
+      const result = await this.db.update(tasks).set(updateTask).where(and(eq(tasks.id, id), eq(tasks.userId, userId))).returning();
       return result[0];
     });
   }
-  async deleteTask(id) {
+  async deleteTask(userId, id) {
     return this.withPersistence("delete_task", { id }, async () => {
-      const result = await this.db.delete(tasks).where(eq(tasks.id, id)).returning({ id: tasks.id });
+      const result = await this.db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId))).returning({ id: tasks.id });
       return result.length > 0;
     });
   }
-  async getActiveTimerSession() {
+  async getActiveTimerSession(userId) {
     return this.withPersistence("get_active_timer_session", {}, async () => {
-      const result = await this.db.select().from(timerSessions).where(eq(timerSessions.isActive, true)).orderBy(desc(timerSessions.startTime)).limit(1);
+      const result = await this.db.select().from(timerSessions).where(and(eq(timerSessions.isActive, true), eq(timerSessions.userId, userId))).orderBy(desc(timerSessions.startTime)).limit(1);
       return result[0];
     });
   }
-  async getTimerSession(id) {
+  async getTimerSession(userId, id) {
     return this.withPersistence("get_timer_session", { id }, async () => {
-      const result = await this.db.select().from(timerSessions).where(eq(timerSessions.id, id)).limit(1);
+      const result = await this.db.select().from(timerSessions).where(and(eq(timerSessions.id, id), eq(timerSessions.userId, userId))).limit(1);
       return result[0];
     });
   }
-  async getTimerSessionsByTask(taskId) {
+  async getTimerSessionsByTask(userId, taskId) {
     return this.withPersistence("get_timer_sessions_by_task", { taskId }, async () => {
-      return await this.db.select().from(timerSessions).where(eq(timerSessions.taskId, taskId)).orderBy(desc(timerSessions.startTime));
+      return await this.db.select().from(timerSessions).where(and(eq(timerSessions.taskId, taskId), eq(timerSessions.userId, userId))).orderBy(desc(timerSessions.startTime));
     });
   }
-  async createTimerSession(insertSession) {
+  async createTimerSession(userId, insertSession) {
     return this.withPersistence("create_timer_session", { taskId: insertSession.taskId }, async () => {
       const now = /* @__PURE__ */ new Date();
       const withDefaults = {
@@ -47320,6 +47480,7 @@ class DbStorage {
         endTime: insertSession.endTime ?? null,
         durationSeconds: insertSession.durationSeconds ?? 0,
         isActive: insertSession.isActive ?? false,
+        userId,
         createdAt: now,
         updatedAt: now
       };
@@ -47327,74 +47488,74 @@ class DbStorage {
       return result[0];
     });
   }
-  async updateTimerSession(id, updateSession) {
+  async updateTimerSession(userId, id, updateSession) {
     return this.withPersistence("update_timer_session", { id }, async () => {
       const now = /* @__PURE__ */ new Date();
-      const result = await this.db.update(timerSessions).set({ ...updateSession, updatedAt: now }).where(eq(timerSessions.id, id)).returning();
+      const result = await this.db.update(timerSessions).set({ ...updateSession, updatedAt: now }).where(and(eq(timerSessions.id, id), eq(timerSessions.userId, userId))).returning();
       return result[0];
     });
   }
-  async deleteTimerSession(id) {
+  async deleteTimerSession(userId, id) {
     return this.withPersistence("delete_timer_session", { id }, async () => {
-      const result = await this.db.delete(timerSessions).where(eq(timerSessions.id, id)).returning({ id: timerSessions.id });
+      const result = await this.db.delete(timerSessions).where(and(eq(timerSessions.id, id), eq(timerSessions.userId, userId))).returning({ id: timerSessions.id });
       return result.length > 0;
     });
   }
-  async stopActiveTimerSessions() {
+  async stopActiveTimerSessions(userId) {
     return this.withPersistence("stop_active_timer_sessions", {}, async () => {
       const db = this.db;
       await db.transaction(async (tx) => {
-        const active = await tx.select().from(timerSessions).where(eq(timerSessions.isActive, true));
+        const active = await tx.select().from(timerSessions).where(and(eq(timerSessions.isActive, true), eq(timerSessions.userId, userId)));
         if (active.length === 0) return;
         const now = /* @__PURE__ */ new Date();
         for (const session of active) {
           const start = new Date(session.startTime);
           const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 1e3));
           const total = (session.durationSeconds ?? 0) + elapsed;
-          await tx.update(timerSessions).set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now }).where(eq(timerSessions.id, session.id));
-          await tx.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${elapsed}` }).where(eq(tasks.id, session.taskId));
+          await tx.update(timerSessions).set({ endTime: now, durationSeconds: total, isActive: false, updatedAt: now }).where(and(eq(timerSessions.id, session.id), eq(timerSessions.userId, userId)));
+          await tx.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${elapsed}` }).where(and(eq(tasks.id, session.taskId), eq(tasks.userId, userId)));
         }
       });
     });
   }
-  async incrementTaskLoggedTime(taskId, deltaSeconds) {
+  async incrementTaskLoggedTime(userId, taskId, deltaSeconds) {
     return this.withPersistence("increment_task_logged_time", { taskId, deltaSeconds }, async () => {
       const add = Math.max(0, Math.floor(deltaSeconds || 0));
-      await this.db.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${add}` }).where(eq(tasks.id, taskId));
+      await this.db.update(tasks).set({ timeLoggedSeconds: sql`${tasks.timeLoggedSeconds} + ${add}` }).where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)));
     });
   }
-  async getTaskEstimate(taskId) {
+  async getTaskEstimate(userId, taskId) {
     return this.withPersistence("get_task_estimate", { taskId }, async () => {
-      const result = await this.db.select().from(taskEstimates).where(eq(taskEstimates.taskId, taskId)).limit(1);
+      const result = await this.db.select().from(taskEstimates).where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId, userId))).limit(1);
       return result[0];
     });
   }
-  async createTaskEstimate(insertEstimate) {
+  async createTaskEstimate(userId, insertEstimate) {
     return this.withPersistence("create_task_estimate", { taskId: insertEstimate.taskId }, async () => {
-      const result = await this.db.insert(taskEstimates).values(insertEstimate).returning();
+      const result = await this.db.insert(taskEstimates).values({ ...insertEstimate, userId }).returning();
       return result[0];
     });
   }
-  async updateTaskEstimate(taskId, updateEstimate) {
+  async updateTaskEstimate(userId, taskId, updateEstimate) {
     return this.withPersistence("update_task_estimate", { taskId }, async () => {
-      const result = await this.db.update(taskEstimates).set(updateEstimate).where(eq(taskEstimates.taskId, taskId)).returning();
+      const result = await this.db.update(taskEstimates).set(updateEstimate).where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId, userId))).returning();
       return result[0];
     });
   }
-  async deleteTaskEstimate(taskId) {
+  async deleteTaskEstimate(userId, taskId) {
     return this.withPersistence("delete_task_estimate", { taskId }, async () => {
-      const result = await this.db.delete(taskEstimates).where(eq(taskEstimates.taskId, taskId)).returning({ id: taskEstimates.id });
+      const result = await this.db.delete(taskEstimates).where(and(eq(taskEstimates.taskId, taskId), eq(taskEstimates.userId, userId))).returning({ id: taskEstimates.id });
       return result.length > 0;
     });
   }
-  async getDailySummary(date2) {
+  async getDailySummary(userId, date2) {
     return this.withPersistence("get_daily_summary", { date: date2.toISOString() }, async () => {
       const startOfDay = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
       const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1e3);
-      return await this.getDailySummaryByDateRange(startOfDay, endOfDay);
+      return await this.getDailySummaryByDateRange(userId, startOfDay, endOfDay);
     });
   }
-  async getDailySummaryByDateRange(startDate, endDate) {
+  async getDailySummaryByDateRange(userId, startDate, endDate) {
     return this.withPersistence(
       "get_daily_summary_by_range",
       { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
@@ -47402,6 +47563,7 @@ class DbStorage {
         const rows = await this.db.select().from(timerSessions).where(
           and(
             isNotNull(timerSessions.endTime),
+            eq(timerSessions.userId, userId),
             gte(timerSessions.startTime, startDate),
             lt(timerSessions.startTime, endDate)
           )
@@ -47425,7 +47587,7 @@ class DbStorage {
           taskIds.add(s2.taskId);
         }
         if (taskIds.size > 0) {
-          const taskList = await this.db.select().from(tasks).where(inArray(tasks.id, Array.from(taskIds)));
+          const taskList = await this.db.select().from(tasks).where(and(inArray(tasks.id, Array.from(taskIds)), eq(tasks.userId, userId)));
           const idToTask = new Map(taskList.map((t) => [t.id, t]));
           Array.from(summaryMap.values()).forEach((item) => {
             item.task = idToTask.get(item.taskId);
@@ -47435,22 +47597,58 @@ class DbStorage {
       }
     );
   }
-  async getGoal(type3, anchorDate) {
+  async getGoal(userId, type3, anchorDate) {
     return this.withPersistence("get_goal", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
       const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
-      const result = await this.db.select().from(goals).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly))).limit(1);
+      const result = await this.db.select().from(goals).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly), eq(goals.userId, userId))).limit(1);
       return result[0];
     });
   }
-  async setGoal(type3, anchorDate, value) {
+  async setGoal(userId, type3, anchorDate, value) {
     return this.withPersistence("set_goal", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
       const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
-      const existing = await this.db.select().from(goals).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly))).limit(1);
+      const existing = await this.db.select().from(goals).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly), eq(goals.userId, userId))).limit(1);
       if (existing[0]) {
-        const updated = await this.db.update(goals).set({ value, updatedAt: /* @__PURE__ */ new Date() }).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly))).returning();
+        const updated = await this.db.update(goals).set({ value, updatedAt: /* @__PURE__ */ new Date() }).where(and(eq(goals.type, type3), eq(goals.anchorDate, dateOnly), eq(goals.userId, userId))).returning();
         return updated[0];
       }
-      const inserted = await this.db.insert(goals).values({ type: type3, anchorDate: dateOnly, value }).returning();
+      const inserted = await this.db.insert(goals).values({ type: type3, anchorDate: dateOnly, value, userId }).returning();
+      return inserted[0];
+    });
+  }
+  async getReview(userId, type3, anchorDate) {
+    return this.withPersistence("get_review", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const result = await this.db.select().from(reviews).where(and(eq(reviews.type, type3), eq(reviews.anchorDate, dateOnly), eq(reviews.userId, userId))).limit(1);
+      return result[0];
+    });
+  }
+  async setReview(userId, type3, anchorDate, values) {
+    return this.withPersistence("set_review", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
+      const dateOnly = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const existing = await this.db.select().from(reviews).where(and(eq(reviews.type, type3), eq(reviews.anchorDate, dateOnly), eq(reviews.userId, userId))).limit(1);
+      if (existing[0]) {
+        const updated = await this.db.update(reviews).set({ ...values, updatedAt: /* @__PURE__ */ new Date() }).where(and(eq(reviews.type, type3), eq(reviews.anchorDate, dateOnly), eq(reviews.userId, userId))).returning();
+        return updated[0];
+      }
+      const inserted = await this.db.insert(reviews).values({ type: type3, anchorDate: dateOnly, ...values, userId }).returning();
+      return inserted[0];
+    });
+  }
+  async getNote(userId, type3, anchorDate) {
+    return this.withPersistence("get_note", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
+      const result = await this.db.select().from(notes).where(and(eq(notes.type, type3), eq(notes.anchorDate, anchorDate), eq(notes.userId, userId))).limit(1);
+      return result[0];
+    });
+  }
+  async setNote(userId, type3, anchorDate, values) {
+    return this.withPersistence("set_note", { type: type3, anchorDate: anchorDate.toISOString() }, async () => {
+      const existing = await this.db.select().from(notes).where(and(eq(notes.type, type3), eq(notes.anchorDate, anchorDate), eq(notes.userId, userId))).limit(1);
+      if (existing[0]) {
+        const updated = await this.db.update(notes).set({ ...values, updatedAt: /* @__PURE__ */ new Date() }).where(and(eq(notes.type, type3), eq(notes.anchorDate, anchorDate), eq(notes.userId, userId))).returning();
+        return updated[0];
+      }
+      const inserted = await this.db.insert(notes).values({ type: type3, anchorDate, ...values, userId }).returning();
       return inserted[0];
     });
   }
@@ -47464,67 +47662,1448 @@ function createStorage() {
   return new MemStorage();
 }
 const storage = createStorage();
-function handleTimerError(error2, req2, res2, operation) {
-  console.error(`Timer operation failed: ${operation}`, {
-    error: error2,
-    url: req2.url,
-    method: req2.method,
-    body: req2.body,
-    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+function concat(...buffers) {
+  const size = buffers.reduce((acc, { length }) => acc + length, 0);
+  const buf = new Uint8Array(size);
+  let i = 0;
+  for (const buffer of buffers) {
+    buf.set(buffer, i);
+    i += buffer.length;
+  }
+  return buf;
+}
+function decodeBase64(encoded) {
+  if (Uint8Array.fromBase64) {
+    return Uint8Array.fromBase64(encoded);
+  }
+  const binary = atob(encoded);
+  const bytes2 = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes2[i] = binary.charCodeAt(i);
+  }
+  return bytes2;
+}
+function decode(input) {
+  if (Uint8Array.fromBase64) {
+    return Uint8Array.fromBase64(typeof input === "string" ? input : decoder.decode(input), {
+      alphabet: "base64url"
+    });
+  }
+  let encoded = input;
+  if (encoded instanceof Uint8Array) {
+    encoded = decoder.decode(encoded);
+  }
+  encoded = encoded.replace(/-/g, "+").replace(/_/g, "/").replace(/\s/g, "");
+  try {
+    return decodeBase64(encoded);
+  } catch {
+    throw new TypeError("The input to be decoded is not correctly encoded.");
+  }
+}
+class JOSEError extends Error {
+  constructor(message2, options2) {
+    var _a2;
+    super(message2, options2);
+    __publicField(this, "code", "ERR_JOSE_GENERIC");
+    this.name = this.constructor.name;
+    (_a2 = Error.captureStackTrace) == null ? void 0 : _a2.call(Error, this, this.constructor);
+  }
+}
+__publicField(JOSEError, "code", "ERR_JOSE_GENERIC");
+class JWTClaimValidationFailed extends JOSEError {
+  constructor(message2, payload, claim = "unspecified", reason = "unspecified") {
+    super(message2, { cause: { claim, reason, payload } });
+    __publicField(this, "code", "ERR_JWT_CLAIM_VALIDATION_FAILED");
+    __publicField(this, "claim");
+    __publicField(this, "reason");
+    __publicField(this, "payload");
+    this.claim = claim;
+    this.reason = reason;
+    this.payload = payload;
+  }
+}
+__publicField(JWTClaimValidationFailed, "code", "ERR_JWT_CLAIM_VALIDATION_FAILED");
+class JWTExpired extends JOSEError {
+  constructor(message2, payload, claim = "unspecified", reason = "unspecified") {
+    super(message2, { cause: { claim, reason, payload } });
+    __publicField(this, "code", "ERR_JWT_EXPIRED");
+    __publicField(this, "claim");
+    __publicField(this, "reason");
+    __publicField(this, "payload");
+    this.claim = claim;
+    this.reason = reason;
+    this.payload = payload;
+  }
+}
+__publicField(JWTExpired, "code", "ERR_JWT_EXPIRED");
+class JOSEAlgNotAllowed extends JOSEError {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "code", "ERR_JOSE_ALG_NOT_ALLOWED");
+  }
+}
+__publicField(JOSEAlgNotAllowed, "code", "ERR_JOSE_ALG_NOT_ALLOWED");
+class JOSENotSupported extends JOSEError {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "code", "ERR_JOSE_NOT_SUPPORTED");
+  }
+}
+__publicField(JOSENotSupported, "code", "ERR_JOSE_NOT_SUPPORTED");
+class JWSInvalid extends JOSEError {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "code", "ERR_JWS_INVALID");
+  }
+}
+__publicField(JWSInvalid, "code", "ERR_JWS_INVALID");
+class JWTInvalid extends JOSEError {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "code", "ERR_JWT_INVALID");
+  }
+}
+__publicField(JWTInvalid, "code", "ERR_JWT_INVALID");
+class JWKSInvalid extends JOSEError {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "code", "ERR_JWKS_INVALID");
+  }
+}
+__publicField(JWKSInvalid, "code", "ERR_JWKS_INVALID");
+class JWKSNoMatchingKey extends JOSEError {
+  constructor(message2 = "no applicable key found in the JSON Web Key Set", options2) {
+    super(message2, options2);
+    __publicField(this, "code", "ERR_JWKS_NO_MATCHING_KEY");
+  }
+}
+__publicField(JWKSNoMatchingKey, "code", "ERR_JWKS_NO_MATCHING_KEY");
+class JWKSMultipleMatchingKeys extends (_Wd = JOSEError, _Vd = Symbol.asyncIterator, _Wd) {
+  constructor(message2 = "multiple matching keys found in the JSON Web Key Set", options2) {
+    super(message2, options2);
+    __publicField(this, _Vd);
+    __publicField(this, "code", "ERR_JWKS_MULTIPLE_MATCHING_KEYS");
+  }
+}
+__publicField(JWKSMultipleMatchingKeys, "code", "ERR_JWKS_MULTIPLE_MATCHING_KEYS");
+class JWKSTimeout extends JOSEError {
+  constructor(message2 = "request timed out", options2) {
+    super(message2, options2);
+    __publicField(this, "code", "ERR_JWKS_TIMEOUT");
+  }
+}
+__publicField(JWKSTimeout, "code", "ERR_JWKS_TIMEOUT");
+class JWSSignatureVerificationFailed extends JOSEError {
+  constructor(message2 = "signature verification failed", options2) {
+    super(message2, options2);
+    __publicField(this, "code", "ERR_JWS_SIGNATURE_VERIFICATION_FAILED");
+  }
+}
+__publicField(JWSSignatureVerificationFailed, "code", "ERR_JWS_SIGNATURE_VERIFICATION_FAILED");
+function unusable(name2, prop = "algorithm.name") {
+  return new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name2}`);
+}
+function isAlgorithm(algorithm, name2) {
+  return algorithm.name === name2;
+}
+function getHashLength(hash) {
+  return parseInt(hash.name.slice(4), 10);
+}
+function getNamedCurve(alg) {
+  switch (alg) {
+    case "ES256":
+      return "P-256";
+    case "ES384":
+      return "P-384";
+    case "ES512":
+      return "P-521";
+    default:
+      throw new Error("unreachable");
+  }
+}
+function checkUsage(key, usage) {
+  if (!key.usages.includes(usage)) {
+    throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
+  }
+}
+function checkSigCryptoKey(key, alg, usage) {
+  switch (alg) {
+    case "HS256":
+    case "HS384":
+    case "HS512": {
+      if (!isAlgorithm(key.algorithm, "HMAC"))
+        throw unusable("HMAC");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "RS256":
+    case "RS384":
+    case "RS512": {
+      if (!isAlgorithm(key.algorithm, "RSASSA-PKCS1-v1_5"))
+        throw unusable("RSASSA-PKCS1-v1_5");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "PS256":
+    case "PS384":
+    case "PS512": {
+      if (!isAlgorithm(key.algorithm, "RSA-PSS"))
+        throw unusable("RSA-PSS");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "Ed25519":
+    case "EdDSA": {
+      if (!isAlgorithm(key.algorithm, "Ed25519"))
+        throw unusable("Ed25519");
+      break;
+    }
+    case "ES256":
+    case "ES384":
+    case "ES512": {
+      if (!isAlgorithm(key.algorithm, "ECDSA"))
+        throw unusable("ECDSA");
+      const expected = getNamedCurve(alg);
+      const actual = key.algorithm.namedCurve;
+      if (actual !== expected)
+        throw unusable(expected, "algorithm.namedCurve");
+      break;
+    }
+    default:
+      throw new TypeError("CryptoKey does not support this operation");
+  }
+  checkUsage(key, usage);
+}
+function message(msg, actual, ...types2) {
+  var _a2;
+  types2 = types2.filter(Boolean);
+  if (types2.length > 2) {
+    const last = types2.pop();
+    msg += `one of type ${types2.join(", ")}, or ${last}.`;
+  } else if (types2.length === 2) {
+    msg += `one of type ${types2[0]} or ${types2[1]}.`;
+  } else {
+    msg += `of type ${types2[0]}.`;
+  }
+  if (actual == null) {
+    msg += ` Received ${actual}`;
+  } else if (typeof actual === "function" && actual.name) {
+    msg += ` Received function ${actual.name}`;
+  } else if (typeof actual === "object" && actual != null) {
+    if ((_a2 = actual.constructor) == null ? void 0 : _a2.name) {
+      msg += ` Received an instance of ${actual.constructor.name}`;
+    }
+  }
+  return msg;
+}
+const invalidKeyInput = (actual, ...types2) => {
+  return message("Key must be ", actual, ...types2);
+};
+function withAlg(alg, actual, ...types2) {
+  return message(`Key for the ${alg} algorithm must be `, actual, ...types2);
+}
+function isCryptoKey(key) {
+  return (key == null ? void 0 : key[Symbol.toStringTag]) === "CryptoKey";
+}
+function isKeyObject(key) {
+  return (key == null ? void 0 : key[Symbol.toStringTag]) === "KeyObject";
+}
+const isKeyLike = (key) => {
+  return isCryptoKey(key) || isKeyObject(key);
+};
+const isDisjoint = (...headers) => {
+  const sources = headers.filter(Boolean);
+  if (sources.length === 0 || sources.length === 1) {
+    return true;
+  }
+  let acc;
+  for (const header3 of sources) {
+    const parameters = Object.keys(header3);
+    if (!acc || acc.size === 0) {
+      acc = new Set(parameters);
+      continue;
+    }
+    for (const parameter of parameters) {
+      if (acc.has(parameter)) {
+        return false;
+      }
+      acc.add(parameter);
+    }
+  }
+  return true;
+};
+function isObjectLike(value) {
+  return typeof value === "object" && value !== null;
+}
+const isObject = (input) => {
+  if (!isObjectLike(input) || Object.prototype.toString.call(input) !== "[object Object]") {
+    return false;
+  }
+  if (Object.getPrototypeOf(input) === null) {
+    return true;
+  }
+  let proto2 = input;
+  while (Object.getPrototypeOf(proto2) !== null) {
+    proto2 = Object.getPrototypeOf(proto2);
+  }
+  return Object.getPrototypeOf(input) === proto2;
+};
+const checkKeyLength = (alg, key) => {
+  if (alg.startsWith("RS") || alg.startsWith("PS")) {
+    const { modulusLength } = key.algorithm;
+    if (typeof modulusLength !== "number" || modulusLength < 2048) {
+      throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
+    }
+  }
+};
+function subtleMapping(jwk) {
+  let algorithm;
+  let keyUsages;
+  switch (jwk.kty) {
+    case "RSA": {
+      switch (jwk.alg) {
+        case "PS256":
+        case "PS384":
+        case "PS512":
+          algorithm = { name: "RSA-PSS", hash: `SHA-${jwk.alg.slice(-3)}` };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "RS256":
+        case "RS384":
+        case "RS512":
+          algorithm = { name: "RSASSA-PKCS1-v1_5", hash: `SHA-${jwk.alg.slice(-3)}` };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "RSA-OAEP":
+        case "RSA-OAEP-256":
+        case "RSA-OAEP-384":
+        case "RSA-OAEP-512":
+          algorithm = {
+            name: "RSA-OAEP",
+            hash: `SHA-${parseInt(jwk.alg.slice(-3), 10) || 1}`
+          };
+          keyUsages = jwk.d ? ["decrypt", "unwrapKey"] : ["encrypt", "wrapKey"];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    case "EC": {
+      switch (jwk.alg) {
+        case "ES256":
+          algorithm = { name: "ECDSA", namedCurve: "P-256" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ES384":
+          algorithm = { name: "ECDSA", namedCurve: "P-384" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ES512":
+          algorithm = { name: "ECDSA", namedCurve: "P-521" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ECDH-ES":
+        case "ECDH-ES+A128KW":
+        case "ECDH-ES+A192KW":
+        case "ECDH-ES+A256KW":
+          algorithm = { name: "ECDH", namedCurve: jwk.crv };
+          keyUsages = jwk.d ? ["deriveBits"] : [];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    case "OKP": {
+      switch (jwk.alg) {
+        case "Ed25519":
+        case "EdDSA":
+          algorithm = { name: "Ed25519" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ECDH-ES":
+        case "ECDH-ES+A128KW":
+        case "ECDH-ES+A192KW":
+        case "ECDH-ES+A256KW":
+          algorithm = { name: jwk.crv };
+          keyUsages = jwk.d ? ["deriveBits"] : [];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    default:
+      throw new JOSENotSupported('Invalid or unsupported JWK "kty" (Key Type) Parameter value');
+  }
+  return { algorithm, keyUsages };
+}
+const importJWK$1 = async (jwk) => {
+  if (!jwk.alg) {
+    throw new TypeError('"alg" argument is required when "jwk.alg" is not present');
+  }
+  const { algorithm, keyUsages } = subtleMapping(jwk);
+  const keyData = { ...jwk };
+  delete keyData.alg;
+  delete keyData.use;
+  return crypto.subtle.importKey("jwk", keyData, algorithm, jwk.ext ?? (jwk.d ? false : true), jwk.key_ops ?? keyUsages);
+};
+async function importJWK(jwk, alg, options2) {
+  if (!isObject(jwk)) {
+    throw new TypeError("JWK must be an object");
+  }
+  let ext;
+  alg ?? (alg = jwk.alg);
+  ext ?? (ext = jwk.ext);
+  switch (jwk.kty) {
+    case "oct":
+      if (typeof jwk.k !== "string" || !jwk.k) {
+        throw new TypeError('missing "k" (Key Value) Parameter value');
+      }
+      return decode(jwk.k);
+    case "RSA":
+      if ("oth" in jwk && jwk.oth !== void 0) {
+        throw new JOSENotSupported('RSA JWK "oth" (Other Primes Info) Parameter value is not supported');
+      }
+    case "EC":
+    case "OKP":
+      return importJWK$1({ ...jwk, alg, ext });
+    default:
+      throw new JOSENotSupported('Unsupported "kty" (Key Type) Parameter value');
+  }
+}
+const validateCrit = (Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) => {
+  if (joseHeader.crit !== void 0 && (protectedHeader == null ? void 0 : protectedHeader.crit) === void 0) {
+    throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
+  }
+  if (!protectedHeader || protectedHeader.crit === void 0) {
+    return /* @__PURE__ */ new Set();
+  }
+  if (!Array.isArray(protectedHeader.crit) || protectedHeader.crit.length === 0 || protectedHeader.crit.some((input) => typeof input !== "string" || input.length === 0)) {
+    throw new Err('"crit" (Critical) Header Parameter MUST be an array of non-empty strings when present');
+  }
+  let recognized;
+  if (recognizedOption !== void 0) {
+    recognized = new Map([...Object.entries(recognizedOption), ...recognizedDefault.entries()]);
+  } else {
+    recognized = recognizedDefault;
+  }
+  for (const parameter of protectedHeader.crit) {
+    if (!recognized.has(parameter)) {
+      throw new JOSENotSupported(`Extension Header Parameter "${parameter}" is not recognized`);
+    }
+    if (joseHeader[parameter] === void 0) {
+      throw new Err(`Extension Header Parameter "${parameter}" is missing`);
+    }
+    if (recognized.get(parameter) && protectedHeader[parameter] === void 0) {
+      throw new Err(`Extension Header Parameter "${parameter}" MUST be integrity protected`);
+    }
+  }
+  return new Set(protectedHeader.crit);
+};
+const validateAlgorithms = (option, algorithms) => {
+  if (algorithms !== void 0 && (!Array.isArray(algorithms) || algorithms.some((s2) => typeof s2 !== "string"))) {
+    throw new TypeError(`"${option}" option must be an array of strings`);
+  }
+  if (!algorithms) {
+    return void 0;
+  }
+  return new Set(algorithms);
+};
+function isJWK(key) {
+  return isObject(key) && typeof key.kty === "string";
+}
+function isPrivateJWK(key) {
+  return key.kty !== "oct" && typeof key.d === "string";
+}
+function isPublicJWK(key) {
+  return key.kty !== "oct" && typeof key.d === "undefined";
+}
+function isSecretJWK(key) {
+  return key.kty === "oct" && typeof key.k === "string";
+}
+let cache;
+const handleJWK = async (key, jwk, alg, freeze = false) => {
+  cache || (cache = /* @__PURE__ */ new WeakMap());
+  let cached = cache.get(key);
+  if (cached == null ? void 0 : cached[alg]) {
+    return cached[alg];
+  }
+  const cryptoKey = await importJWK$1({ ...jwk, alg });
+  if (freeze)
+    Object.freeze(key);
+  if (!cached) {
+    cache.set(key, { [alg]: cryptoKey });
+  } else {
+    cached[alg] = cryptoKey;
+  }
+  return cryptoKey;
+};
+const handleKeyObject = (keyObject, alg) => {
+  var _a2;
+  cache || (cache = /* @__PURE__ */ new WeakMap());
+  let cached = cache.get(keyObject);
+  if (cached == null ? void 0 : cached[alg]) {
+    return cached[alg];
+  }
+  const isPublic = keyObject.type === "public";
+  const extractable = isPublic ? true : false;
+  let cryptoKey;
+  if (keyObject.asymmetricKeyType === "x25519") {
+    switch (alg) {
+      case "ECDH-ES":
+      case "ECDH-ES+A128KW":
+      case "ECDH-ES+A192KW":
+      case "ECDH-ES+A256KW":
+        break;
+      default:
+        throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    cryptoKey = keyObject.toCryptoKey(keyObject.asymmetricKeyType, extractable, isPublic ? [] : ["deriveBits"]);
+  }
+  if (keyObject.asymmetricKeyType === "ed25519") {
+    if (alg !== "EdDSA" && alg !== "Ed25519") {
+      throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    cryptoKey = keyObject.toCryptoKey(keyObject.asymmetricKeyType, extractable, [
+      isPublic ? "verify" : "sign"
+    ]);
+  }
+  if (keyObject.asymmetricKeyType === "rsa") {
+    let hash;
+    switch (alg) {
+      case "RSA-OAEP":
+        hash = "SHA-1";
+        break;
+      case "RS256":
+      case "PS256":
+      case "RSA-OAEP-256":
+        hash = "SHA-256";
+        break;
+      case "RS384":
+      case "PS384":
+      case "RSA-OAEP-384":
+        hash = "SHA-384";
+        break;
+      case "RS512":
+      case "PS512":
+      case "RSA-OAEP-512":
+        hash = "SHA-512";
+        break;
+      default:
+        throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    if (alg.startsWith("RSA-OAEP")) {
+      return keyObject.toCryptoKey({
+        name: "RSA-OAEP",
+        hash
+      }, extractable, isPublic ? ["encrypt"] : ["decrypt"]);
+    }
+    cryptoKey = keyObject.toCryptoKey({
+      name: alg.startsWith("PS") ? "RSA-PSS" : "RSASSA-PKCS1-v1_5",
+      hash
+    }, extractable, [isPublic ? "verify" : "sign"]);
+  }
+  if (keyObject.asymmetricKeyType === "ec") {
+    const nist = /* @__PURE__ */ new Map([
+      ["prime256v1", "P-256"],
+      ["secp384r1", "P-384"],
+      ["secp521r1", "P-521"]
+    ]);
+    const namedCurve = nist.get((_a2 = keyObject.asymmetricKeyDetails) == null ? void 0 : _a2.namedCurve);
+    if (!namedCurve) {
+      throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    if (alg === "ES256" && namedCurve === "P-256") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg === "ES384" && namedCurve === "P-384") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg === "ES512" && namedCurve === "P-521") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg.startsWith("ECDH-ES")) {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDH",
+        namedCurve
+      }, extractable, isPublic ? [] : ["deriveBits"]);
+    }
+  }
+  if (!cryptoKey) {
+    throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+  }
+  if (!cached) {
+    cache.set(keyObject, { [alg]: cryptoKey });
+  } else {
+    cached[alg] = cryptoKey;
+  }
+  return cryptoKey;
+};
+const normalizeKey = async (key, alg) => {
+  if (key instanceof Uint8Array) {
+    return key;
+  }
+  if (isCryptoKey(key)) {
+    return key;
+  }
+  if (isKeyObject(key)) {
+    if (key.type === "secret") {
+      return key.export();
+    }
+    if ("toCryptoKey" in key && typeof key.toCryptoKey === "function") {
+      try {
+        return handleKeyObject(key, alg);
+      } catch (err) {
+        if (err instanceof TypeError) {
+          throw err;
+        }
+      }
+    }
+    let jwk = key.export({ format: "jwk" });
+    return handleJWK(key, jwk, alg);
+  }
+  if (isJWK(key)) {
+    if (key.k) {
+      return decode(key.k);
+    }
+    return handleJWK(key, key, alg, true);
+  }
+  throw new Error("unreachable");
+};
+const tag = (key) => key == null ? void 0 : key[Symbol.toStringTag];
+const jwkMatchesOp = (alg, key, usage) => {
+  var _a2, _b2;
+  if (key.use !== void 0) {
+    let expected;
+    switch (usage) {
+      case "sign":
+      case "verify":
+        expected = "sig";
+        break;
+      case "encrypt":
+      case "decrypt":
+        expected = "enc";
+        break;
+    }
+    if (key.use !== expected) {
+      throw new TypeError(`Invalid key for this operation, its "use" must be "${expected}" when present`);
+    }
+  }
+  if (key.alg !== void 0 && key.alg !== alg) {
+    throw new TypeError(`Invalid key for this operation, its "alg" must be "${alg}" when present`);
+  }
+  if (Array.isArray(key.key_ops)) {
+    let expectedKeyOp;
+    switch (true) {
+      case usage === "verify":
+      case alg === "dir":
+      case alg.includes("CBC-HS"):
+        expectedKeyOp = usage;
+        break;
+      case alg.startsWith("PBES2"):
+        expectedKeyOp = "deriveBits";
+        break;
+      case /^A\d{3}(?:GCM)?(?:KW)?$/.test(alg):
+        if (!alg.includes("GCM") && alg.endsWith("KW")) {
+          expectedKeyOp = "unwrapKey";
+        } else {
+          expectedKeyOp = usage;
+        }
+        break;
+      case usage === "encrypt":
+        expectedKeyOp = "wrapKey";
+        break;
+      case usage === "decrypt":
+        expectedKeyOp = alg.startsWith("RSA") ? "unwrapKey" : "deriveBits";
+        break;
+    }
+    if (expectedKeyOp && ((_b2 = (_a2 = key.key_ops) == null ? void 0 : _a2.includes) == null ? void 0 : _b2.call(_a2, expectedKeyOp)) === false) {
+      throw new TypeError(`Invalid key for this operation, its "key_ops" must include "${expectedKeyOp}" when present`);
+    }
+  }
+  return true;
+};
+const symmetricTypeCheck = (alg, key, usage) => {
+  if (key instanceof Uint8Array)
+    return;
+  if (isJWK(key)) {
+    if (isSecretJWK(key) && jwkMatchesOp(alg, key, usage))
+      return;
+    throw new TypeError(`JSON Web Key for symmetric algorithms must have JWK "kty" (Key Type) equal to "oct" and the JWK "k" (Key Value) present`);
+  }
+  if (!isKeyLike(key)) {
+    throw new TypeError(withAlg(alg, key, "CryptoKey", "KeyObject", "JSON Web Key", "Uint8Array"));
+  }
+  if (key.type !== "secret") {
+    throw new TypeError(`${tag(key)} instances for symmetric algorithms must be of type "secret"`);
+  }
+};
+const asymmetricTypeCheck = (alg, key, usage) => {
+  if (isJWK(key)) {
+    switch (usage) {
+      case "decrypt":
+      case "sign":
+        if (isPrivateJWK(key) && jwkMatchesOp(alg, key, usage))
+          return;
+        throw new TypeError(`JSON Web Key for this operation be a private JWK`);
+      case "encrypt":
+      case "verify":
+        if (isPublicJWK(key) && jwkMatchesOp(alg, key, usage))
+          return;
+        throw new TypeError(`JSON Web Key for this operation be a public JWK`);
+    }
+  }
+  if (!isKeyLike(key)) {
+    throw new TypeError(withAlg(alg, key, "CryptoKey", "KeyObject", "JSON Web Key"));
+  }
+  if (key.type === "secret") {
+    throw new TypeError(`${tag(key)} instances for asymmetric algorithms must not be of type "secret"`);
+  }
+  if (key.type === "public") {
+    switch (usage) {
+      case "sign":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm signing must be of type "private"`);
+      case "decrypt":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm decryption must be of type "private"`);
+    }
+  }
+  if (key.type === "private") {
+    switch (usage) {
+      case "verify":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm verifying must be of type "public"`);
+      case "encrypt":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm encryption must be of type "public"`);
+    }
+  }
+};
+const checkKeyType = (alg, key, usage) => {
+  const symmetric = alg.startsWith("HS") || alg === "dir" || alg.startsWith("PBES2") || /^A(?:128|192|256)(?:GCM)?(?:KW)?$/.test(alg) || /^A(?:128|192|256)CBC-HS(?:256|384|512)$/.test(alg);
+  if (symmetric) {
+    symmetricTypeCheck(alg, key, usage);
+  } else {
+    asymmetricTypeCheck(alg, key, usage);
+  }
+};
+const subtleAlgorithm = (alg, algorithm) => {
+  const hash = `SHA-${alg.slice(-3)}`;
+  switch (alg) {
+    case "HS256":
+    case "HS384":
+    case "HS512":
+      return { hash, name: "HMAC" };
+    case "PS256":
+    case "PS384":
+    case "PS512":
+      return { hash, name: "RSA-PSS", saltLength: parseInt(alg.slice(-3), 10) >> 3 };
+    case "RS256":
+    case "RS384":
+    case "RS512":
+      return { hash, name: "RSASSA-PKCS1-v1_5" };
+    case "ES256":
+    case "ES384":
+    case "ES512":
+      return { hash, name: "ECDSA", namedCurve: algorithm.namedCurve };
+    case "Ed25519":
+    case "EdDSA":
+      return { name: "Ed25519" };
+    default:
+      throw new JOSENotSupported(`alg ${alg} is not supported either by JOSE or your javascript runtime`);
+  }
+};
+const getSignKey = async (alg, key, usage) => {
+  if (key instanceof Uint8Array) {
+    if (!alg.startsWith("HS")) {
+      throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
+    }
+    return crypto.subtle.importKey("raw", key, { hash: `SHA-${alg.slice(-3)}`, name: "HMAC" }, false, [usage]);
+  }
+  checkSigCryptoKey(key, alg, usage);
+  return key;
+};
+const verify = async (alg, key, signature, data) => {
+  const cryptoKey = await getSignKey(alg, key, "verify");
+  checkKeyLength(alg, cryptoKey);
+  const algorithm = subtleAlgorithm(alg, cryptoKey.algorithm);
+  try {
+    return await crypto.subtle.verify(algorithm, cryptoKey, signature, data);
+  } catch {
+    return false;
+  }
+};
+async function flattenedVerify(jws, key, options2) {
+  if (!isObject(jws)) {
+    throw new JWSInvalid("Flattened JWS must be an object");
+  }
+  if (jws.protected === void 0 && jws.header === void 0) {
+    throw new JWSInvalid('Flattened JWS must have either of the "protected" or "header" members');
+  }
+  if (jws.protected !== void 0 && typeof jws.protected !== "string") {
+    throw new JWSInvalid("JWS Protected Header incorrect type");
+  }
+  if (jws.payload === void 0) {
+    throw new JWSInvalid("JWS Payload missing");
+  }
+  if (typeof jws.signature !== "string") {
+    throw new JWSInvalid("JWS Signature missing or incorrect type");
+  }
+  if (jws.header !== void 0 && !isObject(jws.header)) {
+    throw new JWSInvalid("JWS Unprotected Header incorrect type");
+  }
+  let parsedProt = {};
+  if (jws.protected) {
+    try {
+      const protectedHeader = decode(jws.protected);
+      parsedProt = JSON.parse(decoder.decode(protectedHeader));
+    } catch {
+      throw new JWSInvalid("JWS Protected Header is invalid");
+    }
+  }
+  if (!isDisjoint(parsedProt, jws.header)) {
+    throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
+  }
+  const joseHeader = {
+    ...parsedProt,
+    ...jws.header
+  };
+  const extensions = validateCrit(JWSInvalid, /* @__PURE__ */ new Map([["b64", true]]), options2 == null ? void 0 : options2.crit, parsedProt, joseHeader);
+  let b64 = true;
+  if (extensions.has("b64")) {
+    b64 = parsedProt.b64;
+    if (typeof b64 !== "boolean") {
+      throw new JWSInvalid('The "b64" (base64url-encode payload) Header Parameter must be a boolean');
+    }
+  }
+  const { alg } = joseHeader;
+  if (typeof alg !== "string" || !alg) {
+    throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
+  }
+  const algorithms = options2 && validateAlgorithms("algorithms", options2.algorithms);
+  if (algorithms && !algorithms.has(alg)) {
+    throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter value not allowed');
+  }
+  if (b64) {
+    if (typeof jws.payload !== "string") {
+      throw new JWSInvalid("JWS Payload must be a string");
+    }
+  } else if (typeof jws.payload !== "string" && !(jws.payload instanceof Uint8Array)) {
+    throw new JWSInvalid("JWS Payload must be a string or an Uint8Array instance");
+  }
+  let resolvedKey = false;
+  if (typeof key === "function") {
+    key = await key(parsedProt, jws);
+    resolvedKey = true;
+  }
+  checkKeyType(alg, key, "verify");
+  const data = concat(encoder.encode(jws.protected ?? ""), encoder.encode("."), typeof jws.payload === "string" ? encoder.encode(jws.payload) : jws.payload);
+  let signature;
+  try {
+    signature = decode(jws.signature);
+  } catch {
+    throw new JWSInvalid("Failed to base64url decode the signature");
+  }
+  const k = await normalizeKey(key, alg);
+  const verified = await verify(alg, k, signature, data);
+  if (!verified) {
+    throw new JWSSignatureVerificationFailed();
+  }
+  let payload;
+  if (b64) {
+    try {
+      payload = decode(jws.payload);
+    } catch {
+      throw new JWSInvalid("Failed to base64url decode the payload");
+    }
+  } else if (typeof jws.payload === "string") {
+    payload = encoder.encode(jws.payload);
+  } else {
+    payload = jws.payload;
+  }
+  const result = { payload };
+  if (jws.protected !== void 0) {
+    result.protectedHeader = parsedProt;
+  }
+  if (jws.header !== void 0) {
+    result.unprotectedHeader = jws.header;
+  }
+  if (resolvedKey) {
+    return { ...result, key: k };
+  }
+  return result;
+}
+async function compactVerify(jws, key, options2) {
+  if (jws instanceof Uint8Array) {
+    jws = decoder.decode(jws);
+  }
+  if (typeof jws !== "string") {
+    throw new JWSInvalid("Compact JWS must be a string or Uint8Array");
+  }
+  const { 0: protectedHeader, 1: payload, 2: signature, length } = jws.split(".");
+  if (length !== 3) {
+    throw new JWSInvalid("Invalid Compact JWS");
+  }
+  const verified = await flattenedVerify({ payload, protected: protectedHeader, signature }, key, options2);
+  const result = { payload: verified.payload, protectedHeader: verified.protectedHeader };
+  if (typeof key === "function") {
+    return { ...result, key: verified.key };
+  }
+  return result;
+}
+const epoch = (date2) => Math.floor(date2.getTime() / 1e3);
+const minute = 60;
+const hour = minute * 60;
+const day = hour * 24;
+const week = day * 7;
+const year = day * 365.25;
+const REGEX = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)(?: (ago|from now))?$/i;
+const secs = (str) => {
+  const matched = REGEX.exec(str);
+  if (!matched || matched[4] && matched[1]) {
+    throw new TypeError("Invalid time period format");
+  }
+  const value = parseFloat(matched[2]);
+  const unit = matched[3].toLowerCase();
+  let numericDate;
+  switch (unit) {
+    case "sec":
+    case "secs":
+    case "second":
+    case "seconds":
+    case "s":
+      numericDate = Math.round(value);
+      break;
+    case "minute":
+    case "minutes":
+    case "min":
+    case "mins":
+    case "m":
+      numericDate = Math.round(value * minute);
+      break;
+    case "hour":
+    case "hours":
+    case "hr":
+    case "hrs":
+    case "h":
+      numericDate = Math.round(value * hour);
+      break;
+    case "day":
+    case "days":
+    case "d":
+      numericDate = Math.round(value * day);
+      break;
+    case "week":
+    case "weeks":
+    case "w":
+      numericDate = Math.round(value * week);
+      break;
+    default:
+      numericDate = Math.round(value * year);
+      break;
+  }
+  if (matched[1] === "-" || matched[4] === "ago") {
+    return -numericDate;
+  }
+  return numericDate;
+};
+const normalizeTyp = (value) => {
+  if (value.includes("/")) {
+    return value.toLowerCase();
+  }
+  return `application/${value.toLowerCase()}`;
+};
+const checkAudiencePresence = (audPayload, audOption) => {
+  if (typeof audPayload === "string") {
+    return audOption.includes(audPayload);
+  }
+  if (Array.isArray(audPayload)) {
+    return audOption.some(Set.prototype.has.bind(new Set(audPayload)));
+  }
+  return false;
+};
+function validateClaimsSet(protectedHeader, encodedPayload, options2 = {}) {
+  let payload;
+  try {
+    payload = JSON.parse(decoder.decode(encodedPayload));
+  } catch {
+  }
+  if (!isObject(payload)) {
+    throw new JWTInvalid("JWT Claims Set must be a top-level JSON object");
+  }
+  const { typ } = options2;
+  if (typ && (typeof protectedHeader.typ !== "string" || normalizeTyp(protectedHeader.typ) !== normalizeTyp(typ))) {
+    throw new JWTClaimValidationFailed('unexpected "typ" JWT header value', payload, "typ", "check_failed");
+  }
+  const { requiredClaims = [], issuer, subject, audience, maxTokenAge } = options2;
+  const presenceCheck = [...requiredClaims];
+  if (maxTokenAge !== void 0)
+    presenceCheck.push("iat");
+  if (audience !== void 0)
+    presenceCheck.push("aud");
+  if (subject !== void 0)
+    presenceCheck.push("sub");
+  if (issuer !== void 0)
+    presenceCheck.push("iss");
+  for (const claim of new Set(presenceCheck.reverse())) {
+    if (!(claim in payload)) {
+      throw new JWTClaimValidationFailed(`missing required "${claim}" claim`, payload, claim, "missing");
+    }
+  }
+  if (issuer && !(Array.isArray(issuer) ? issuer : [issuer]).includes(payload.iss)) {
+    throw new JWTClaimValidationFailed('unexpected "iss" claim value', payload, "iss", "check_failed");
+  }
+  if (subject && payload.sub !== subject) {
+    throw new JWTClaimValidationFailed('unexpected "sub" claim value', payload, "sub", "check_failed");
+  }
+  if (audience && !checkAudiencePresence(payload.aud, typeof audience === "string" ? [audience] : audience)) {
+    throw new JWTClaimValidationFailed('unexpected "aud" claim value', payload, "aud", "check_failed");
+  }
+  let tolerance;
+  switch (typeof options2.clockTolerance) {
+    case "string":
+      tolerance = secs(options2.clockTolerance);
+      break;
+    case "number":
+      tolerance = options2.clockTolerance;
+      break;
+    case "undefined":
+      tolerance = 0;
+      break;
+    default:
+      throw new TypeError("Invalid clockTolerance option type");
+  }
+  const { currentDate } = options2;
+  const now = epoch(currentDate || /* @__PURE__ */ new Date());
+  if ((payload.iat !== void 0 || maxTokenAge) && typeof payload.iat !== "number") {
+    throw new JWTClaimValidationFailed('"iat" claim must be a number', payload, "iat", "invalid");
+  }
+  if (payload.nbf !== void 0) {
+    if (typeof payload.nbf !== "number") {
+      throw new JWTClaimValidationFailed('"nbf" claim must be a number', payload, "nbf", "invalid");
+    }
+    if (payload.nbf > now + tolerance) {
+      throw new JWTClaimValidationFailed('"nbf" claim timestamp check failed', payload, "nbf", "check_failed");
+    }
+  }
+  if (payload.exp !== void 0) {
+    if (typeof payload.exp !== "number") {
+      throw new JWTClaimValidationFailed('"exp" claim must be a number', payload, "exp", "invalid");
+    }
+    if (payload.exp <= now - tolerance) {
+      throw new JWTExpired('"exp" claim timestamp check failed', payload, "exp", "check_failed");
+    }
+  }
+  if (maxTokenAge) {
+    const age = now - payload.iat;
+    const max2 = typeof maxTokenAge === "number" ? maxTokenAge : secs(maxTokenAge);
+    if (age - tolerance > max2) {
+      throw new JWTExpired('"iat" claim timestamp check failed (too far in the past)', payload, "iat", "check_failed");
+    }
+    if (age < 0 - tolerance) {
+      throw new JWTClaimValidationFailed('"iat" claim timestamp check failed (it should be in the past)', payload, "iat", "check_failed");
+    }
+  }
+  return payload;
+}
+async function jwtVerify(jwt, key, options2) {
+  var _a2;
+  const verified = await compactVerify(jwt, key, options2);
+  if (((_a2 = verified.protectedHeader.crit) == null ? void 0 : _a2.includes("b64")) && verified.protectedHeader.b64 === false) {
+    throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
+  }
+  const payload = validateClaimsSet(verified.protectedHeader, verified.payload, options2);
+  const result = { payload, protectedHeader: verified.protectedHeader };
+  if (typeof key === "function") {
+    return { ...result, key: verified.key };
+  }
+  return result;
+}
+function getKtyFromAlg(alg) {
+  switch (typeof alg === "string" && alg.slice(0, 2)) {
+    case "RS":
+    case "PS":
+      return "RSA";
+    case "ES":
+      return "EC";
+    case "Ed":
+      return "OKP";
+    default:
+      throw new JOSENotSupported('Unsupported "alg" value for a JSON Web Key Set');
+  }
+}
+function isJWKSLike(jwks) {
+  return jwks && typeof jwks === "object" && Array.isArray(jwks.keys) && jwks.keys.every(isJWKLike);
+}
+function isJWKLike(key) {
+  return isObject(key);
+}
+class LocalJWKSet {
+  constructor(jwks) {
+    __privateAdd(this, _jwks);
+    __privateAdd(this, _cached, /* @__PURE__ */ new WeakMap());
+    if (!isJWKSLike(jwks)) {
+      throw new JWKSInvalid("JSON Web Key Set malformed");
+    }
+    __privateSet(this, _jwks, structuredClone(jwks));
+  }
+  jwks() {
+    return __privateGet(this, _jwks);
+  }
+  async getKey(protectedHeader, token) {
+    const { alg, kid } = { ...protectedHeader, ...token == null ? void 0 : token.header };
+    const kty = getKtyFromAlg(alg);
+    const candidates = __privateGet(this, _jwks).keys.filter((jwk2) => {
+      let candidate = kty === jwk2.kty;
+      if (candidate && typeof kid === "string") {
+        candidate = kid === jwk2.kid;
+      }
+      if (candidate && typeof jwk2.alg === "string") {
+        candidate = alg === jwk2.alg;
+      }
+      if (candidate && typeof jwk2.use === "string") {
+        candidate = jwk2.use === "sig";
+      }
+      if (candidate && Array.isArray(jwk2.key_ops)) {
+        candidate = jwk2.key_ops.includes("verify");
+      }
+      if (candidate) {
+        switch (alg) {
+          case "ES256":
+            candidate = jwk2.crv === "P-256";
+            break;
+          case "ES384":
+            candidate = jwk2.crv === "P-384";
+            break;
+          case "ES512":
+            candidate = jwk2.crv === "P-521";
+            break;
+          case "Ed25519":
+          case "EdDSA":
+            candidate = jwk2.crv === "Ed25519";
+            break;
+        }
+      }
+      return candidate;
+    });
+    const { 0: jwk, length } = candidates;
+    if (length === 0) {
+      throw new JWKSNoMatchingKey();
+    }
+    if (length !== 1) {
+      const error2 = new JWKSMultipleMatchingKeys();
+      const _cached2 = __privateGet(this, _cached);
+      error2[Symbol.asyncIterator] = async function* () {
+        for (const jwk2 of candidates) {
+          try {
+            yield await importWithAlgCache(_cached2, jwk2, alg);
+          } catch {
+          }
+        }
+      };
+      throw error2;
+    }
+    return importWithAlgCache(__privateGet(this, _cached), jwk, alg);
+  }
+}
+_jwks = new WeakMap();
+_cached = new WeakMap();
+async function importWithAlgCache(cache2, jwk, alg) {
+  const cached = cache2.get(jwk) || cache2.set(jwk, {}).get(jwk);
+  if (cached[alg] === void 0) {
+    const key = await importJWK({ ...jwk, ext: true }, alg);
+    if (key instanceof Uint8Array || key.type !== "public") {
+      throw new JWKSInvalid("JSON Web Key Set members must be public keys");
+    }
+    cached[alg] = key;
+  }
+  return cached[alg];
+}
+function createLocalJWKSet(jwks) {
+  const set = new LocalJWKSet(jwks);
+  const localJWKSet = async (protectedHeader, token) => set.getKey(protectedHeader, token);
+  Object.defineProperties(localJWKSet, {
+    jwks: {
+      value: () => structuredClone(set.jwks()),
+      enumerable: false,
+      configurable: false,
+      writable: false
+    }
   });
-  if (error2 instanceof TimerValidationError) {
-    return res2.status(400).json({
-      error: "VALIDATION_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details
-    });
-  }
-  if (error2 instanceof TimerStateError) {
-    return res2.status(409).json({
-      error: "STATE_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details
-    });
-  }
-  if (error2 instanceof TimerSyncError) {
-    return res2.status(409).json({
-      error: "SYNC_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details,
-      retryable: true
-    });
-  }
-  if (error2 instanceof TimerPersistenceError) {
-    return res2.status(503).json({
-      error: "PERSISTENCE_ERROR",
-      message: error2.message,
-      code: error2.code,
-      details: error2.details,
-      retryable: true
-    });
-  }
-  if (error2 instanceof z.ZodError) {
-    return res2.status(400).json({
-      error: "VALIDATION_ERROR",
-      message: "Invalid request data",
-      code: "INVALID_REQUEST_DATA",
-      details: error2.errors
-    });
-  }
-  return res2.status(500).json({
-    error: "INTERNAL_SERVER_ERROR",
-    message: "An unexpected error occurred",
-    code: "UNKNOWN_ERROR",
-    retryable: true
+  return localJWKSet;
+}
+function isCloudflareWorkers() {
+  return typeof WebSocketPair !== "undefined" || typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime !== "undefined" && EdgeRuntime === "vercel";
+}
+let USER_AGENT;
+if (typeof navigator === "undefined" || !((_Yd = (_Xd = navigator.userAgent) == null ? void 0 : _Xd.startsWith) == null ? void 0 : _Yd.call(_Xd, "Mozilla/5.0 "))) {
+  const NAME = "jose";
+  const VERSION = "v6.0.12";
+  USER_AGENT = `${NAME}/${VERSION}`;
+}
+const customFetch = Symbol();
+async function fetchJwks(url2, headers, signal, fetchImpl = fetch) {
+  const response2 = await fetchImpl(url2, {
+    method: "GET",
+    signal,
+    redirect: "manual",
+    headers
+  }).catch((err) => {
+    if (err.name === "TimeoutError") {
+      throw new JWKSTimeout();
+    }
+    throw err;
   });
+  if (response2.status !== 200) {
+    throw new JOSEError("Expected 200 OK from the JSON Web Key Set HTTP response");
+  }
+  try {
+    return await response2.json();
+  } catch {
+    throw new JOSEError("Failed to parse the JSON Web Key Set HTTP response as JSON");
+  }
+}
+const jwksCache = Symbol();
+function isFreshJwksCache(input, cacheMaxAge) {
+  if (typeof input !== "object" || input === null) {
+    return false;
+  }
+  if (!("uat" in input) || typeof input.uat !== "number" || Date.now() - input.uat >= cacheMaxAge) {
+    return false;
+  }
+  if (!("jwks" in input) || !isObject(input.jwks) || !Array.isArray(input.jwks.keys) || !Array.prototype.every.call(input.jwks.keys, isObject)) {
+    return false;
+  }
+  return true;
+}
+class RemoteJWKSet {
+  constructor(url2, options2) {
+    __privateAdd(this, _url);
+    __privateAdd(this, _timeoutDuration);
+    __privateAdd(this, _cooldownDuration);
+    __privateAdd(this, _cacheMaxAge);
+    __privateAdd(this, _jwksTimestamp);
+    __privateAdd(this, _pendingFetch);
+    __privateAdd(this, _headers);
+    __privateAdd(this, _customFetch);
+    __privateAdd(this, _local);
+    __privateAdd(this, _cache);
+    if (!(url2 instanceof URL)) {
+      throw new TypeError("url must be an instance of URL");
+    }
+    __privateSet(this, _url, new URL(url2.href));
+    __privateSet(this, _timeoutDuration, typeof (options2 == null ? void 0 : options2.timeoutDuration) === "number" ? options2 == null ? void 0 : options2.timeoutDuration : 5e3);
+    __privateSet(this, _cooldownDuration, typeof (options2 == null ? void 0 : options2.cooldownDuration) === "number" ? options2 == null ? void 0 : options2.cooldownDuration : 3e4);
+    __privateSet(this, _cacheMaxAge, typeof (options2 == null ? void 0 : options2.cacheMaxAge) === "number" ? options2 == null ? void 0 : options2.cacheMaxAge : 6e5);
+    __privateSet(this, _headers, new Headers(options2 == null ? void 0 : options2.headers));
+    if (USER_AGENT && !__privateGet(this, _headers).has("User-Agent")) {
+      __privateGet(this, _headers).set("User-Agent", USER_AGENT);
+    }
+    if (!__privateGet(this, _headers).has("accept")) {
+      __privateGet(this, _headers).set("accept", "application/json");
+      __privateGet(this, _headers).append("accept", "application/jwk-set+json");
+    }
+    __privateSet(this, _customFetch, options2 == null ? void 0 : options2[customFetch]);
+    if ((options2 == null ? void 0 : options2[jwksCache]) !== void 0) {
+      __privateSet(this, _cache, options2 == null ? void 0 : options2[jwksCache]);
+      if (isFreshJwksCache(options2 == null ? void 0 : options2[jwksCache], __privateGet(this, _cacheMaxAge))) {
+        __privateSet(this, _jwksTimestamp, __privateGet(this, _cache).uat);
+        __privateSet(this, _local, createLocalJWKSet(__privateGet(this, _cache).jwks));
+      }
+    }
+  }
+  pendingFetch() {
+    return !!__privateGet(this, _pendingFetch);
+  }
+  coolingDown() {
+    return typeof __privateGet(this, _jwksTimestamp) === "number" ? Date.now() < __privateGet(this, _jwksTimestamp) + __privateGet(this, _cooldownDuration) : false;
+  }
+  fresh() {
+    return typeof __privateGet(this, _jwksTimestamp) === "number" ? Date.now() < __privateGet(this, _jwksTimestamp) + __privateGet(this, _cacheMaxAge) : false;
+  }
+  jwks() {
+    var _a2;
+    return (_a2 = __privateGet(this, _local)) == null ? void 0 : _a2.jwks();
+  }
+  async getKey(protectedHeader, token) {
+    if (!__privateGet(this, _local) || !this.fresh()) {
+      await this.reload();
+    }
+    try {
+      return await __privateGet(this, _local).call(this, protectedHeader, token);
+    } catch (err) {
+      if (err instanceof JWKSNoMatchingKey) {
+        if (this.coolingDown() === false) {
+          await this.reload();
+          return __privateGet(this, _local).call(this, protectedHeader, token);
+        }
+      }
+      throw err;
+    }
+  }
+  async reload() {
+    if (__privateGet(this, _pendingFetch) && isCloudflareWorkers()) {
+      __privateSet(this, _pendingFetch, void 0);
+    }
+    __privateGet(this, _pendingFetch) || __privateSet(this, _pendingFetch, fetchJwks(__privateGet(this, _url).href, __privateGet(this, _headers), AbortSignal.timeout(__privateGet(this, _timeoutDuration)), __privateGet(this, _customFetch)).then((json3) => {
+      __privateSet(this, _local, createLocalJWKSet(json3));
+      if (__privateGet(this, _cache)) {
+        __privateGet(this, _cache).uat = Date.now();
+        __privateGet(this, _cache).jwks = json3;
+      }
+      __privateSet(this, _jwksTimestamp, Date.now());
+      __privateSet(this, _pendingFetch, void 0);
+    }).catch((err) => {
+      __privateSet(this, _pendingFetch, void 0);
+      throw err;
+    }));
+    await __privateGet(this, _pendingFetch);
+  }
+}
+_url = new WeakMap();
+_timeoutDuration = new WeakMap();
+_cooldownDuration = new WeakMap();
+_cacheMaxAge = new WeakMap();
+_jwksTimestamp = new WeakMap();
+_pendingFetch = new WeakMap();
+_headers = new WeakMap();
+_customFetch = new WeakMap();
+_local = new WeakMap();
+_cache = new WeakMap();
+function createRemoteJWKSet(url2, options2) {
+  const set = new RemoteJWKSet(url2, options2);
+  const remoteJWKSet = async (protectedHeader, token) => set.getKey(protectedHeader, token);
+  Object.defineProperties(remoteJWKSet, {
+    coolingDown: {
+      get: () => set.coolingDown(),
+      enumerable: true,
+      configurable: false
+    },
+    fresh: {
+      get: () => set.fresh(),
+      enumerable: true,
+      configurable: false
+    },
+    reload: {
+      value: () => set.reload(),
+      enumerable: true,
+      configurable: false,
+      writable: false
+    },
+    reloading: {
+      get: () => set.pendingFetch(),
+      enumerable: true,
+      configurable: false
+    },
+    jwks: {
+      value: () => set.jwks(),
+      enumerable: true,
+      configurable: false,
+      writable: false
+    }
+  });
+  return remoteJWKSet;
+}
+const AUTH_ENABLED = process.env.AUTH_ENABLED === "true";
+const SUPABASE_JWKS_URL = process.env.SUPABASE_JWKS_URL;
+const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+const DEV_USER_ID = process.env.DEV_USER_ID || "dev-user-00000000-0000-0000-0000-000000000000";
+async function verifySupabaseJwt(token) {
+  if (SUPABASE_JWKS_URL) {
+    const jwks = createRemoteJWKSet(new URL(SUPABASE_JWKS_URL));
+    const { payload } = await jwtVerify(token, jwks, {
+      // Allow small clock skew
+      clockTolerance: 5
+    });
+    const userId = typeof payload.sub === "string" ? payload.sub : "";
+    if (!userId) {
+      throw new Error("MISSING_SUB");
+    }
+    return { userId, raw: payload };
+  }
+  if (SUPABASE_JWT_SECRET) {
+    const secret = new TextEncoder().encode(SUPABASE_JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret, {
+      clockTolerance: 5
+    });
+    const userId = typeof payload.sub === "string" ? payload.sub : "";
+    if (!userId) {
+      throw new Error("MISSING_SUB");
+    }
+    return { userId, raw: payload };
+  }
+  throw new Error("AUTH_MISCONFIGURED");
+}
+async function authenticateRequest(req2) {
+  if (!AUTH_ENABLED) {
+    return { userId: DEV_USER_ID, raw: { sub: DEV_USER_ID } };
+  }
+  const authHeader = req2.headers["authorization"] || req2.headers["Authorization"];
+  if (!authHeader || Array.isArray(authHeader)) {
+    throw Object.assign(new Error("MISSING_AUTH_HEADER"), { status: 401 });
+  }
+  const match2 = /^Bearer\s+(.+)$/i.exec(String(authHeader));
+  if (!match2) {
+    throw Object.assign(new Error("INVALID_AUTH_SCHEME"), { status: 401 });
+  }
+  const token = match2[1];
+  try {
+    return await verifySupabaseJwt(token);
+  } catch (error2) {
+    const message2 = (error2 == null ? void 0 : error2.code) === "ERR_JWT_EXPIRED" ? "TOKEN_EXPIRED" : (error2 == null ? void 0 : error2.message) || "INVALID_TOKEN";
+    const status3 = message2 === "TOKEN_EXPIRED" ? 401 : 401;
+    throw Object.assign(new Error(message2), { status: status3 });
+  }
+}
+function requireAuth() {
+  return async function(req2, res2, next) {
+    try {
+      const { userId } = await authenticateRequest(req2);
+      req2.userId = userId;
+      next();
+    } catch (error2) {
+      const status3 = (error2 == null ? void 0 : error2.status) || 401;
+      const message2 = (error2 == null ? void 0 : error2.message) || "UNAUTHORIZED";
+      console.warn("[auth] rejected request", {
+        path: req2.path,
+        method: req2.method,
+        status: status3,
+        code: message2
+      });
+      res2.status(status3).json({ error: "UNAUTHORIZED", message: message2 });
+    }
+  };
 }
 async function registerRoutes(app2) {
+  app2.head("/api/health", (_req, res2) => res2.status(200).end());
+  app2.get("/api/health", (_req, res2) => res2.status(200).json({ status: "ok" }));
+  app2.get("/api/me", requireAuth(), async (req2, res2) => {
+    const userId = req2.userId;
+    res2.json({ userId });
+  });
+  app2.use("/api", requireAuth());
   app2.get("/api/lists", async (req2, res2) => {
     try {
-      const lists2 = await storage.getLists();
+      const lists2 = await storage.getLists(req2.userId);
       res2.json(lists2);
     } catch (error2) {
       res2.status(500).json({ message: "Failed to fetch lists" });
@@ -47532,7 +49111,7 @@ async function registerRoutes(app2) {
   });
   app2.get("/api/lists/:id", async (req2, res2) => {
     try {
-      const list = await storage.getList(req2.params.id);
+      const list = await storage.getList(req2.userId, req2.params.id);
       if (!list) {
         return res2.status(404).json({ message: "List not found" });
       }
@@ -47544,7 +49123,7 @@ async function registerRoutes(app2) {
   app2.post("/api/lists", async (req2, res2) => {
     try {
       const validatedData = insertListSchema.parse(req2.body);
-      const list = await storage.createList(validatedData);
+      const list = await storage.createList(req2.userId, validatedData);
       res2.status(201).json(list);
     } catch (error2) {
       if (error2 instanceof z.ZodError) {
@@ -47556,7 +49135,7 @@ async function registerRoutes(app2) {
   app2.put("/api/lists/:id", async (req2, res2) => {
     try {
       const validatedData = updateListSchema.parse(req2.body);
-      const list = await storage.updateList(req2.params.id, validatedData);
+      const list = await storage.updateList(req2.userId, req2.params.id, validatedData);
       if (!list) {
         return res2.status(404).json({ message: "List not found" });
       }
@@ -47570,7 +49149,7 @@ async function registerRoutes(app2) {
   });
   app2.delete("/api/lists/:id", async (req2, res2) => {
     try {
-      const deleted = await storage.deleteList(req2.params.id);
+      const deleted = await storage.deleteList(req2.userId, req2.params.id);
       if (!deleted) {
         return res2.status(404).json({ message: "List not found" });
       }
@@ -47581,7 +49160,7 @@ async function registerRoutes(app2) {
   });
   app2.get("/api/lists/:id/tasks", async (req2, res2) => {
     try {
-      const tasks2 = await storage.getTasksByList(req2.params.id);
+      const tasks2 = await storage.getTasksByList(req2.userId, req2.params.id);
       res2.json(tasks2);
     } catch (error2) {
       res2.status(500).json({ message: "Failed to fetch tasks for list" });
@@ -47596,7 +49175,7 @@ async function registerRoutes(app2) {
       }
       const type3 = goalTypeEnum.parse(typeRaw);
       const anchorDate = new Date(dateRaw);
-      const goal = await storage.getGoal(type3, anchorDate);
+      const goal = await storage.getGoal(req2.userId, type3, anchorDate);
       res2.json(goal ?? null);
     } catch (error2) {
       if (error2 instanceof z.ZodError) {
@@ -47616,13 +49195,85 @@ async function registerRoutes(app2) {
       if (typeof value !== "string") {
         return res2.status(400).json({ message: "value must be a string" });
       }
-      const updated = await storage.setGoal(type3, anchorDate, value);
+      const updated = await storage.setGoal(req2.userId, type3, anchorDate, value);
       res2.json(updated);
     } catch (error2) {
       if (error2 instanceof z.ZodError) {
         return res2.status(400).json({ message: "Invalid goal data", errors: error2.errors });
       }
       res2.status(500).json({ message: "Failed to save goal" });
+    }
+  });
+  app2.get("/api/reviews", async (req2, res2) => {
+    try {
+      const typeRaw = req2.query.type;
+      const dateRaw = req2.query.anchorDate;
+      if (typeof typeRaw !== "string" || typeof dateRaw !== "string") {
+        return res2.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type3 = reviewTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const review = await storage.getReview(req2.userId, type3, anchorDate);
+      res2.json(review ?? null);
+    } catch (error2) {
+      if (error2 instanceof z.ZodError) {
+        return res2.status(400).json({ message: "Invalid review request", errors: error2.errors });
+      }
+      res2.status(500).json({ message: "Failed to fetch review" });
+    }
+  });
+  app2.put("/api/reviews", async (req2, res2) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, ...values } = req2.body || {};
+      const type3 = reviewTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== "string" && !(dateRaw instanceof Date)) {
+        return res2.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      const validated = updateReviewSchema.parse(values);
+      const updated = await storage.setReview(req2.userId, type3, anchorDate, validated);
+      res2.json(updated);
+    } catch (error2) {
+      if (error2 instanceof z.ZodError) {
+        return res2.status(400).json({ message: "Invalid review data", errors: error2.errors });
+      }
+      res2.status(500).json({ message: "Failed to save review" });
+    }
+  });
+  app2.get("/api/notes", async (req2, res2) => {
+    try {
+      const typeRaw = req2.query.type;
+      const dateRaw = req2.query.anchorDate;
+      if (typeof typeRaw !== "string" || typeof dateRaw !== "string") {
+        return res2.status(400).json({ message: "type and anchorDate are required" });
+      }
+      const type3 = noteTypeEnum.parse(typeRaw);
+      const anchorDate = new Date(dateRaw);
+      const note = await storage.getNote(req2.userId, type3, anchorDate);
+      res2.json(note ?? null);
+    } catch (error2) {
+      if (error2 instanceof z.ZodError) {
+        return res2.status(400).json({ message: "Invalid note request", errors: error2.errors });
+      }
+      res2.status(500).json({ message: "Failed to fetch note" });
+    }
+  });
+  app2.put("/api/notes", async (req2, res2) => {
+    try {
+      const { type: typeRaw, anchorDate: dateRaw, ...values } = req2.body || {};
+      const type3 = noteTypeEnum.parse(typeRaw);
+      if (typeof dateRaw !== "string" && !(dateRaw instanceof Date)) {
+        return res2.status(400).json({ message: "anchorDate must be a date or ISO string" });
+      }
+      const anchorDate = new Date(dateRaw);
+      const validated = updateNoteSchema.parse(values);
+      const updated = await storage.setNote(req2.userId, type3, anchorDate, validated);
+      res2.json(updated);
+    } catch (error2) {
+      if (error2 instanceof z.ZodError) {
+        return res2.status(400).json({ message: "Invalid note data", errors: error2.errors });
+      }
+      res2.status(500).json({ message: "Failed to save note" });
     }
   });
   app2.get("/api/tasks", async (req2, res2) => {
@@ -47636,7 +49287,7 @@ async function registerRoutes(app2) {
       if (endDate) {
         end = new Date(endDate);
       }
-      const tasks2 = await storage.getTasks(start, end, includeUnscheduled === "true");
+      const tasks2 = await storage.getTasks(req2.userId, start, end, includeUnscheduled === "true");
       res2.json(tasks2);
     } catch (error2) {
       res2.status(500).json({ message: "Failed to fetch tasks" });
@@ -47644,7 +49295,7 @@ async function registerRoutes(app2) {
   });
   app2.get("/api/tasks/:id", async (req2, res2) => {
     try {
-      const task = await storage.getTask(req2.params.id);
+      const task = await storage.getTask(req2.userId, req2.params.id);
       if (!task) {
         return res2.status(404).json({ message: "Task not found" });
       }
@@ -47653,10 +49304,31 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to fetch task" });
     }
   });
+  app2.put("/api/tasks/:id/time-logged", async (req2, res2) => {
+    try {
+      const taskId = req2.params.id;
+      const { timeLoggedSeconds } = req2.body || {};
+      if (typeof timeLoggedSeconds !== "number" || !isFinite(timeLoggedSeconds)) {
+        return res2.status(400).json({ message: "timeLoggedSeconds must be a non-negative number" });
+      }
+      const seconds = Math.max(0, Math.floor(timeLoggedSeconds));
+      const existing = await storage.getTask(req2.userId, taskId);
+      if (!existing) {
+        return res2.status(404).json({ message: "Task not found" });
+      }
+      const updated = await storage.updateTask(req2.userId, taskId, { timeLoggedSeconds: seconds });
+      if (!updated) {
+        return res2.status(500).json({ message: "Failed to update task time" });
+      }
+      res2.json(updated);
+    } catch (error2) {
+      res2.status(500).json({ message: "Failed to set time logged" });
+    }
+  });
   app2.post("/api/tasks", async (req2, res2) => {
     try {
       const validatedData = insertTaskSchema.parse(req2.body);
-      const task = await storage.createTask(validatedData);
+      const task = await storage.createTask(req2.userId, validatedData);
       res2.status(201).json(task);
     } catch (error2) {
       if (error2 instanceof z.ZodError) {
@@ -47668,7 +49340,7 @@ async function registerRoutes(app2) {
   app2.put("/api/tasks/:id", async (req2, res2) => {
     try {
       const validatedData = updateTaskSchema.parse(req2.body);
-      const task = await storage.updateTask(req2.params.id, validatedData);
+      const task = await storage.updateTask(req2.userId, req2.params.id, validatedData);
       if (!task) {
         return res2.status(404).json({ message: "Task not found" });
       }
@@ -47682,7 +49354,7 @@ async function registerRoutes(app2) {
   });
   app2.delete("/api/tasks/:id", async (req2, res2) => {
     try {
-      const deleted = await storage.deleteTask(req2.params.id);
+      const deleted = await storage.deleteTask(req2.userId, req2.params.id);
       if (!deleted) {
         return res2.status(404).json({ message: "Task not found" });
       }
@@ -47691,263 +49363,9 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to delete task" });
     }
   });
-  app2.post("/api/timers/start", async (req2, res2) => {
-    try {
-      const { taskId } = req2.body;
-      if (!taskId || typeof taskId !== "string") {
-        throw new TimerValidationError(
-          "Task ID is required and must be a valid string",
-          { taskId }
-        );
-      }
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        throw new TimerValidationError(
-          "Task not found",
-          { taskId, code: TIMER_ERROR_CODES.INVALID_TASK_ID }
-        );
-      }
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          {
-            activeTaskId: activeSession.taskId,
-            requestedTaskId: taskId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      const sessionData = insertTimerSessionSchema.parse({
-        taskId,
-        startTime: /* @__PURE__ */ new Date(),
-        durationSeconds: 0,
-        isActive: true
-      });
-      const session = await storage.createTimerSession(sessionData);
-      res2.status(201).json({
-        session,
-        message: "Timer started successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "start_timer");
-    }
-  });
-  app2.post("/api/timers/pause", async (req2, res2) => {
-    var _a2;
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to pause",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          {
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_NOT_PAUSED
-          }
-        );
-      }
-      const now = /* @__PURE__ */ new Date();
-      const startTime = new Date(activeSession.startTime);
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-      const updatedSession = await storage.updateTimerSession(activeSession.id, {
-        durationSeconds: totalSeconds,
-        isActive: false
-      });
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to update timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error("Failed to increment task logged time on pause", { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-      res2.json({
-        session: updatedSession,
-        totalElapsedSeconds: totalSeconds,
-        message: "Timer paused successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "pause_timer");
-    }
-  });
-  app2.post("/api/timers/resume", async (req2, res2) => {
-    try {
-      const { sessionId } = req2.body;
-      if (!sessionId || typeof sessionId !== "string") {
-        throw new TimerValidationError(
-          "Session ID is required and must be a valid string",
-          { sessionId }
-        );
-      }
-      const session = await storage.getTimerSession(sessionId);
-      if (!session) {
-        throw new TimerValidationError(
-          "Timer session not found",
-          { sessionId, code: TIMER_ERROR_CODES.INVALID_SESSION }
-        );
-      }
-      if (session.isActive) {
-        throw new TimerStateError(
-          "Timer is already active",
-          {
-            sessionId,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      if (session.endTime) {
-        throw new TimerStateError(
-          "Cannot resume a completed timer session",
-          {
-            sessionId,
-            endTime: session.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      const activeSession = await storage.getActiveTimerSession();
-      if (activeSession && activeSession.id !== sessionId) {
-        throw new TimerStateError(
-          "Another timer is already running",
-          {
-            activeSessionId: activeSession.id,
-            activeTaskId: activeSession.taskId,
-            requestedSessionId: sessionId,
-            requiresConfirmation: true,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_ACTIVE
-          }
-        );
-      }
-      const updatedSession = await storage.updateTimerSession(sessionId, {
-        isActive: true,
-        startTime: /* @__PURE__ */ new Date()
-        // Reset start time for new segment
-      });
-      if (!updatedSession) {
-        throw new TimerPersistenceError(
-          "Failed to resume timer session",
-          { sessionId }
-        );
-      }
-      res2.json({
-        session: updatedSession,
-        message: "Timer resumed successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "resume_timer");
-    }
-  });
-  app2.post("/api/timers/stop", async (req2, res2) => {
-    var _a2;
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      if (!activeSession) {
-        throw new TimerStateError(
-          "No active timer found to stop",
-          { code: TIMER_ERROR_CODES.NO_ACTIVE_TIMER }
-        );
-      }
-      if (!activeSession.isActive) {
-        throw new TimerStateError(
-          "Timer is not currently active",
-          {
-            sessionId: activeSession.id,
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      if (activeSession.endTime) {
-        throw new TimerStateError(
-          "Timer session is already completed",
-          {
-            sessionId: activeSession.id,
-            endTime: activeSession.endTime.toISOString(),
-            code: TIMER_ERROR_CODES.TIMER_ALREADY_STOPPED
-          }
-        );
-      }
-      const now = /* @__PURE__ */ new Date();
-      const startTime = new Date(activeSession.startTime);
-      if (startTime > now) {
-        throw new TimerValidationError(
-          "Invalid timer state: start time is in the future",
-          { startTime: startTime.toISOString(), currentTime: now.toISOString() }
-        );
-      }
-      const clientTotal = typeof ((_a2 = req2.body) == null ? void 0 : _a2.clientTotalSeconds) === "number" ? Math.max(0, Math.floor(req2.body.clientTotalSeconds)) : null;
-      const elapsedSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1e3);
-      const computedTotal = (activeSession.durationSeconds || 0) + elapsedSeconds;
-      const safeComputed = Math.max(computedTotal, activeSession.durationSeconds || 0);
-      const totalSeconds = clientTotal !== null ? clientTotal : safeComputed;
-      if (totalSeconds < 0) {
-        throw new TimerValidationError(
-          "Invalid duration calculation",
-          { elapsedSeconds, previousDuration: activeSession.durationSeconds }
-        );
-      }
-      const completedSession = await storage.updateTimerSession(activeSession.id, {
-        endTime: now,
-        durationSeconds: totalSeconds,
-        isActive: false
-      });
-      if (!completedSession) {
-        throw new TimerPersistenceError(
-          "Failed to complete timer session",
-          { sessionId: activeSession.id }
-        );
-      }
-      const deltaSeconds = elapsedSeconds;
-      try {
-        await storage.incrementTaskLoggedTime(activeSession.taskId, deltaSeconds);
-      } catch (e) {
-        console.error("Failed to increment task logged time on stop", { taskId: activeSession.taskId, deltaSeconds, error: e });
-      }
-      res2.json({
-        session: completedSession,
-        message: "Timer stopped successfully"
-      });
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "stop_timer");
-    }
-  });
-  app2.get("/api/timers/active", async (req2, res2) => {
-    try {
-      const activeSession = await storage.getActiveTimerSession();
-      res2.json({ session: activeSession });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to get active timer" });
-    }
-  });
   app2.get("/api/tasks/:id/time-logged", async (req2, res2) => {
     try {
-      const task = await storage.getTask(req2.params.id);
+      const task = await storage.getTask(req2.userId, req2.params.id);
       if (!task) {
         return res2.status(404).json({ message: "Task not found" });
       }
@@ -47956,29 +49374,11 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to get task logged time" });
     }
   });
-  app2.post("/api/tasks/:id/time-logged/increment", async (req2, res2) => {
-    try {
-      const taskId = req2.params.id;
-      const { deltaSeconds } = req2.body || {};
-      if (typeof deltaSeconds !== "number" || !isFinite(deltaSeconds)) {
-        return res2.status(400).json({ message: "deltaSeconds must be a number" });
-      }
-      const task = await storage.getTask(taskId);
-      if (!task) {
-        return res2.status(404).json({ message: "Task not found" });
-      }
-      await storage.incrementTaskLoggedTime(taskId, Math.max(0, Math.floor(deltaSeconds)));
-      const updated = await storage.getTask(taskId);
-      res2.json({ taskId, timeLoggedSeconds: (updated == null ? void 0 : updated.timeLoggedSeconds) ?? 0 });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to increment task logged time" });
-    }
-  });
   app2.get("/api/timers/daily", async (req2, res2) => {
     try {
       const { date: date2 } = req2.query;
       const targetDate = date2 ? new Date(date2) : /* @__PURE__ */ new Date();
-      const dailySummary = await storage.getDailySummary(targetDate);
+      const dailySummary = await storage.getDailySummary(req2.userId, targetDate);
       const totalSeconds = dailySummary.reduce((sum, item) => sum + item.totalSeconds, 0);
       const targetSeconds = 8 * 60 * 60;
       const remainingSeconds = Math.max(0, targetSeconds - totalSeconds);
@@ -47993,144 +49393,9 @@ async function registerRoutes(app2) {
       res2.status(500).json({ message: "Failed to get daily summary" });
     }
   });
-  app2.get("/api/timers/task/:id", async (req2, res2) => {
-    try {
-      const taskId = req2.params.id;
-      const sessions = await storage.getTimerSessionsByTask(taskId);
-      const estimate = await storage.getTaskEstimate(taskId);
-      const totalSeconds = sessions.filter((session) => session.endTime).reduce((sum, session) => sum + (session.durationSeconds || 0), 0);
-      res2.json({
-        taskId,
-        sessions,
-        estimate,
-        totalSeconds
-      });
-    } catch (error2) {
-      res2.status(500).json({ message: "Failed to get task timer data" });
-    }
-  });
-  app2.post("/api/timers/sync", async (req2, res2) => {
-    try {
-      const { events, clientTimestamp } = req2.body;
-      if (!Array.isArray(events)) {
-        throw new TimerValidationError(
-          "Events array is required for sync operation",
-          { eventsType: typeof events }
-        );
-      }
-      if (events.length === 0) {
-        return res2.json({
-          syncedEventIds: [],
-          conflicts: [],
-          message: "No events to sync"
-        });
-      }
-      const serverTime = /* @__PURE__ */ new Date();
-      const clientTime = clientTimestamp ? new Date(clientTimestamp) : null;
-      if (clientTime && Math.abs(serverTime.getTime() - clientTime.getTime()) > 3e5) {
-        console.warn("Large time difference detected in sync request", {
-          serverTime: serverTime.toISOString(),
-          clientTime: clientTime.toISOString(),
-          difference: Math.abs(serverTime.getTime() - clientTime.getTime())
-        });
-      }
-      const syncedEventIds = [];
-      const failedEvents = [];
-      const conflicts = [];
-      for (const event of events) {
-        try {
-          if (!event.id || !event.type || !event.timestamp) {
-            throw new TimerValidationError(
-              "Invalid event structure",
-              { event }
-            );
-          }
-          const activeSession = await storage.getActiveTimerSession();
-          switch (event.type) {
-            case "start":
-              if (activeSession && activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "Another timer is active on server",
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id
-                  }
-                });
-                continue;
-              }
-              break;
-            case "pause":
-            case "stop":
-              if (!activeSession || activeSession.taskId !== event.taskId) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "No matching active timer on server",
-                  serverState: {
-                    activeSession: activeSession ? {
-                      taskId: activeSession.taskId,
-                      sessionId: activeSession.id
-                    } : null
-                  }
-                });
-                continue;
-              }
-              break;
-            case "resume":
-              if (activeSession) {
-                conflicts.push({
-                  eventId: event.id,
-                  reason: "Another timer is already active",
-                  serverState: {
-                    activeTaskId: activeSession.taskId,
-                    sessionId: activeSession.id
-                  }
-                });
-                continue;
-              }
-              break;
-            default:
-              throw new TimerValidationError(
-                `Unknown event type: ${event.type}`,
-                { event }
-              );
-          }
-          syncedEventIds.push(event.id);
-        } catch (eventError) {
-          const timerError = TimerErrorHandler.handleError(eventError);
-          failedEvents.push({
-            eventId: event.id || "unknown",
-            error: timerError.message
-          });
-          console.error("Failed to process sync event:", {
-            event,
-            error: timerError,
-            timestamp: (/* @__PURE__ */ new Date()).toISOString()
-          });
-        }
-      }
-      const response2 = {
-        syncedEventIds,
-        failedEvents,
-        conflicts,
-        serverTimestamp: serverTime.toISOString(),
-        message: `Processed ${events.length} events: ${syncedEventIds.length} synced, ${failedEvents.length} failed, ${conflicts.length} conflicts`
-      };
-      console.log("Timer sync completed", {
-        totalEvents: events.length,
-        syncedCount: syncedEventIds.length,
-        failedCount: failedEvents.length,
-        conflictCount: conflicts.length,
-        timestamp: serverTime.toISOString()
-      });
-      res2.json(response2);
-    } catch (error2) {
-      handleTimerError(error2, req2, res2, "sync_timer_events");
-    }
-  });
   app2.get("/api/tasks/:id/estimate", async (req2, res2) => {
     try {
-      const estimate = await storage.getTaskEstimate(req2.params.id);
+      const estimate = await storage.getTaskEstimate(req2.userId, req2.params.id);
       res2.json({ estimate });
     } catch (error2) {
       res2.status(500).json({ message: "Failed to get task estimate" });
@@ -48143,17 +49408,17 @@ async function registerRoutes(app2) {
         return res2.status(400).json({ message: "Valid estimated duration is required" });
       }
       const taskId = req2.params.id;
-      const task = await storage.getTask(taskId);
+      const task = await storage.getTask(req2.userId, taskId);
       if (!task) {
         return res2.status(404).json({ message: "Task not found" });
       }
-      let estimate = await storage.updateTaskEstimate(taskId, { estimatedDurationMinutes });
+      let estimate = await storage.updateTaskEstimate(req2.userId, taskId, { estimatedDurationMinutes });
       if (!estimate) {
         const estimateData = insertTaskEstimateSchema.parse({
           taskId,
           estimatedDurationMinutes
         });
-        estimate = await storage.createTaskEstimate(estimateData);
+        estimate = await storage.createTaskEstimate(req2.userId, estimateData);
       }
       res2.json({ estimate });
     } catch (error2) {
@@ -48165,7 +49430,7 @@ async function registerRoutes(app2) {
   });
   app2.delete("/api/tasks/:id/estimate", async (req2, res2) => {
     try {
-      const deleted = await storage.deleteTaskEstimate(req2.params.id);
+      const deleted = await storage.deleteTaskEstimate(req2.userId, req2.params.id);
       if (!deleted) {
         return res2.status(404).json({ message: "Task estimate not found" });
       }
@@ -48224,6 +49489,19 @@ function formatDuration(totalSeconds) {
   if (h2 > 0) return `${h2}:${m2.toString().padStart(2, "0")}:${s2.toString().padStart(2, "0")}`;
   return `${m2.toString().padStart(2, "0")}:${s2.toString().padStart(2, "0")}`;
 }
+function updateTodaysTasks(tasks2) {
+  try {
+    if (tasks2) {
+      todaysTasks = tasks2.slice(0, 5);
+    }
+    console.log(`Updated tray menu with ${todaysTasks.length} tasks for today`);
+    if (tray) {
+      refreshTrayMenu();
+    }
+  } catch (error2) {
+    console.error("Failed to update today's tasks:", error2);
+  }
+}
 const TRAY_TITLE_MAX_CHARS = parseInt(process.env.TRAY_TITLE_MAX_CHARS || "20", 10);
 function truncateTrayTitle(raw) {
   if (!raw) return "";
@@ -48237,20 +49515,32 @@ const API_PORT = parseInt(process.env.ELECTRON_API_PORT || "5002", 10);
 let mainWindow = null;
 let tray = null;
 let isRunning = false;
+let hasActiveSession = false;
 let httpServerRef = null;
 let isQuitting = false;
 let isQuitConfirmed = false;
 let openAtLoginEnabled = false;
 let preferRendererTrayTitle = false;
+let todaysTasks = [];
 async function startExpressServer(port) {
   const exp = express$1();
   exp.use(express$1.json());
   exp.use(express$1.urlencoded({ extended: false }));
+  if (!isDev) {
+    try {
+      const staticDir = path$4.resolve(app.getAppPath(), "dist", "public");
+      exp.use(express$1.static(staticDir));
+      exp.get(/^(?!\/api\/).*/, (_req, res2) => {
+        res2.sendFile(path$4.join(staticDir, "index.html"));
+      });
+    } catch {
+    }
+  }
   const httpServer = await registerRoutes(exp);
   exp.use((err, _req, res2, _next) => {
     const status3 = (err == null ? void 0 : err.status) || (err == null ? void 0 : err.statusCode) || 500;
-    const message = (err == null ? void 0 : err.message) || "Internal Server Error";
-    res2.status(status3).json({ message });
+    const message2 = (err == null ? void 0 : err.message) || "Internal Server Error";
+    res2.status(status3).json({ message: message2 });
     if (isDev) console.error(err);
   });
   await new Promise((resolve3) => {
@@ -48300,8 +49590,8 @@ async function createWindow() {
     await mainWindow.loadURL(devServerUrl);
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    const indexPath = path$4.resolve(process.cwd(), "dist", "public", "index.html");
-    await mainWindow.loadURL(pathToFileURL(indexPath).toString());
+    const appUrl = `http://localhost:${API_PORT}`;
+    await mainWindow.loadURL(appUrl);
   }
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -48319,6 +49609,17 @@ function createTray() {
   tray = new Tray(icon);
   tray.setTitle(truncateTrayTitle("00:00"));
   tray.setToolTip("TodoPlan Timer");
+  refreshTrayMenu();
+  tray.on("click", () => {
+    if (!mainWindow) return;
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send("tray:action", "show");
+    setTimeout(() => refreshTrayMenu(), 0);
+  });
+}
+function refreshTrayMenu() {
+  if (!tray) return;
   const buildMenu = () => {
     const template = [
       {
@@ -48333,7 +49634,7 @@ function createTray() {
             mainWindow.focus();
             mainWindow.webContents.send("tray:action", "show");
           }
-          setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         }
       },
       { type: "separator" },
@@ -48351,6 +49652,51 @@ function createTray() {
           mainWindow.webContents.send("tray:action", "stop");
         }
       },
+      {
+        label: "Discard Session",
+        enabled: hasActiveSession,
+        click: () => {
+          if (!mainWindow) return;
+          mainWindow.webContents.send("tray:action", "discardLastSession");
+        }
+      }
+    ];
+    if (todaysTasks.length > 0) {
+      template.push({ type: "separator" });
+      template.push({
+        label: "⏱️ Start Task",
+        enabled: false
+      });
+      todaysTasks.forEach((task, index2) => {
+        const priorityIcon = task.priority === "high" ? "🔴" : task.priority === "medium" ? "🟡" : "🟢";
+        const statusIcon = task.completed ? "✅" : "⏱️";
+        const truncatedTitle = task.title.length > 25 ? task.title.substring(0, 22) + "..." : task.title;
+        template.push({
+          label: `${statusIcon} ${priorityIcon} ${truncatedTitle}`,
+          click: () => {
+            console.log(`Starting task from tray: ${task.title} (${task.id})`);
+            if (!mainWindow) return;
+            mainWindow.webContents.send("tray:startTask", { taskId: task.id, taskTitle: task.title });
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        });
+      });
+    } else {
+      template.push({ type: "separator" });
+      template.push({
+        label: "No tasks for today",
+        enabled: false
+      });
+    }
+    template.push(
+      { type: "separator" },
+      {
+        label: "Refresh Tasks",
+        click: async () => {
+          await updateTodaysTasks();
+        }
+      },
       { type: "separator" },
       {
         label: "Open at Login",
@@ -48360,21 +49706,122 @@ function createTray() {
           const enabled = Boolean(item.checked);
           app.setLoginItemSettings({ openAtLogin: enabled });
           openAtLoginEnabled = enabled;
-          setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+          setTimeout(() => refreshTrayMenu(), 0);
         }
       },
       { type: "separator" },
       { role: "quit", label: "Quit" }
-    ];
+    );
     return template;
   };
   tray.setContextMenu(Menu.buildFromTemplate(buildMenu()));
-  tray.on("click", () => {
-    if (!mainWindow) return;
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send("tray:action", "show");
-    setTimeout(() => tray == null ? void 0 : tray.setContextMenu(Menu.buildFromTemplate(buildMenu())), 0);
+}
+function setupPowerMonitoring() {
+  let wasTimerRunningBeforeLock = false;
+  powerMonitor.on("lock-screen", () => {
+    console.log("Screen locked - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
+  });
+  powerMonitor.on("unlock-screen", async () => {
+    console.log("Screen unlocked");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because screen was locked",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("suspend", () => {
+    console.log("System suspending - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
+  });
+  powerMonitor.on("resume", async () => {
+    console.log("System resumed from sleep");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because system went to sleep",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("user-did-become-active", async () => {
+    console.log("User session became active");
+    if (mainWindow && wasTimerRunningBeforeLock) {
+      mainWindow.show();
+      mainWindow.focus();
+      const options2 = {
+        type: "question",
+        buttons: ["Resume Timer", "Keep Paused"],
+        defaultId: 0,
+        cancelId: 1,
+        title: "Timer Paused",
+        message: "Timer was paused because user session changed",
+        detail: "Would you like to resume the timer?",
+        normalizeAccessKeys: true
+      };
+      try {
+        const result = await dialog.showMessageBox(mainWindow, options2);
+        if (result.response === 0) {
+          mainWindow.webContents.send("tray:action", "resume");
+        }
+      } catch (error2) {
+        console.error("Failed to show dialog:", error2);
+      }
+      wasTimerRunningBeforeLock = false;
+    }
+  });
+  powerMonitor.on("user-did-resign-active", () => {
+    console.log("User session resigned active - pausing timer if running");
+    if (mainWindow && isRunning) {
+      wasTimerRunningBeforeLock = true;
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send("tray:action", "pause");
+    }
   });
 }
 function registerIpc() {
@@ -48386,44 +49833,14 @@ function registerIpc() {
   });
   ipcMain.on("timer:stateChanged", (_event, payload) => {
     isRunning = (payload == null ? void 0 : payload.status) === "RUNNING";
+    hasActiveSession = (payload == null ? void 0 : payload.hasActiveSession) ?? ((payload == null ? void 0 : payload.status) === "RUNNING" || (payload == null ? void 0 : payload.status) === "PAUSED");
+    (payload == null ? void 0 : payload.sessionSeconds) || 0;
     preferRendererTrayTitle = (payload == null ? void 0 : payload.status) !== "IDLE";
+    if ((payload == null ? void 0 : payload.status) === "IDLE" && tray) {
+      preferRendererTrayTitle = false;
+    }
     if (tray) {
-      const template = [];
-      const cm = Menu.buildFromTemplate(template);
-      tray.setContextMenu(cm);
-      tray.setContextMenu(Menu.buildFromTemplate((() => {
-        const label = isRunning ? "Pause" : "Resume";
-        return [
-          { label: (mainWindow == null ? void 0 : mainWindow.isVisible()) ? "Hide" : "Show", click: () => {
-            if (!mainWindow) return;
-            if (mainWindow.isVisible()) {
-              mainWindow.hide();
-              mainWindow.webContents.send("tray:action", "hide");
-            } else {
-              mainWindow.show();
-              mainWindow.focus();
-              mainWindow.webContents.send("tray:action", "show");
-            }
-          } },
-          { type: "separator" },
-          { label, click: () => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("tray:action", isRunning ? "pause" : "resume");
-          } },
-          { label: "Stop", click: () => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("tray:action", "stop");
-          } },
-          { type: "separator" },
-          { label: "Open at Login", type: "checkbox", checked: openAtLoginEnabled, click: (item) => {
-            const enabled = Boolean(item.checked);
-            app.setLoginItemSettings({ openAtLogin: enabled });
-            openAtLoginEnabled = enabled;
-          } },
-          { type: "separator" },
-          { role: "quit", label: "Quit" }
-        ];
-      })()));
+      refreshTrayMenu();
     }
   });
   ipcMain.on("show:mainWindow", () => {
@@ -48464,6 +49881,9 @@ function registerIpc() {
       return false;
     }
   });
+  ipcMain.on("tasks:updated", (_, tasks2) => {
+    updateTodaysTasks(tasks2);
+  });
 }
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -48488,7 +49908,10 @@ app.whenReady().then(async () => {
     }
   }
   await createWindow();
-  if (isMac) createTray();
+  if (isMac) {
+    createTray();
+    updateTodaysTasks([]);
+  }
   registerIpc();
   if (isMac && process.env.HIDE_DOCK === "1" && app.dock) {
     try {
@@ -48501,6 +49924,7 @@ app.whenReady().then(async () => {
   } catch {
     openAtLoginEnabled = false;
   }
+  setupPowerMonitoring();
   app.on("activate", async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       await createWindow();

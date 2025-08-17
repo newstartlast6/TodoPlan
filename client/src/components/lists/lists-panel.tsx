@@ -10,8 +10,8 @@ interface ListsPanelProps {
   lists: ListWithTaskCount[];
   selectedListId: string | null;
   onListSelect: (listId: string) => void;
-  onListCreate: (list: { name: string; emoji: string; color?: string }) => void;
-  onListUpdate: (listId: string, updates: { name?: string; emoji?: string; color?: string }) => void;
+  onListCreate: (list: { name: string; emoji: string }) => void;
+  onListUpdate: (listId: string, updates: { name?: string; emoji?: string }) => void;
   onListDelete: (listId: string) => void;
   isLoading?: boolean;
 }
@@ -30,7 +30,7 @@ export function ListsPanel({
   const [deleteConfirmListId, setDeleteConfirmListId] = useState<string | null>(null);
   const [contextMenuListId, setContextMenuListId] = useState<string | null>(null);
 
-  const handleCreateList = (listData: { name: string; emoji: string; color?: string }) => {
+  const handleCreateList = (listData: { name: string; emoji: string }) => {
     onListCreate(listData);
     setIsCreateDialogOpen(false);
   };
@@ -52,7 +52,7 @@ export function ListsPanel({
     }
   };
 
-  const handleUpdateList = (listId: string, updates: { name?: string; emoji?: string; color?: string }) => {
+  const handleUpdateList = (listId: string, updates: { name?: string; emoji?: string }) => {
     onListUpdate(listId, updates);
     setEditingListId(null);
   };
