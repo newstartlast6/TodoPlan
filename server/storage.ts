@@ -113,6 +113,7 @@ export class MemStorage implements IStorage {
 
   private initializeSampleData() {
     const devUserId = process.env.DEV_USER_ID || 'dev-user-00000000-0000-0000-0000-000000000000';
+    console.log('Initializing sample data for user:', devUserId);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
@@ -791,7 +792,9 @@ class DbStorage implements IStorage {
 
   // List operations
   async getLists(userId: string): Promise<List[]> {
+    console.log('Fetching lists', userId);
     return this.withPersistence("get_lists", {}, async () => {
+      console.log('Fetching lists', userId);
       return await this.db.select().from(lists).where(eq(lists.userId as any, userId as any)).orderBy(lists.createdAt);
     });
   }
@@ -1301,7 +1304,7 @@ class DbStorage implements IStorage {
 }
 
 export function createStorage(): IStorage {
-  const usePostgres = isPostgresMode();
+  const usePostgres = true;
   // Helpful runtime log to know which storage backend is active
   console.log(`[storage] Using ${usePostgres ? 'Postgres' : 'In-Memory'} storage backend`);
   if (usePostgres) {

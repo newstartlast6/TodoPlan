@@ -24,6 +24,7 @@ function normalizeDatabaseUrl(url: string): string {
 }
 
 export function isPostgresMode(): boolean {
+  console.log('isPostgresMode', process.env.STORAGE_BACKEND);
   const backend = process.env.STORAGE_BACKEND || "";
   if (backend) return backend === "postgres";
   return Boolean(process.env.DATABASE_URL);

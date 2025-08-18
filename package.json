@@ -34,6 +34,10 @@
       {
         "from": "dist-electron",
         "to": "dist-electron"
+      },
+      {
+        "from": ".env",
+        "to": ".env"
       }
     ]
   },

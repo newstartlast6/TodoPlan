@@ -30,13 +30,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protect all subsequent /api routes (excluding already-defined public ones like /api/health, /api/me)
-  // app.use('/api', requireAuth());
+  app.use('/api', requireAuth());
 
   // Lists endpoints
   
   // Get all lists with task counts
   app.get("/api/lists", async (req, res) => {
+    console.log('Fetching lists', req.userId);
+
     try {
+      console.log('Fetching lists', req.userId);
       const lists = await storage.getLists(req.userId!);
       res.json(lists);
     } catch (error) {
@@ -59,6 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create new list
   app.post("/api/lists", async (req, res) => {
+    console.log('Fetching lists', req.userId);
+
     try {
       const validatedData = insertListSchema.parse(req.body);
       const list = await storage.createList(req.userId!, validatedData);
@@ -103,6 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get tasks for specific list
   app.get("/api/lists/:id/tasks", async (req, res) => {
+    console.log('Fetching lists tasks', req.userId);
+
     try {
       const tasks = await storage.getTasksByList(req.userId!, req.params.id);
       res.json(tasks);
@@ -253,11 +260,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get single task
   app.get("/api/tasks/:id", async (req, res) => {
-    console.log('=== TASK ROUTE DEBUG ===');
-    console.log('Task ID:', req.params.id);
-    console.log('User ID:', (req as any).userId);
-    console.log('Headers:', req.headers);
-    console.log('========================');
     try {
       const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
@@ -539,13 +541,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Database URL (masked):', process.env.DATABASE_URL?.replace(/\/\/.*@/, '//***:***@') || 'not set');
       
       res.json({
-        userId: req.userId,
+        userId: req.userId || 'not set',
         totalTasks: allTasks.length,
         tasks: allTasks.map(t => ({ id: t.id, title: t.title, createdAt: t.createdAt })),
         environment: {
           nodeEnv: process.env.NODE_ENV,
           hasDatabaseUrl: !!process.env.DATABASE_URL,
-          url: process.env.DATABASE_URL
+          url: process.env.DATABASE_URL || 'not set'
         }
       });
     } catch (error) {

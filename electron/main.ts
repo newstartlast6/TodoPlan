@@ -1,4 +1,56 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+// === Load environment early so process.env is available for later code ===
+function loadEnv() {
+  try {
+    // Development: read from project root .env (if present)
+    if (!app.isPackaged) {
+      const devEnvPath = path.resolve(process.cwd(), '.env');
+      if (fs.existsSync(devEnvPath)) {
+        dotenv.config({ path: devEnvPath });
+        console.log('Loaded .env not packaged from project root (dev):', devEnvPath);
+        return;
+      }
+      // also allow a .env.development fallback
+      const devEnvAlt = path.resolve(process.cwd(), '.env.development');
+      if (fs.existsSync(devEnvAlt)) {
+        dotenv.config({ path: devEnvAlt });
+        console.log('Loaded .env.development from project root (dev):', devEnvAlt);
+        return;
+      }
+      console.warn('No .env found in project root (dev). Continuing without it.');
+      return;
+    }
+
+    // Packaged: prefer Resources/.env, then Resources/dist-electron/.env
+    const candidatePaths = [
+      path.join(process.resourcesPath, '.env'),
+      path.join(process.resourcesPath, 'dist-electron', '.env'),
+      // fallback: if you copied the whole project into resources
+      path.join(process.resourcesPath, 'app', '.env'),
+    ];
+
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        dotenv.config({ path: p });
+        console.log('Loaded .env from packaged resources:', p);
+        return;
+      }
+    }
+
+    console.warn('No .env found in packaged resources; proceeding without an env file.');
+  } catch (err) {
+    console.error('Error while loading env:', err);
+  }
+}
+
+// call it immediately after imports so subsequent constants read the right env
+loadEnv();
+// === end env loading ===
+
+
+//call it first so all subsequent imports have the right env particularly storage.
+
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, powerMonitor } from 'electron';
 import path from 'path';
 import { pathToFileURL, fileURLToPath } from 'url';
@@ -7,6 +59,7 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import { registerRoutes } from '../server/routes';
 import type { Server } from 'http';
 import fs from 'fs';
+
 
 // Basic time formatter for tray title
 function formatDuration(totalSeconds: number): string {
@@ -90,6 +143,14 @@ async function startExpressServer(port: number): Promise<Server> {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+
+  // Error middleware similar to server/index.ts
+  exp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err?.status || err?.statusCode || 500;
+    const message = err?.message || 'Internal Server Error';
+    res.status(status).json({ message });
+    if (isDev) console.error(err);
+  });
   await new Promise<void>((resolve, reject) => {
     httpServer.listen({ port }, (error?: any) => {
       if (error) {
@@ -507,6 +568,7 @@ function registerIpc() {
 
   // Handle task updates from renderer (to refresh tray menu)
   ipcMain.on('tasks:updated', (_, tasks: any[]) => {
+    console.log('Tasks updated:', tasks);
     updateTodaysTasks(tasks);
   });
 }

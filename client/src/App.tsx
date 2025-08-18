@@ -109,7 +109,9 @@ function TodaysTasksSync() {
   const { data: tasks = [] } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
     queryFn: async () => {
+      console.log('Fetching tasks');
       const response = await fetch('/api/tasks');
+      console.log('Tasks fetched:', response);
       if (!response.ok) throw new Error('Failed to fetch tasks');
       return response.json();
     },
