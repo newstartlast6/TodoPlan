@@ -48,3 +48,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
   setOpenAtLogin: async (value) => ipcRenderer.invoke("app:setOpenAtLogin", value),
   quit: () => ipcRenderer.send("app:quit")
 });
+rtTask", handler);
+      },
+      notifyTasksUpdated: (tasks) => {
+        ipcRenderer.send("tasks:updated", tasks || []);
+      },
+      setTrayTitle: (title) => {
+        ipcRenderer.send("tray:setTitle", { title });
+      },
+      getOpenAtLogin: async () => ipcRenderer.invoke("app:getOpenAtLogin"),
+      setOpenAtLogin: async (value) => ipcRenderer.invoke("app:setOpenAtLogin", value),
+      quit: () => ipcRenderer.send("app:quit")
+    });
+  }
+});
+export default require_preload();

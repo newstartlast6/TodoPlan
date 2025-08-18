@@ -344,60 +344,87 @@ export function BlockNotesEditor({
         .slash-menu-item.selected {
           background-color: var(--bn-colors-hovered-background);
         }
-        /* Remove any default left gutter and ensure full width and height */
-        .bn-container { height: 100% !important; }
-        .bn-container .bn-editor { padding-left: 12px !important; padding-right: 0 !important; margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; height: 100% !important; min-height: 300px !important; }
-        .bn-container .bn-block-group { margin-left: 0 !important; height: 100% !important; }
-        .bn-container .bn-block-group .bn-block-group > .bn-block-outer:not([data-prev-depth-changed])::before { display: none !important; }
+        /* FIXED: Remove fixed min-height and ensure proper scrolling */
+        .bn-container { 
+          height: 100% !important; 
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .bn-container .bn-editor { 
+          padding-left: 12px !important; 
+          padding-right: 12px !important; 
+          margin-left: 0 !important; 
+          margin-right: 0 !important; 
+          width: 100% !important; 
+          flex: 1 !important;
+          overflow-y: auto !important;
+          /* Remove fixed min-height that was causing issues */
+        }
+        .bn-container .bn-block-group { 
+          margin-left: 0 !important; 
+        }
+        .bn-container .bn-block-group .bn-block-group > .bn-block-outer:not([data-prev-depth-changed])::before { 
+          display: none !important; 
+        }
         /* Force inline content to flow normally (fix accidental vertical stacking) */
-        .bn-container .bn-block-content { flex-direction: row !important; align-items: flex-start !important; }
-        .bn-container .bn-inline-content { display: block !important; width: 100% !important; white-space: pre-wrap !important; word-break: break-word !important; }
+        .bn-container .bn-block-content { 
+          flex-direction: row !important; 
+          align-items: flex-start !important; 
+        }
+        .bn-container .bn-inline-content { 
+          display: block !important; 
+          width: 100% !important; 
+          white-space: pre-wrap !important; 
+          word-break: break-word !important; 
+        }
       `}</style>
       {/* Header toolbar intentionally removed; rely on selection toolbar */}
 
       <div
         className={cn(
-          "relative rounded-lg border transition-all bg-background flex-1 min-h-0 h-full",
+          "relative rounded-lg border transition-all bg-background flex flex-col flex-1 min-h-0",
           isFocused ? "ring-2 ring-primary/20 border-primary/30" : "border-border"
         )}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       >
-        <BlockNoteView
-          editor={editor as unknown as BlockNoteEditor}
-          theme={minimalTheme}
-          onChange={() => { /* handled in editor.onChange above */ }}
-          editable
-          // turn off optional UIs that reference sideMenu/drag
-          sideMenu={false}
-          tableHandles={false}
-          filePanel={false}
-          comments={false}
-          emojiPicker={false}
-          formattingToolbar={true}
-          linkToolbar={false}
-           slashMenu={false}
-           className="px-0 h-full"
-        >
-          <SuggestionMenuController
-            triggerCharacter="/"
-            // Build the same set as the TipTap enhanced editor, with our own icons and actions
-            getItems={async (query: string) => {
-              const items: Array<DefaultReactSuggestionItem & { icon?: JSX.Element }> = [
-                { title: "Heading 1", onItemClick: () => toggleHeading(1), icon: <Type className="w-4 h-4" /> },
-                { title: "Heading 2", onItemClick: () => toggleHeading(2), icon: <Type className="w-4 h-4" /> },
-                { title: "Heading 3", onItemClick: () => toggleHeading(3), icon: <Type className="w-4 h-4" /> },
-                { title: "Bulleted List", onItemClick: () => toggleBlockType("bulletListItem"), icon: <List className="w-4 h-4" /> },
-                { title: "Numbered List", onItemClick: () => toggleBlockType("numberedListItem"), icon: <List className="w-4 h-4" /> },
-                { title: "Check Item", onItemClick: () => toggleBlockType("checkListItem"), icon: <CheckSquare className="w-4 h-4" /> },
-                { title: "Horizontal Line", onItemClick: insertDivider, icon: <Minus className="w-4 h-4" /> },
-              ];
-              const q = (query || "").toLowerCase();
-              return q ? items.filter(i => i.title.toLowerCase().includes(q)) : items;
-            }}
-            suggestionMenuComponent={CustomSlashMenu}
-          />
-        </BlockNoteView>
+        <div className="flex-1 overflow-hidden">
+          <BlockNoteView
+            editor={editor as unknown as BlockNoteEditor}
+            theme={minimalTheme}
+            onChange={() => { /* handled in editor.onChange above */ }}
+            editable
+            // turn off optional UIs that reference sideMenu/drag
+            sideMenu={false}
+            tableHandles={false}
+            filePanel={false}
+            comments={false}
+            emojiPicker={false}
+            formattingToolbar={true}
+            linkToolbar={false}
+             slashMenu={false}
+             className="px-0 h-full"
+          >
+            <SuggestionMenuController
+              triggerCharacter="/"
+              // Build the same set as the TipTap enhanced editor, with our own icons and actions
+              getItems={async (query: string) => {
+                const items: Array<DefaultReactSuggestionItem & { icon?: JSX.Element }> = [
+                  { title: "Heading 1", onItemClick: () => toggleHeading(1), icon: <Type className="w-4 h-4" /> },
+                  { title: "Heading 2", onItemClick: () => toggleHeading(2), icon: <Type className="w-4 h-4" /> },
+                  { title: "Heading 3", onItemClick: () => toggleHeading(3), icon: <Type className="w-4 h-4" /> },
+                  { title: "Bulleted List", onItemClick: () => toggleBlockType("bulletListItem"), icon: <List className="w-4 h-4" /> },
+                  { title: "Numbered List", onItemClick: () => toggleBlockType("numberedListItem"), icon: <List className="w-4 h-4" /> },
+                  { title: "Check Item", onItemClick: () => toggleBlockType("checkListItem"), icon: <CheckSquare className="w-4 h-4" /> },
+                  { title: "Horizontal Line", onItemClick: insertDivider, icon: <Minus className="w-4 h-4" /> },
+                ];
+                const q = (query || "").toLowerCase();
+                return q ? items.filter(i => i.title.toLowerCase().includes(q)) : items;
+              }}
+              suggestionMenuComponent={CustomSlashMenu}
+            />
+          </BlockNoteView>
+        </div>
       </div>
 
       {autosaveMode && (
@@ -422,5 +449,3 @@ export function BlockNotesEditor({
     </div>
   );
 }
-
-
