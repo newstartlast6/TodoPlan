@@ -1,18 +1,16 @@
-// Use CommonJS syntax for Electron preload runtime to avoid ES6 import issues in distribution
+// electron/preload.ts - Convert to CommonJS for Electron compatibility
 const { contextBridge, ipcRenderer } = require('electron');
 
 // Must match the port used by electron main process
 const API_PORT = parseInt(process.env.ELECTRON_API_PORT || '5002', 10);
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Prefer dev proxy by returning '/api' in development to avoid CORS
-  getApiBaseUrl: (): string => {
-    const isDev = (process.env.NODE_ENV === 'development');
-    if (isDev) return '/api';
-    return API_BASE_URL;
+  // Always use relative path '/api' for both dev and prod
+  getApiBaseUrl: () => {
+    return '/api';
   },
-  getPublicAssetUrl: (relativePath: string): string => {
+  
+  getPublicAssetUrl: (relativePath) => {
     try {
       const url = new URL(relativePath, globalThis.location?.href || '');
       return url.toString();
@@ -20,42 +18,49 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return `/${relativePath}`;
     }
   },
-  onTimerTick: (callback: (elapsedSeconds: number) => void) => {
+  
+  onTimerTick: (callback) => {
     // Not used by renderer in current design; renderer sends ticks to main.
-    const handler = (_event: any, payload: { elapsedSeconds: number }) => callback(payload.elapsedSeconds);
+    const handler = (_event, payload) => callback(payload.elapsedSeconds);
     ipcRenderer.on('timer:tick', handler);
     return () => ipcRenderer.off('timer:tick', handler);
   },
-  sendTimerTick: (elapsedSeconds: number) => {
+  
+  sendTimerTick: (elapsedSeconds) => {
     ipcRenderer.send('timer:tick', { elapsedSeconds });
   },
-  notifyTimerState: (status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE') => {
+  
+  notifyTimerState: (status) => {
     ipcRenderer.send('timer:stateChanged', { status });
   },
-  sendTimerStateWithSession: (data: { status: 'RUNNING' | 'PAUSED' | 'STOPPED' | 'IDLE'; sessionSeconds: number; hasActiveSession?: boolean }) => {
+  
+  sendTimerStateWithSession: (data) => {
     ipcRenderer.send('timer:stateChanged', data);
   },
-  onTrayAction: (callback: (action: 'show' | 'hide' | 'pause' | 'resume' | 'stop' | 'discardLastSession') => void) => {
-    const handler = (_event: any, action: any) => callback(action);
+  
+  onTrayAction: (callback) => {
+    const handler = (_event, action) => callback(action);
     ipcRenderer.on('tray:action', handler);
     return () => ipcRenderer.off('tray:action', handler);
   },
-  onTrayStartTask: (callback: (taskData: { taskId: string; taskTitle: string }) => void) => {
-    const handler = (_event: any, taskData: any) => callback(taskData);
+  
+  onTrayStartTask: (callback) => {
+    const handler = (_event, taskData) => callback(taskData);
     ipcRenderer.on('tray:startTask', handler);
     return () => ipcRenderer.off('tray:startTask', handler);
   },
-  notifyTasksUpdated: (tasks?: any[]): void => {
+  
+  notifyTasksUpdated: (tasks) => {
     ipcRenderer.send('tasks:updated', tasks || []);
   },
-    setTrayTitle: (title: string) => {
-      ipcRenderer.send('tray:setTitle', { title });
-    },
-  getOpenAtLogin: async (): Promise<boolean> => ipcRenderer.invoke('app:getOpenAtLogin'),
-  setOpenAtLogin: async (value: boolean): Promise<boolean> => ipcRenderer.invoke('app:setOpenAtLogin', value),
-  quit: (): void => ipcRenderer.send('app:quit'),
+  
+  setTrayTitle: (title) => {
+    ipcRenderer.send('tray:setTitle', { title });
+  },
+  
+  getOpenAtLogin: async () => ipcRenderer.invoke('app:getOpenAtLogin'),
+  
+  setOpenAtLogin: async (value) => ipcRenderer.invoke('app:setOpenAtLogin', value),
+  
+  quit: () => ipcRenderer.send('app:quit'),
 });
-
-
-
-

@@ -4,14 +4,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const API_PORT = parseInt(process.env.ELECTRON_API_PORT || '5002', 10);
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Prefer dev proxy by returning '/api' in development to avoid CORS
+  // Always use relative path '/api' for both dev and prod  
   getApiBaseUrl: () => {
-    if (process.env.NODE_ENV === 'development') return '/api';
-    return API_BASE_URL;
+    return '/api';
   },
+  
   getPublicAssetUrl: (relativePath) => {
     try {
       // Works in both dev (http) and prod (file) by resolving relative to current document URL
@@ -56,5 +55,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setOpenAtLogin: async (value) => ipcRenderer.invoke('app:setOpenAtLogin', value),
   quit: () => ipcRenderer.send('app:quit'),
 });
-
-

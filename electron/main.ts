@@ -61,6 +61,8 @@ let preferRendererTrayTitle = false;
 let todaysTasks: any[] = [];
 
 async function startExpressServer(port: number): Promise<Server> {
+  console.log(`Starting Express server on port ${port} (packaged: ${app.isPackaged})`);
+  
   const exp: Express = express();
   exp.use(express.json());
   exp.use(express.urlencoded({ extended: false }));
@@ -69,29 +71,39 @@ async function startExpressServer(port: number): Promise<Server> {
   if (!isDev) {
     try {
       const staticDir = path.resolve(app.getAppPath(), 'dist', 'public');
+      console.log(`Static directory: ${staticDir}`);
+      console.log(`Static dir exists: ${fs.existsSync(staticDir)}`);
+      
       exp.use(express.static(staticDir));
       exp.get(/^(?!\/api\/).*/, (_req, res) => {
         res.sendFile(path.join(staticDir, 'index.html'));
       });
-    } catch { }
+    } catch (error) {
+      console.error('Failed to set up static serving:', error);
+    }
   }
 
   const httpServer = await registerRoutes(exp);
-
-  // Error middleware similar to server/index.ts
-  exp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err?.status || err?.statusCode || 500;
-    const message = err?.message || 'Internal Server Error';
-    res.status(status).json({ message });
-    if (isDev) console.error(err);
+  
+  // Add a health check endpoint
+  exp.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  await new Promise<void>((resolve) => {
-    httpServer.listen({ port }, () => resolve());
+  await new Promise<void>((resolve, reject) => {
+    httpServer.listen({ port }, (error?: any) => {
+      if (error) {
+        console.error(`Failed to start server on port ${port}:`, error);
+        reject(error);
+      } else {
+        console.log(`Express server started successfully on port ${port}`);
+        resolve();
+      }
+    });
   });
+  
   return httpServer;
 }
-
 function resolvePreloadPath(): string {
   if (app.isPackaged) {
     const base = path.join(process.resourcesPath, 'dist-electron');

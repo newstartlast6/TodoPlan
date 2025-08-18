@@ -56,7 +56,7 @@ export default defineConfig({
               output: {
                 format: "cjs",
                 entryFileNames: () => `preload.cjs`,
-                exports: 'auto',
+                exports: 'none', // Changed from 'auto' to 'none'
               },
             },
             target: 'node18',
@@ -65,11 +65,11 @@ export default defineConfig({
             commonjsOptions: {
               transformMixedEsModules: true,
             },
-            // Ensure node platform for esbuild transforms
-            // @ts-ignore
-            esbuild: {
-              platform: 'node',
-              format: 'cjs',
+            // Force CommonJS output
+            lib: {
+              entry: path.resolve(import.meta.dirname, "electron", "preload.ts"),
+              formats: ['cjs'],
+              fileName: () => 'preload.cjs',
             },
           },
         },

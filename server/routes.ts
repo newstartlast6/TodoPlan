@@ -30,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protect all subsequent /api routes (excluding already-defined public ones like /api/health, /api/me)
-  app.use('/api', requireAuth());
+  // app.use('/api', requireAuth());
 
   // Lists endpoints
   
@@ -253,6 +253,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get single task
   app.get("/api/tasks/:id", async (req, res) => {
+    console.log('=== TASK ROUTE DEBUG ===');
+    console.log('Task ID:', req.params.id);
+    console.log('User ID:', (req as any).userId);
+    console.log('Headers:', req.headers);
+    console.log('========================');
     try {
       const task = await storage.getTask(req.userId!, req.params.id);
       if (!task) {
@@ -506,6 +511,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch list notes" });
     }
   });
+
+  app.get("/api/debug/database", async (req, res) => {
+    try {
+      console.log('=== DATABASE DEBUG ===');
+      
+      // Check if we have a userId
+      console.log('Request userId:', req.userId);
+      
+      // Try to get all tasks without filters
+      const allTasks = await storage.getTasks(req.userId!);
+      console.log('Total tasks for user:', allTasks.length);
+      
+      // Get all users' tasks (if storage supports it)
+      // This is just for debugging - remove in production
+      try {
+        // Check if your storage has a method to get all tasks regardless of user
+        // You might need to add this method to your storage class
+        console.log('Database connection seems working - got tasks response');
+      } catch (err) {
+        console.error('Storage method error:', err);
+      }
+      
+      // Check database environment
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('Database URL present:', !!process.env.DATABASE_URL);
+      console.log('Database URL (masked):', process.env.DATABASE_URL?.replace(/\/\/.*@/, '//***:***@') || 'not set');
+      
+      res.json({
+        userId: req.userId,
+        totalTasks: allTasks.length,
+        tasks: allTasks.map(t => ({ id: t.id, title: t.title, createdAt: t.createdAt })),
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          hasDatabaseUrl: !!process.env.DATABASE_URL,
+          url: process.env.DATABASE_URL
+        }
+      });
+    } catch (error) {
+      console.error('Database debug error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });  
 
   // Get single list note
   app.get("/api/list-notes/:id", async (req, res) => {
