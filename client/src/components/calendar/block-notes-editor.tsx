@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView, Theme, lightDefaultTheme, darkDefaultTheme } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
-import { BlockNoteEditor, PartialBlock } from "@blocknote/core";
-import { useCreateBlockNote, SuggestionMenuController, DefaultReactSuggestionItem, SuggestionMenuProps } from "@blocknote/react";
+import { BlockNoteEditor, PartialBlock, BlockNoteSchema, defaultBlockSpecs, createBlockSpec } from "@blocknote/core";
+import { useCreateBlockNote, SuggestionMenuController, DefaultReactSuggestionItem, SuggestionMenuProps, createReactBlockSpec } from "@blocknote/react";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesAutoSave } from "@/hooks/use-notes-auto-save";
@@ -22,6 +22,30 @@ interface BlockNotesEditorProps {
   onSaveError?: (error: string) => void;
 }
 
+// Custom divider block
+const DividerBlock = createReactBlockSpec(
+  {
+    type: "divider",
+    propSchema: {},
+    content: "none",
+  },
+  {
+    render: () => (
+      <hr 
+        style={{
+          width: "100%",
+          height: "1px",
+          backgroundColor: "#e5e7eb",
+          margin: "0px 0px 4px 0px",
+          border: "none",
+          display: "block",
+        }}
+        className="dark:bg-gray-600"
+      />
+    ),
+  }
+);
+
 export function BlockNotesEditor({
   taskId,
   initialNotes,
@@ -38,9 +62,24 @@ export function BlockNotesEditor({
   const { isDirty, isSaving, lastSaved, error, updateNotes, forceSave, retrySave } =
     useNotesAutoSave({ taskId: taskId || "", initialNotes: initialNotes || "", debounceMs: 800, onSaveSuccess, onSaveError });
 
-  // Initialize BlockNote with HTML content to keep storage as simple text
+  // Create schema with custom divider block
+  const schema = BlockNoteSchema.create({
+    blockSpecs: {
+      // Include default blocks
+      paragraph: defaultBlockSpecs.paragraph,
+      heading: defaultBlockSpecs.heading,
+      bulletListItem: defaultBlockSpecs.bulletListItem,
+      numberedListItem: defaultBlockSpecs.numberedListItem,
+      checkListItem: defaultBlockSpecs.checkListItem,
+      // Add custom divider block
+      divider: DividerBlock,
+    },
+  });
+
+  // Initialize BlockNote with proper ESM support and custom schema
   const editor = useCreateBlockNote({
-    initialContent: [{ type: "paragraph" }] as PartialBlock[],
+    schema,
+    initialContent: undefined, // Let editor initialize empty
     // Match enhanced editor: tight left alignment, smaller font, no side spacing
     domAttributes: {
         editor: {
@@ -53,15 +92,9 @@ export function BlockNotesEditor({
         handleDOMEvents: {},
       },
     },
-    disableExtensions: [
-      // Side menu contains drag handle; disable to avoid block dragging
-      "sideMenu",
-      // Tables, file panel, comments are not needed for simple notes
-      "tableHandles",
-      "filePanel",
-      "comments",
-    ],
-  } as any);
+    trailingBlock: false,
+    uploadFile: undefined, // Disable file uploads to avoid ESM issues
+  });
 
   // Initialize content only when the editor mounts or when the logical doc changes (taskId)
   const initializedForRef = useRef<string | null>(null);
@@ -70,10 +103,21 @@ export function BlockNotesEditor({
     if (!editor) return;
     if (initializedForRef.current === initKey) return;
     (async () => {
-      const html = autosaveMode ? (initialNotes || "") : (value || "");
-      const blocks = await editor.tryParseHTMLToBlocks(html || "<p></p>");
-      editor.replaceBlocks(editor.topLevelBlocks.map(b => b.id), blocks.length ? blocks : [{ type: "paragraph" }]);
-      initializedForRef.current = initKey;
+      try {
+        const html = autosaveMode ? (initialNotes || "") : (value || "");
+        if (html) {
+          const blocks = await editor.tryParseHTMLToBlocks(html);
+          if (blocks.length > 0) {
+            editor.replaceBlocks(editor.topLevelBlocks.map(b => b.id), blocks);
+          }
+        }
+        initializedForRef.current = initKey;
+      } catch (error) {
+        console.warn('Error initializing editor content:', error);
+        // Fallback to empty paragraph
+        // Keep the current empty state if there's an error
+        initializedForRef.current = initKey;
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor, initKey]);
@@ -82,11 +126,15 @@ export function BlockNotesEditor({
   useEffect(() => {
     if (!editor) return;
     const unsubscribe = editor.onChange(async () => {
-      const html = await editor.blocksToFullHTML(editor.document);
-      if (autosaveMode) {
-        updateNotes(html);
-      } else {
-        onChange?.(html);
+      try {
+        const html = await editor.blocksToFullHTML(editor.document);
+        if (autosaveMode) {
+          updateNotes(html);
+        } else {
+          onChange?.(html);
+        }
+      } catch (error) {
+        console.warn('Error converting blocks to HTML:', error);
       }
     });
     return () => { (unsubscribe as any)?.(); };
@@ -131,14 +179,28 @@ export function BlockNotesEditor({
   }
 
   // Helpers for current block state
-  const currentBlock = editor.getTextCursorPosition().block as any;
+  const getCurrentBlock = () => {
+    try {
+      const position = editor.getTextCursorPosition();
+      return position?.block || null;
+    } catch (error) {
+      console.warn('Error getting current block:', error);
+      return null;
+    }
+  };
+
+  const currentBlock = getCurrentBlock();
   const currentType: string | undefined = currentBlock?.type;
-  const currentLevel: number | undefined = currentBlock?.props?.level;
+  const currentLevel: number | undefined = (currentBlock as any)?.props?.level;
 
   const setBlockType = (type: string, props?: Record<string, any>) => {
-    const block = editor.getTextCursorPosition().block;
+    const block = getCurrentBlock();
     if (!block) return;
-    editor.updateBlock(block, { type: type as any, props: props as any });
+    try {
+      editor.updateBlock(block, { type: type as any, props: props as any });
+    } catch (error) {
+      console.warn('Error updating block:', error);
+    }
   };
 
   const toggleBlockType = (type: string, props?: Record<string, any>) => {
@@ -154,6 +216,24 @@ export function BlockNotesEditor({
       setBlockType("paragraph");
     } else {
       setBlockType("heading", { level });
+    }
+  };
+
+  const insertDivider = () => {
+    try {
+      const currentBlock = editor.getTextCursorPosition().block;
+      if (!currentBlock) {
+        console.warn('No current block found');
+        return;
+      }
+      
+      // Insert divider above the current cursor position
+      editor.insertBlocks([
+        { type: "divider" }
+      ], currentBlock.id, "before");
+      
+    } catch (error) {
+      console.warn('Error inserting divider:', error);
     }
   };
 
@@ -310,8 +390,7 @@ export function BlockNotesEditor({
                 { title: "Bulleted List", onItemClick: () => toggleBlockType("bulletListItem"), icon: <List className="w-4 h-4" /> },
                 { title: "Numbered List", onItemClick: () => toggleBlockType("numberedListItem"), icon: <List className="w-4 h-4" /> },
                 { title: "Check Item", onItemClick: () => toggleBlockType("checkListItem"), icon: <CheckSquare className="w-4 h-4" /> },
-                { title: "Quote", onItemClick: () => toggleBlockType("quote"), icon: <Quote className="w-4 h-4" /> },
-                { title: "Horizontal Line", onItemClick: () => toggleBlockType("pageBreak"), icon: <Minus className="w-4 h-4" /> },
+                { title: "Horizontal Line", onItemClick: insertDivider, icon: <Minus className="w-4 h-4" /> },
               ];
               const q = (query || "").toLowerCase();
               return q ? items.filter(i => i.title.toLowerCase().includes(q)) : items;

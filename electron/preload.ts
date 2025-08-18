@@ -1,6 +1,5 @@
-// Use CommonJS-compatible imports for Electron preload runtime
-import { contextBridge, ipcRenderer } from 'electron';
-// Avoid Node built-ins in preload to keep compatibility with sandboxed preload
+// Use CommonJS syntax for Electron preload runtime to avoid ES6 import issues in distribution
+const { contextBridge, ipcRenderer } = require('electron');
 
 // Must match the port used by electron main process
 const API_PORT = parseInt(process.env.ELECTRON_API_PORT || '5002', 10);
@@ -57,6 +56,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   quit: (): void => ipcRenderer.send('app:quit'),
 });
 
-export {};
+
 
 

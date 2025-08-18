@@ -2,9 +2,9 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
-import { contextBridge, ipcRenderer } from "electron";
 var require_preload = __commonJS({
   "preload.cjs"() {
+    const { contextBridge, ipcRenderer } = require("electron");
     const API_PORT = parseInt(process.env.ELECTRON_API_PORT || "5002", 10);
     const API_BASE_URL = `http://localhost:${API_PORT}/api`;
     contextBridge.exposeInMainWorld("electronAPI", {
