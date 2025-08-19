@@ -84,7 +84,7 @@ export function BlockNotesEditor({
     domAttributes: {
         editor: {
           // Remove padding/margins and shrink font-size for compact appearance
-          class: "px-2 mx-2 text-[13px] leading-[1.45]",
+          class: "px-2 mx-2 py-2 text-[13px] leading-[1.45]",
         },
       },
     _tiptapOptions: {
@@ -343,40 +343,7 @@ export function BlockNotesEditor({
         .slash-menu-item:hover,
         .slash-menu-item.selected {
           background-color: var(--bn-colors-hovered-background);
-        }
-        /* FIXED: Remove fixed min-height and ensure proper scrolling */
-        .bn-container { 
-          height: 100% !important; 
-          display: flex !important;
-          flex-direction: column !important;
-        }
-        .bn-container .bn-editor { 
-          padding-left: 12px !important; 
-          padding-right: 12px !important; 
-          margin-left: 0 !important; 
-          margin-right: 0 !important; 
-          width: 100% !important; 
-          flex: 1 !important;
-          overflow-y: auto !important;
-          /* Remove fixed min-height that was causing issues */
-        }
-        .bn-container .bn-block-group { 
-          margin-left: 0 !important; 
-        }
-        .bn-container .bn-block-group .bn-block-group > .bn-block-outer:not([data-prev-depth-changed])::before { 
-          display: none !important; 
-        }
-        /* Force inline content to flow normally (fix accidental vertical stacking) */
-        .bn-container .bn-block-content { 
-          flex-direction: row !important; 
-          align-items: flex-start !important; 
-        }
-        .bn-container .bn-inline-content { 
-          display: block !important; 
-          width: 100% !important; 
-          white-space: pre-wrap !important; 
-          word-break: break-word !important; 
-        }
+        }  
       `}</style>
       {/* Header toolbar intentionally removed; rely on selection toolbar */}
 

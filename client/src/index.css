@@ -159,18 +159,6 @@
     color: hsl(142 76% 36%);
   }
 
-  /* BlockNote adjustments for tighter left alignment and larger hit area */
-  .bn-container .bn-editor {
-    padding: 12px 14px !important;
-    margin: 0 !important;
-  }
-  .bn-container .bn-block-group {
-    margin-left: 0 !important;
-  }
-  .bn-container {
-    min-height: 100%;
-  }
-
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
